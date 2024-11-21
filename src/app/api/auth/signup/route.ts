@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { MongoClient } from "mongodb";
 
-const client = new MongoClient(process.env.MONGODB_URI || 'mongodb://localhost:27017');
+const client =  new MongoClient(process.env.MONGODB_URI || 'mongodb://localhost:27017');
 
 
 export async function POST(req: Request) {

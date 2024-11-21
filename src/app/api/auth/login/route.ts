@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { MongoClient } from 'mongodb';
 import jwt from "jsonwebtoken";
+import connectMongoDB from "../../../../../lib/mongodb";
 
-const client =  new MongoClient(process.env.MONGODB_URI || 'mongodb://localhost:27017');
+
+// const client =  new MongoClient(process.env.MONGODB_URI || 'mongodb://localhost:27017');
+
 
 export async function POST(req: Request) {
     const { email, password } = await req.json();
@@ -13,7 +15,7 @@ export async function POST(req: Request) {
     }
 
     try {
-        
+        const client = await connectMongoDB();
         const db = client.db("my-next-app");
         const user = await db.collection("users").findOne({ email });
         if (!user || !(await bcrypt.compare(password, user.password))) {
