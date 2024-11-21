@@ -1,40 +1,25 @@
-import { MongoClient } from "mongodb";
+import { MongoClient } from 'mongodb';
 
-const uri = process.env.MONGODB_URI!;
-// const options = {};
-const options = {
-    useUnifiedTopology: true,
-    useNewUrlParser: true,
-    tls: true, // Enforce TLS connection
-    tlsAllowInvalidCertificates: false, // Reject invalid certificates
-  };
-  
+// Ensure that the MONGODB_URI environment variable is not undefined
+const uri: string | undefined = process.env.MONGODB_URI;
 
-let clientPromise: Promise<MongoClient>;
-
-/* eslint-disable no-var */
-declare global {
-  var _mongoClientPromise: Promise<MongoClient> | undefined;
+if (!uri) {
+  throw new Error("MONGODB_URI environment variable is not defined");
 }
-/* eslint-enable no-var */
 
-// Log the attempt to connect to MongoDB
-console.log("Attempting to connect to MongoDB...");
+// Use uri to create a MongoClient instance
+const client = new MongoClient(uri);
 
-if (process.env.NODE_ENV === "development") {
-  // In development, we use a global variable to ensure we reuse the connection
-  if (!global._mongoClientPromise) {
-    const client = new MongoClient(uri, options);
-    global._mongoClientPromise = client.connect();
+// Example function to connect to MongoDB
+async function connectToDatabase() {
+  try {
+    await client.connect();
+    console.log("Connected to MongoDB successfully");
+    return client;
+  } catch (error) {
+    console.error("Error connecting to MongoDB:", error);
+    throw new Error("Database connection error");
   }
-  clientPromise = global._mongoClientPromise;
-} else {
-  // In production, directly create and connect the client without using global
-  const client = new MongoClient(uri, options);
-  clientPromise = client.connect();
 }
-// Log the successful connection or failure
-clientPromise
-  .then(() => console.log("MongoDB connection successful"))
-  .catch((error) => console.log("MongoDB connection error:", error));
-export default clientPromise;
+
+export default connectToDatabase;

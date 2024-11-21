@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import clientPromise from "@lib/mongodb";
+import { MongoClient } from "mongodb";
+
+const client = new MongoClient(process.env.MONGODB_URI || 'mongodb://localhost:27017');
+
 
 export async function POST(req: Request) {
   try {
@@ -22,8 +25,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Connect to MongoDB
-    const client = await clientPromise;
     const db = client.db("my-next-app");
 
     // Check if user already exists
