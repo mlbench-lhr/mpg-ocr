@@ -1,13 +1,7 @@
 import { MongoClient } from "mongodb";
 
 const uri = process.env.MONGODB_URI!;
-const options = {
-    useUnifiedTopology: true,
-    useNewUrlParser: true,
-    keepAlive: true,
-    connectTimeoutMS: 10000,
-    socketTimeoutMS: 45000, 
-  };
+const options = {};
   
 
 let clientPromise: Promise<MongoClient>;
