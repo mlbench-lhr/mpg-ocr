@@ -27,10 +27,8 @@ if (process.env.NODE_ENV === "development") {
   const client = new MongoClient(uri, options);
   clientPromise = client.connect();
 }
-
 // Log the successful connection or failure
 clientPromise
   .then(() => console.log("MongoDB connection successful"))
   .catch((error) => console.log("MongoDB connection error:", error));
-
 export default clientPromise;
