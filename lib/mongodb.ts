@@ -1,16 +1,25 @@
 import { MongoClient } from "mongodb";
 
 const uri = process.env.MONGODB_URI!;
-const options = {};
+const options = {
+    useUnifiedTopology: true,
+    useNewUrlParser: true,
+    keepAlive: true,
+    connectTimeoutMS: 10000,
+    socketTimeoutMS: 45000, 
+  };
+  
 
 let clientPromise: Promise<MongoClient>;
 
 /* eslint-disable no-var */
 declare global {
-  // Type declaration for a global variable to persist MongoDB connectionz
   var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 /* eslint-enable no-var */
+
+// Log the attempt to connect to MongoDB
+console.log("Attempting to connect to MongoDB...");
 
 if (process.env.NODE_ENV === "development") {
   // In development, we use a global variable to ensure we reuse the connection
@@ -24,5 +33,10 @@ if (process.env.NODE_ENV === "development") {
   const client = new MongoClient(uri, options);
   clientPromise = client.connect();
 }
+
+// Log the successful connection or failure
+clientPromise
+  .then(() => console.log("MongoDB connection successful"))
+  .catch((error) => console.log("MongoDB connection error:", error));
 
 export default clientPromise;
