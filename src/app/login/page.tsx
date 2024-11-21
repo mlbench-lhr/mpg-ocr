@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
+import ForgotPasswordModal from "../components/ForgotPasswordModal";
+
 
 
 export default function LoginPage() {
@@ -12,6 +14,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isForgotPasswordVisible, setIsForgotPasswordVisible] = useState(false);
+
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -42,6 +46,9 @@ export default function LoginPage() {
     }
   };
 
+  const openForgotPasswordModal = () => setIsForgotPasswordVisible(true);
+  const closeForgotPasswordModal = () => setIsForgotPasswordVisible(false);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-[url('/images/bg.png')] bg-cover bg-center">
       <div className="w-full max-w-md bg-white rounded-sm shadow-lg p-6 mx-5">
@@ -65,7 +72,7 @@ export default function LoginPage() {
             />
           </div>
 
-          <div className="mb-4 relative">
+          <div className="mb-2 relative">
             <label className="block text-black font-semibold">Password</label>
             <div className="relative">
               <input
@@ -89,6 +96,17 @@ export default function LoginPage() {
               </button>
             </div>
           </div>
+          <div className="flex justify-end items-center mb-10 mt-0">
+
+            <p className="font-medium mt-0">
+              <a
+                onClick={openForgotPasswordModal}
+                className="text-[#005B97] cursor-pointer hover:underline"
+              >
+                Forgot Password?
+              </a>
+            </p>
+          </div>
 
           <button
             type="submit"
@@ -105,6 +123,10 @@ export default function LoginPage() {
           </Link>
         </p>
       </div>
+      {isForgotPasswordVisible && (
+        <ForgotPasswordModal onClose={closeForgotPasswordModal} />
+      )}
+
     </div>
   );
 }
