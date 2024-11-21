@@ -1,7 +1,13 @@
 import { MongoClient } from "mongodb";
 
 const uri = process.env.MONGODB_URI!;
-const options = {};
+// const options = {};
+const options = {
+    useUnifiedTopology: true,
+    useNewUrlParser: true,
+    tls: true, // Enforce TLS connection
+    tlsAllowInvalidCertificates: false, // Reject invalid certificates
+  };
   
 
 let clientPromise: Promise<MongoClient>;
