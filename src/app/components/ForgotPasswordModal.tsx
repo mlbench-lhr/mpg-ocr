@@ -1,30 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState  } from "react";
+import Toastify from 'toastify-js';
+import 'toastify-js/src/toastify.css'; 
 
 function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
     const [email, setEmail] = useState("");
     const [otp, setOtp] = useState(["", "", "", ""]);
     const [emailError, setEmailError] = useState<string | null>(null);
     const [otpError, setOtpError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false); 
+    const [timer, setTimer] = useState(60); 
+    const [timerActive, setTimerActive] = useState(false);
 
-    // Handle OTP field input change
     const handleChangeOtp = (index: number, value: string) => {
-        // Allow only digits (0-9)
         if (/[^0-9]/.test(value)) return;
 
         const newOtp = [...otp];
         newOtp[index] = value;
         setOtp(newOtp);
 
-        // Move focus to the next field if value is entered
         if (value && index < otp.length - 1) {
             const nextInput = document.getElementById(`otp-${index + 1}`) as HTMLInputElement;
             nextInput?.focus();
         }
     };
 
-    // Handle backspace to move focus to previous field
     const handleBackspace = (index: number, event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === "Backspace" && !otp[index]) {
             const prevInput = document.getElementById(`otp-${index - 1}`) as HTMLInputElement;
@@ -32,7 +33,6 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
         }
     };
 
-    // Validate email format
     const validateEmail = (email: string) => {
         const regex = /\S+@\S+\.\S+/;
         if (!email) return "Email is required.";
@@ -40,7 +40,6 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
         return null;
     };
 
-    // Handle sending OTP
     const handleSendOtp = async () => {
         const emailError = validateEmail(email);
         if (emailError) {
@@ -48,27 +47,61 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
             return;
         }
 
-        setEmailError(null); // Clear email error if valid
+        setEmailError(null);
+        setLoading(true);
 
         const res = await fetch("/api/auth/send-otp", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email }),
         });
+
         if (!res.ok) {
-            alert("Failed to send OTP.");
+            Toastify({
+                text: "Failed to send OTP!",
+                backgroundColor: "#FF0000",
+                close: true,
+            }).showToast();
+            setLoading(false);
         } else {
-            alert("OTP sent to your email.");
+            Toastify({
+                text: "OTP sent to your email!",
+                backgroundColor: "#4CAF50",
+                close: true,
+            }).showToast();
+            startTimer();
         }
     };
 
-    // Validate OTP
+    const startTimer = () => {
+        setTimerActive(true); 
+        let countdown = 60; 
+        setTimer(countdown);
+
+        const interval = setInterval(() => {
+            if (countdown === 0) {
+                clearInterval(interval);
+                setTimerActive(false); 
+                setTimer(0); 
+                setLoading(false);
+            } else {
+                setTimer(countdown);
+                countdown -= 1;
+            }
+        }, 1000); 
+    };
+
+    const formatTime = (seconds: number) => {
+        const minutes = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    };
+
     const validateOtp = (otp: string[]) => {
         if (otp.join("").length !== 4) return "OTP must be 4 digits.";
         return null;
     };
 
-    // Handle verifying OTP
     const handleVerifyOtp = async () => {
         const otpError = validateOtp(otp);
         if (otpError) {
@@ -76,7 +109,7 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
             return;
         }
 
-        setOtpError(null); // Clear OTP error if valid
+        setOtpError(null); 
 
         const res = await fetch("/api/auth/verify-otp", {
             method: "POST",
@@ -84,9 +117,17 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
             body: JSON.stringify({ email, otp: otp.join("") }),
         });
         if (!res.ok) {
-            alert("OTP verification failed.");
+            Toastify({
+                text: "OTP verification failed!",
+                backgroundColor: "#FF0000",
+                close: true,
+            }).showToast();
         } else {
-            alert("OTP verified successfully.");
+            Toastify({
+                text: "OTP verified successfully!",
+                backgroundColor: "#4CAF50",
+                close: true,
+            }).showToast();
             onClose();
         }
     };
@@ -120,8 +161,13 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
                             type="button"
                             onClick={handleSendOtp}
                             className="text-[#005B97] underline"
+                            disabled={loading || timerActive}
                         >
-                            Send OTP
+                            {loading || timerActive ? (
+                                <span>{formatTime(timer)}</span>
+                            ) : (
+                                "Send OTP"
+                            )}
                         </button>
                     </div>
                     <div className="flex justify-evenly mb-6">
@@ -131,7 +177,7 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
                                 id={`otp-${index}`}
                                 type="text"
                                 maxLength={1}
-                                className="text-xl font-semibold w-12 h-12 text-center border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97]"
+                                className="text-xl font-medium w-12 h-12 text-center border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97]"
                                 value={digit}
                                 onChange={(e) => handleChangeOtp(index, e.target.value)}
                                 onKeyDown={(e) => handleBackspace(index, e)}
