@@ -33,8 +33,12 @@ export default function LoginPage() {
       const { token } = await res.json();
       localStorage.setItem("token", token);
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unexpected error occurred");
+      }
     }
   };
 
@@ -95,7 +99,7 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-4 text-center text-sm text-black font-medium">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link href="/signup" className="text-[#005B97] hover:underline">
             Register
           </Link>

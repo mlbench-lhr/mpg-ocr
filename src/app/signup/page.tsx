@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Link from "next/link";
 
@@ -16,8 +15,6 @@ export default function SignupPage() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-    const router = useRouter();
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -48,15 +45,15 @@ export default function SignupPage() {
             setConfirmPassword('');
             setShowPassword(false);
             setShowConfirmPassword(false);
-
             setTimeout(() => {
                 setSuccessMessage(null);
-              }, 20000);
-
-            // alert("Signup successful!");
-            // router.push("/login");
-        } catch (err: any) {
-            setError(err.message);
+            }, 20000);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError("An unexpected error occurred");
+            }
         }
     };
 
