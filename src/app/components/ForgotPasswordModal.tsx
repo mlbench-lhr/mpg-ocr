@@ -1,16 +1,23 @@
 "use client";
 
-import { useState  } from "react";
+import { useState } from "react";
 import Toastify from 'toastify-js';
-import 'toastify-js/src/toastify.css'; 
+import 'toastify-js/src/toastify.css';
 
-function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
+type ForgotPasswordModalProps = {
+    onClose: () => void;
+    openResetPasswordModal: () => void;
+    setUserEmail: (email: string) => void;
+};
+
+function ForgotPasswordModal({ onClose, openResetPasswordModal, setUserEmail }: ForgotPasswordModalProps) {
+
     const [email, setEmail] = useState("");
     const [otp, setOtp] = useState(["", "", "", ""]);
     const [emailError, setEmailError] = useState<string | null>(null);
     const [otpError, setOtpError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false); 
-    const [timer, setTimer] = useState(60); 
+    const [loading, setLoading] = useState(false);
+    const [timer, setTimer] = useState(60);
     const [timerActive, setTimerActive] = useState(false);
 
     const handleChangeOtp = (index: number, value: string) => {
@@ -57,13 +64,16 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
         });
 
         if (!res.ok) {
+            const errorData = await res.json(); 
+            const errorMessage = errorData?.message || "Failed to send OTP!";
             Toastify({
-                text: "Failed to send OTP!",
+                text: errorMessage,
                 backgroundColor: "#FF0000",
                 close: true,
             }).showToast();
             setLoading(false);
         } else {
+            setUserEmail(email);
             Toastify({
                 text: "OTP sent to your email!",
                 backgroundColor: "#4CAF50",
@@ -71,24 +81,25 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
             }).showToast();
             startTimer();
         }
+
     };
 
     const startTimer = () => {
-        setTimerActive(true); 
-        let countdown = 60; 
+        setTimerActive(true);
+        let countdown = 60;
         setTimer(countdown);
 
         const interval = setInterval(() => {
             if (countdown === 0) {
                 clearInterval(interval);
-                setTimerActive(false); 
-                setTimer(0); 
+                setTimerActive(false);
+                setTimer(0);
                 setLoading(false);
             } else {
                 setTimer(countdown);
                 countdown -= 1;
             }
-        }, 1000); 
+        }, 1000);
     };
 
     const formatTime = (seconds: number) => {
@@ -109,7 +120,7 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
             return;
         }
 
-        setOtpError(null); 
+        setOtpError(null);
 
         const res = await fetch("/api/auth/verify-otp", {
             method: "POST",
@@ -128,7 +139,8 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
                 backgroundColor: "#4CAF50",
                 close: true,
             }).showToast();
-            onClose();
+            setUserEmail(email);
+            openResetPasswordModal();
         }
     };
 
@@ -184,7 +196,7 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
                             />
                         ))}
                     </div>
-                    {otpError && <p className="text-red-500 text-sm mt-1">{otpError}</p>}
+                    {otpError && <p className="text-red-500 text-sm my-1">{otpError}</p>}
                     <button
                         type="button"
                         onClick={handleVerifyOtp}

@@ -6,8 +6,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
 import ForgotPasswordModal from "../components/ForgotPasswordModal";
-
-
+import ResetPasswordModal from "../components/ResetPasswordModal";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -15,6 +14,9 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isForgotPasswordVisible, setIsForgotPasswordVisible] = useState(false);
+  const [isResetPasswordVisible, setIsResetPasswordVisible] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
 
   const router = useRouter();
 
@@ -49,14 +51,29 @@ export default function LoginPage() {
   const openForgotPasswordModal = () => setIsForgotPasswordVisible(true);
   const closeForgotPasswordModal = () => setIsForgotPasswordVisible(false);
 
+  const openResetPasswordModal = () => {
+    setIsForgotPasswordVisible(false); 
+    setIsResetPasswordVisible(true);
+  };
+  const closeResetPasswordModal = () => setIsResetPasswordVisible(false);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-[url('/images/bg.png')] bg-cover bg-center">
       <div className="w-full max-w-md bg-white rounded-sm shadow-lg p-6 mx-5">
         <div className="flex justify-center items-center my-3">
-          <Image src="/images/logo.svg" alt="logo" width={200} height={200} priority style={{ width: "auto", height: "auto" }} />
+          <Image
+            src="/images/logo.svg"
+            alt="logo"
+            width={200}
+            height={200}
+            priority
+            style={{ width: "auto", height: "auto" }}
+          />
         </div>
         <h1 className="text-2xl font-bold text-center mb-4 text-black">Sign In</h1>
-        <p className="text-center text-gray-500 mb-6">Sign in With your email and password and continue to MPG OCR</p>
+        <p className="text-center text-gray-500 mb-6">
+          Sign in with your email and password to continue to MPG OCR
+        </p>
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
         <form onSubmit={handleLogin}>
@@ -97,7 +114,6 @@ export default function LoginPage() {
             </div>
           </div>
           <div className="flex justify-end items-center mb-10 mt-0">
-
             <p className="font-medium mt-0">
               <a
                 onClick={openForgotPasswordModal}
@@ -124,9 +140,15 @@ export default function LoginPage() {
         </p>
       </div>
       {isForgotPasswordVisible && (
-        <ForgotPasswordModal onClose={closeForgotPasswordModal} />
+        <ForgotPasswordModal
+          onClose={closeForgotPasswordModal}
+          openResetPasswordModal={openResetPasswordModal}
+          setUserEmail={setUserEmail}
+        />
       )}
-
+      {isResetPasswordVisible && (
+        <ResetPasswordModal onClose={closeResetPasswordModal} userEmail={userEmail} />
+      )}
     </div>
   );
 }

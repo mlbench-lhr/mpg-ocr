@@ -4,7 +4,8 @@ import { MongoClient } from 'mongodb';
 
 const client = new MongoClient(process.env.MONGODB_URI || 'mongodb://localhost:27017');
 const dbName = 'my-next-app';
-const collectionName = 'otps';
+const usersCollection = 'users';
+const otpCollection = 'otps';
 
 export async function POST(req: NextRequest) {
     const { email }: { email: string } = await req.json();
@@ -12,6 +13,11 @@ export async function POST(req: NextRequest) {
     const emailError = validateEmail(email);
     if (emailError) {
         return NextResponse.json({ message: emailError }, { status: 400 });
+    }
+
+    const userExists = await checkUserExists(email);
+    if (!userExists) {
+        return NextResponse.json({ message: 'Email does not exist in our system.' }, { status: 404 });
     }
 
     const otpData = await checkOtpExists(email);
@@ -58,11 +64,24 @@ function validateEmail(email: string) {
     return null;
 }
 
+async function checkUserExists(email: string) {
+    try {
+        await client.connect();
+        const db = client.db(dbName);
+        const collection = db.collection(usersCollection);
+
+        const user = await collection.findOne({ email });
+        return !!user;
+    } finally {
+        await client.close();
+    }
+}
+
 async function checkOtpExists(email: string) {
     try {
         await client.connect();
         const db = client.db(dbName);
-        const collection = db.collection(collectionName);
+        const collection = db.collection(otpCollection);
 
         const otpData = await collection.findOne({ email });
         return otpData;
@@ -75,7 +94,7 @@ async function saveOrUpdateOtp(email: string, otp: string) {
     try {
         await client.connect();
         const db = client.db(dbName);
-        const collection = db.collection(collectionName);
+        const collection = db.collection(otpCollection);
 
         const timestamp = Date.now();
         const otpData = { email, otp, timestamp };
