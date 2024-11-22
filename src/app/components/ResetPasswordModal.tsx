@@ -72,7 +72,7 @@ function ResetPasswordModal({ onClose, userEmail }: ResetPasswordModalProps) {
                     &times;
                 </button>
                 <h1 className="text-2xl font-bold text-center mb-3 text-black">Reset Password</h1>
-                <p className="text-sm text-gray-500 text-center mb-6">
+                <p className="text-sm text-gray-500 text-center mb-10">
                     Please enter your new password. It should meet our security requirements.
                 </p>
                 <form>
@@ -116,7 +116,7 @@ function ResetPasswordModal({ onClose, userEmail }: ResetPasswordModalProps) {
                     <button
                         type="button"
                         onClick={handleResetPassword}
-                        className="w-full bg-[#005B97] text-white py-2 mt-14 rounded-md"
+                        className="w-full bg-[#005B97] text-white py-2 mt-16 rounded-md"
                     >
                         Reset Password
                     </button>
