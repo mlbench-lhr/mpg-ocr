@@ -101,7 +101,7 @@ export default function DBConnectionPage() {
     if (!isAuthenticated) return null;
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-[url('/images/bg.png')] bg-cover bg-center">
+        <div className="flex min-h-screen items-center justify-center bg-[url('/images/bg.jpg')] bg-cover bg-center">
             <div className="w-full max-w-md bg-white rounded-sm shadow-lg p-6 mx-5 my-5">
                 <h1 className="text-2xl font-bold text-center mb-2 text-black">DB Connection</h1>
 
