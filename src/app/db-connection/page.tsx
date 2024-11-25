@@ -1,8 +1,12 @@
 "use client";
 
 import { useAuth } from "../hooks/useAuth";
+import Swal from 'sweetalert2';
 import { useState, useEffect, useCallback } from "react";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { useRouter } from "next/navigation";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+
 
 export default function DBConnectionPage() {
     const isAuthenticated = useAuth();
@@ -18,6 +22,9 @@ export default function DBConnectionPage() {
     const [percentage, setPercentage] = useState(0);
 
     const [loadingComplete, setLoadingComplete] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const router = useRouter();
+
 
     useEffect(() => {
         if (isLoading) {
@@ -28,9 +35,9 @@ export default function DBConnectionPage() {
                     setPercentage(progress);
                 } else {
                     clearInterval(interval);
-                    setLoadingComplete(true); 
+                    setLoadingComplete(true);
                 }
-            }, 800); 
+            }, 800);
 
             return () => clearInterval(interval);
         }
@@ -64,9 +71,16 @@ export default function DBConnectionPage() {
 
             if (!res.ok) {
                 const data = await res.json();
+                Swal.fire({
+                    icon: "error",
+                    title: "DB connection fails",
+                    text: "An error occurred while connecting to your DB Please try again",
+                    confirmButtonColor: "#005B97",
+                    confirmButtonText: "Try Again",
+                });
                 throw new Error(data.message || "Failed to connect to the database");
             }
-
+            router.push("/dashboard");
         } catch (err: unknown) {
             if (err instanceof Error) {
                 setError(err.message);
@@ -74,9 +88,9 @@ export default function DBConnectionPage() {
                 setError("An unexpected error occurred");
             }
         } finally {
-            setIsLoading(false); 
+            setIsLoading(false);
         }
-    }, [systemID, userName, password, ipAddress, portNumber, serviceName]);
+    }, [systemID, userName, password, ipAddress, portNumber, serviceName, router]);
 
     useEffect(() => {
         if (loadingComplete) {
@@ -88,15 +102,16 @@ export default function DBConnectionPage() {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-[url('/images/bg.png')] bg-cover bg-center">
-            <div className="w-full max-w-md bg-white rounded-sm shadow-lg p-6 mx-5">
-                <h1 className="text-2xl font-bold text-center mb-4 text-black">DB Connection</h1>
+            <div className="w-full max-w-md bg-white rounded-sm shadow-lg p-6 mx-5 my-5">
+                <h1 className="text-2xl font-bold text-center mb-2 text-black">DB Connection</h1>
 
-                {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
                 {/* Show loading spinner and percentage if loading */}
                 {isLoading ? (
                     <LoadingSpinner percentage={percentage} />
                 ) : (
+
+
                     <form
                         onSubmit={(e) => {
                             e.preventDefault();
@@ -105,6 +120,13 @@ export default function DBConnectionPage() {
                             setLoadingComplete(false);
                         }}
                     >
+
+                        <div className="mb-6 text-center text-gray-400">
+                            <p>If unchecked, connects through API, not DB</p>
+                        </div>
+
+                        {error && <p className="text-red-500 text-center mb-3">{error}</p>}
+
                         <div className="mb-4">
                             <label className="block text-black font-semibold">System ID</label>
                             <input
@@ -132,14 +154,24 @@ export default function DBConnectionPage() {
 
                         <div className="mb-4">
                             <label className="block text-black font-semibold">Password</label>
-                            <input
-                                type="password"
-                                placeholder="Enter DB Password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-4 py-2 mt-1 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97]"
-                                required
-                            />
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Enter new password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97]"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                                >
+                                    {showPassword ? <FaEye size={20} className="text-[#005B97]" /> : <FaEyeSlash size={20} className="text-[#005B97]" />}
+                                </button>
+                            </div>
+
                         </div>
 
                         <div className="mb-4">
@@ -176,6 +208,15 @@ export default function DBConnectionPage() {
                                 className="w-full px-4 py-2 mt-1 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97]"
                                 required
                             />
+                        </div>
+
+                        <div className="mb-8 flex items-center justify-start gap-5">
+                            <div className="flex items-center">
+                                <input className="w-4 h-4 text-[#005B97] bg-slate-600 border-gray-300 rounded active:bg-transparent cursor-pointer" type="checkbox" name="" id="" />
+                            </div>
+                            <div className=" text-gray-800 font-[550]">
+                                Initiating connection to the system
+                            </div>
                         </div>
 
                         <button

@@ -14,8 +14,13 @@ export default function SignupPage() {
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [role, setRole] = useState("standardUser");
+    const [role, setRole] = useState("Standard User");
+    const [isOpen, setIsOpen] = useState(false);
 
+    const handleSelect = (value: string) => {
+        setRole(value);
+        setIsOpen(false);
+    };
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -25,7 +30,7 @@ export default function SignupPage() {
 
         if (password !== confirmPassword) {
             setError("Passwords do not match!");
-            setIsLoading(false); 
+            setIsLoading(false);
             return;
         }
 
@@ -47,7 +52,7 @@ export default function SignupPage() {
             setPassword('');
             setConfirmPassword('');
             setShowPassword(false);
-            setRole("standardUser");
+            setRole("Standard User");
             setShowConfirmPassword(false);
 
             setTimeout(() => {
@@ -107,7 +112,7 @@ export default function SignupPage() {
                         />
                     </div>
 
-                    <div className="mb-4 relative">
+                    {/* <div className="mb-4 relative">
                         <label className="block text-black font-semibold">Role</label>
                         <select
                             value={role}
@@ -117,12 +122,49 @@ export default function SignupPage() {
                         >
                             <option value="admin">Admin</option>
                             <option value="reviewer">Reviewer</option>
-                            <option value="standardUser">Standard User</option>
+                            <option value="Standard User">Standard User</option>
                         </select>
                         <span className="absolute inset-y-0 right-3 top-3/4 transform -translate-y-1/2 text-[#005B97]">
                             <FaChevronDown size={20} />
                         </span>
+                    </div> */}
+
+                    <div className="mb-4 relative">
+                        <label className="block text-black font-semibold">Role</label>
+                        <div
+                            className="w-full px-4 py-2 mt-1 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] pr-10 cursor-pointer"
+                            onClick={() => setIsOpen(!isOpen)}
+                        >
+                            {role || "Select a Role"}
+                            <span className="absolute inset-y-0 right-3 top-3/4 transform -translate-y-1/2 text-[#005B97]">
+                                <FaChevronDown size={20} />
+                            </span>
+                        </div>
+
+                        {isOpen && (
+                            <div className="absolute left-0 right-0 mt-1 bg-white shadow-lg rounded-md z-10">
+                                <div
+                                    onClick={() => handleSelect("Admin")}
+                                    className="px-4 py-2 cursor-pointer  text-gray-800  hover:bg-[#005B97] hover:text-white"
+                                >
+                                    Admin
+                                </div>
+                                <div
+                                    onClick={() => handleSelect("Reviewer")}
+                                    className="px-4 py-2 cursor-pointer  text-gray-800  hover:bg-[#005B97] hover:text-white"
+                                >
+                                    Reviewer
+                                </div>
+                                <div
+                                    onClick={() => handleSelect("Standard User")}
+                                    className="px-4 py-2 cursor-pointer text-gray-800 hover:bg-[#005B97] hover:text-white"
+                                >
+                                    Standard User
+                                </div>
+                            </div>
+                        )}
                     </div>
+
 
                     <div className="mb-4 relative">
                         <label className="block text-black font-semibold">Password</label>
