@@ -2,7 +2,7 @@
 
 import { useAuth } from "../hooks/useAuth";
 import { useState, useEffect, useCallback } from "react";
-import LoadingSpinner from "../components/LoadingSpinner"; // Import the spinner component
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function DBConnectionPage() {
     const isAuthenticated = useAuth();
@@ -67,8 +67,6 @@ export default function DBConnectionPage() {
                 throw new Error(data.message || "Failed to connect to the database");
             }
 
-            // Connection successful
-            // You can trigger further actions here, such as redirecting or showing success
         } catch (err: unknown) {
             if (err instanceof Error) {
                 setError(err.message);
@@ -99,13 +97,12 @@ export default function DBConnectionPage() {
                 {isLoading ? (
                     <LoadingSpinner percentage={percentage} />
                 ) : (
-                    //   <form onSubmit={handleDBConnection}>
                     <form
                         onSubmit={(e) => {
                             e.preventDefault();
                             setIsLoading(true);
                             setPercentage(0);
-                            setLoadingComplete(false); // Reset loading state
+                            setLoadingComplete(false);
                         }}
                     >
                         <div className="mb-4">

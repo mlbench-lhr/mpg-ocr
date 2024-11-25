@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaChevronDown } from "react-icons/fa";
 import Link from "next/link";
 
 export default function SignupPage() {
@@ -13,17 +13,19 @@ export default function SignupPage() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(false); // New loading state
+    const [isLoading, setIsLoading] = useState(false);
+    const [role, setRole] = useState("standardUser");
+
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
         setSuccessMessage(null);
-        setIsLoading(true); // Start loading
+        setIsLoading(true);
 
         if (password !== confirmPassword) {
             setError("Passwords do not match!");
-            setIsLoading(false); // Stop loading
+            setIsLoading(false); 
             return;
         }
 
@@ -45,9 +47,9 @@ export default function SignupPage() {
             setPassword('');
             setConfirmPassword('');
             setShowPassword(false);
+            setRole("standardUser");
             setShowConfirmPassword(false);
 
-            // Remove success message after 20 seconds
             setTimeout(() => {
                 setSuccessMessage(null);
             }, 20000);
@@ -58,7 +60,7 @@ export default function SignupPage() {
                 setError("An unexpected error occurred");
             }
         } finally {
-            setIsLoading(false); // Stop loading
+            setIsLoading(false);
         }
     };
 
@@ -104,6 +106,24 @@ export default function SignupPage() {
                             required
                         />
                     </div>
+
+                    <div className="mb-4 relative">
+                        <label className="block text-black font-semibold">Role</label>
+                        <select
+                            value={role}
+                            onChange={(e) => setRole(e.target.value)}
+                            className="w-full px-4 py-2 mt-1 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] pr-10 appearance-none"
+                            required
+                        >
+                            <option value="admin">Admin</option>
+                            <option value="reviewer">Reviewer</option>
+                            <option value="standardUser">Standard User</option>
+                        </select>
+                        <span className="absolute inset-y-0 right-3 top-3/4 transform -translate-y-1/2 text-[#005B97]">
+                            <FaChevronDown size={20} />
+                        </span>
+                    </div>
+
                     <div className="mb-4 relative">
                         <label className="block text-black font-semibold">Password</label>
                         <div className="relative">
@@ -148,7 +168,7 @@ export default function SignupPage() {
                     <button
                         type="submit"
                         className="w-full bg-[#005B97] text-white py-2 px-4 font-bold rounded-md hover:bg-[#005b97f0] transition duration-300"
-                        disabled={isLoading} // Disable button while loading
+                        disabled={isLoading}
                     >
                         {isLoading ? "Registering..." : "Register"}
                     </button>

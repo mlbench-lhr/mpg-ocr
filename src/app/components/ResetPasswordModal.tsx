@@ -21,7 +21,6 @@ function ResetPasswordModal({ onClose, userEmail }: ResetPasswordModalProps) {
     const validatePasswords = () => {
         if (!password || !confirmPassword) return "Both fields are required.";
         if (password !== confirmPassword) return "Passwords do not match.";
-        // if (password.length < 8) return "Password must be at least 8 characters.";
         return null;
     };
 
