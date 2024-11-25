@@ -1,12 +1,11 @@
-import path from 'path';
 import { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverComponentsExternalPackages: ['oracledb'], // Mark oracledb as external
+  },
   webpack: (config) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      oracledb: path.resolve(__dirname, 'node_modules/oracledb'),
-    };
+    config.externals = [...(config.externals || []), 'oracledb']; // Explicitly exclude oracledb from bundling
     return config;
   },
 };
