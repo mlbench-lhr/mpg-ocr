@@ -13,16 +13,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const [isForgotPasswordVisible, setIsForgotPasswordVisible] = useState(false);
   const [isResetPasswordVisible, setIsResetPasswordVisible] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-
 
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setLoading(true); // Start loading
 
     try {
       const res = await fetch("/api/auth/login", {
@@ -38,15 +39,15 @@ export default function LoginPage() {
 
       const { token } = await res.json();
       localStorage.setItem("token", token);
-      // router.push("/dashboard");
       router.push("/db-connection");
-      
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
         setError("An unexpected error occurred");
       }
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -54,7 +55,7 @@ export default function LoginPage() {
   const closeForgotPasswordModal = () => setIsForgotPasswordVisible(false);
 
   const openResetPasswordModal = () => {
-    setIsForgotPasswordVisible(false); 
+    setIsForgotPasswordVisible(false);
     setIsResetPasswordVisible(true);
   };
   const closeResetPasswordModal = () => setIsResetPasswordVisible(false);
@@ -77,6 +78,11 @@ export default function LoginPage() {
           Sign in with your email and password to continue to MPG OCR
         </p>
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+        {loading && (
+          <p className="text-center text-blue-500 font-medium mb-4">
+            Processing your login, please wait...
+          </p>
+        )}
 
         <form onSubmit={handleLogin}>
           <div className="mb-4">
@@ -128,9 +134,12 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="w-full bg-[#005B97] text-white py-2 px-4 font-bold rounded-md hover:bg-[#005b97f0] transition duration-300"
+            className={`w-full bg-[#005B97] text-white py-2 px-4 font-bold rounded-md hover:bg-[#005b97f0] transition duration-300 ${
+              loading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={loading}
           >
-            Sign In
+            {loading ? "Signing In..." : "Sign In"}
           </button>
         </form>
 

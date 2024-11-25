@@ -4,8 +4,6 @@ import { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Link from "next/link";
 
-
-
 export default function SignupPage() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -15,15 +13,17 @@ export default function SignupPage() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false); // New loading state
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
         setSuccessMessage(null);
-
+        setIsLoading(true); // Start loading
 
         if (password !== confirmPassword) {
             setError("Passwords do not match!");
+            setIsLoading(false); // Stop loading
             return;
         }
 
@@ -38,6 +38,7 @@ export default function SignupPage() {
                 const data = await res.json();
                 throw new Error(data.message);
             }
+
             setSuccessMessage("Signup successful! You can now log in.");
             setName('');
             setEmail('');
@@ -45,6 +46,8 @@ export default function SignupPage() {
             setConfirmPassword('');
             setShowPassword(false);
             setShowConfirmPassword(false);
+
+            // Remove success message after 20 seconds
             setTimeout(() => {
                 setSuccessMessage(null);
             }, 20000);
@@ -54,6 +57,8 @@ export default function SignupPage() {
             } else {
                 setError("An unexpected error occurred");
             }
+        } finally {
+            setIsLoading(false); // Stop loading
         }
     };
 
@@ -65,8 +70,14 @@ export default function SignupPage() {
                     Add your account basic details to create an Account on MPG OCR
                 </p>
                 {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+                {isLoading && (
+                    <p className="text-blue-500 text-center mb-4">Processing your request...</p>
+                )}
                 {successMessage && (
-                    <div className="p-4 mb-4 text-sm text-tail-800 rounded-lg bg-green-50 dark:bg-green-100 dark:text-green-600" role="alert">
+                    <div
+                        className="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-green-100 dark:text-green-600"
+                        role="alert"
+                    >
                         <span className="font-medium">{successMessage}</span>
                     </div>
                 )}
@@ -137,8 +148,9 @@ export default function SignupPage() {
                     <button
                         type="submit"
                         className="w-full bg-[#005B97] text-white py-2 px-4 font-bold rounded-md hover:bg-[#005b97f0] transition duration-300"
+                        disabled={isLoading} // Disable button while loading
                     >
-                        Register
+                        {isLoading ? "Registering..." : "Register"}
                     </button>
                 </form>
                 <p className="mt-4 text-center text-sm text-black font-medium">
