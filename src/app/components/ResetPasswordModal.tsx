@@ -14,6 +14,7 @@ function ResetPasswordModal({ onClose, userEmail }: ResetPasswordModalProps) {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -35,6 +36,7 @@ function ResetPasswordModal({ onClose, userEmail }: ResetPasswordModalProps) {
             setError("No email provided. Please try again.");
             return;
         }
+        setLoading(true);
 
         setError(null);
 
@@ -45,19 +47,21 @@ function ResetPasswordModal({ onClose, userEmail }: ResetPasswordModalProps) {
         });
 
         if (!res.ok) {
-            const errorData = await res.json(); 
+            const errorData = await res.json();
             const errorMessage = errorData?.message || "Failed to reset password!";
             Toastify({
                 text: errorMessage,
                 backgroundColor: "#FF0000",
                 close: true,
             }).showToast();
+            setLoading(false);
         } else {
             Toastify({
                 text: "Password reset successfully!",
                 backgroundColor: "#4CAF50",
                 close: true,
             }).showToast();
+            setLoading(false);
             onClose();
         }
     };
@@ -116,9 +120,9 @@ function ResetPasswordModal({ onClose, userEmail }: ResetPasswordModalProps) {
                     <button
                         type="button"
                         onClick={handleResetPassword}
-                        className="w-full bg-[#005B97] text-white py-2 mt-16 rounded-md"
+                        className="w-full bg-[#005B97] text-white py-2 mt-16 rounded-md" disabled={loading}
                     >
-                        Reset Password
+                        {loading ? "Resetting..." : "Reset Password"}
                     </button>
                 </form>
             </div>

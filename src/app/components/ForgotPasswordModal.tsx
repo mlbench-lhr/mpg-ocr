@@ -17,6 +17,7 @@ function ForgotPasswordModal({ onClose, openResetPasswordModal, setUserEmail }: 
     const [emailError, setEmailError] = useState<string | null>(null);
     const [otpError, setOtpError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [loadingText, setLoadingText] = useState(false);
     const [timer, setTimer] = useState(60);
     const [timerActive, setTimerActive] = useState(false);
 
@@ -64,7 +65,7 @@ function ForgotPasswordModal({ onClose, openResetPasswordModal, setUserEmail }: 
         });
 
         if (!res.ok) {
-            const errorData = await res.json(); 
+            const errorData = await res.json();
             const errorMessage = errorData?.message || "Failed to send OTP!";
             Toastify({
                 text: errorMessage,
@@ -119,6 +120,8 @@ function ForgotPasswordModal({ onClose, openResetPasswordModal, setUserEmail }: 
             setOtpError(otpError);
             return;
         }
+        setLoadingText(true);
+
 
         setOtpError(null);
 
@@ -133,6 +136,8 @@ function ForgotPasswordModal({ onClose, openResetPasswordModal, setUserEmail }: 
                 backgroundColor: "#FF0000",
                 close: true,
             }).showToast();
+            setLoadingText(false);
+
         } else {
             Toastify({
                 text: "OTP verified successfully!",
@@ -140,6 +145,7 @@ function ForgotPasswordModal({ onClose, openResetPasswordModal, setUserEmail }: 
                 close: true,
             }).showToast();
             setUserEmail(email);
+            setLoadingText(false);
             openResetPasswordModal();
         }
     };
@@ -200,9 +206,9 @@ function ForgotPasswordModal({ onClose, openResetPasswordModal, setUserEmail }: 
                     <button
                         type="button"
                         onClick={handleVerifyOtp}
-                        className="w-full bg-[#005B97] text-white py-2 rounded-md"
+                        className="w-full bg-[#005B97] text-white py-2 rounded-md" disabled={loadingText}
                     >
-                        Verify
+                        {loadingText ? "Verifying..." : "Verify"}
                     </button>
                 </form>
             </div>

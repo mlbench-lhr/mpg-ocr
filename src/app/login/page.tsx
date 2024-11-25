@@ -23,7 +23,7 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setLoading(true); // Start loading
+    setLoading(true);
 
     try {
       const res = await fetch("/api/auth/login", {
@@ -47,7 +47,7 @@ export default function LoginPage() {
         setError("An unexpected error occurred");
       }
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   };
 
