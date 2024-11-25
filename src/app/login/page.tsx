@@ -38,7 +38,9 @@ export default function LoginPage() {
 
       const { token } = await res.json();
       localStorage.setItem("token", token);
-      router.push("/dashboard");
+      // router.push("/dashboard");
+      router.push("/db-connection");
+      
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
