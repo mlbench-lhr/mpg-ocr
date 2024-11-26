@@ -80,7 +80,7 @@ export default function DBConnectionPage() {
                 });
                 throw new Error(data.message || "Failed to connect to the database");
             }
-            router.push("/dashboard");
+            router.push("/jobs");
         } catch (err: unknown) {
             if (err instanceof Error) {
                 setError(err.message);
@@ -106,7 +106,6 @@ export default function DBConnectionPage() {
                 <h1 className="text-2xl font-bold text-center mb-2 text-black">DB Connection</h1>
 
 
-                {/* Show loading spinner and percentage if loading */}
                 {isLoading ? (
                     <LoadingSpinner percentage={percentage} />
                 ) : (
