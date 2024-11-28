@@ -3,6 +3,7 @@ import { MongoClient, ObjectId } from "mongodb";
 
 const client = new MongoClient(process.env.MONGODB_URI || "mongodb://localhost:27017");
 
+// Handle POST request to add a new job
 export async function POST(req: Request) {
     try {
         // Parse the incoming JSON request body
@@ -19,12 +20,13 @@ export async function POST(req: Request) {
         const db = client.db("my-next-app");
         const jobsCollection = db.collection("jobs");
 
-        // Insert the job data into the collection
+        // Insert the job data into the collection with "active" set to false by default
         const result = await jobsCollection.insertOne({
             selectedDays,
             fromTime,
             toTime,
             everyTime,
+            active: false, // Default status is inactive
             createdAt: new Date(),
         });
 
@@ -44,7 +46,7 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
     try {
         const url = new URL(req.url);
-        const page = parseInt(url.searchParams.get("page") || "1", 10); 
+        const page = parseInt(url.searchParams.get("page") || "1", 10);
         const limit = 1;
         const skip = (page - 1) * limit;
 
@@ -69,38 +71,48 @@ export async function GET(req: Request) {
     }
 }
 
-
-// Handle DELETE request to remove a job
-export async function DELETE(req: Request) {
+export async function PATCH(req: Request) {
     try {
-        const { id } = await req.json();
+        const { id, active } = await req.json();
 
-        // Validate ID
-        if (!id || !ObjectId.isValid(id)) {
-            return NextResponse.json({ error: "Invalid job ID." }, { status: 400 });
+        // Validate input
+        if (!id || typeof active !== "boolean") {
+            return NextResponse.json({ error: "Invalid input." }, { status: 400 });
         }
 
-        // Connect to the MongoDB database
+        // Ensure the id is a valid ObjectId string
+        if (!ObjectId.isValid(id)) {
+            return NextResponse.json({ error: "Invalid ObjectId format." }, { status: 400 });
+        }
+
+        // Create a new ObjectId instance
+        const objectId = new ObjectId(id);
+
+        // Connect to the database
         await client.connect();
         const db = client.db("my-next-app");
         const jobsCollection = db.collection("jobs");
 
-        // Delete the job from the collection
-        const result = await jobsCollection.deleteOne({ _id: new ObjectId(id) });
+        // Update the job's status
+        const result = await jobsCollection.updateOne(
+            { _id: objectId },
+            { $set: { active } }
+        );
 
-        if (result.deletedCount === 0) {
+        if (result.matchedCount === 0) {
             return NextResponse.json({ error: "Job not found." }, { status: 404 });
         }
 
-        return NextResponse.json({ message: "Job deleted successfully." }, { status: 200 });
+        return NextResponse.json({ message: "Job status updated successfully." }, { status: 200 });
     } catch (error) {
-        console.error("Error deleting job:", error);
-        return NextResponse.json({ error: "Failed to delete job." }, { status: 500 });
+        console.error("Error updating job status:", error);
+        return NextResponse.json({ error: "Failed to update job status." }, { status: 500 });
     } finally {
         await client.close();
     }
 }
 
+// Handle OPTIONS request for allowed methods
 export async function OPTIONS() {
-    return NextResponse.json({ allowedMethods: ["POST", "GET", "DELETE"] });
+    return NextResponse.json({ allowedMethods: ["POST", "GET", "PATCH"] });
 }

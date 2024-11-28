@@ -9,7 +9,7 @@ interface JobData {
 
 interface AddJobModalProps {
   onClose: () => void;
-  onSubmit: (data: JobData) => void; 
+  onSubmit: (data: JobData) => void;
 }
 
 const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
@@ -64,7 +64,7 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
       const responseData = await response.json();
       console.log("Job added successfully:", responseData);
 
-      onSubmit(jobData);  // Pass the correctly typed data
+      onSubmit(jobData);
       onClose();
     } catch (error) {
       console.error("Error adding job:", error);
@@ -132,13 +132,22 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
 
           <div className="mb-4">
             <label className="block font-semibold text-gray-800">Every</label>
-            <input
-              type="number"
+            <select
               value={everyTime}
               onChange={(e) => setEveryTime(e.target.value)}
-              className="px-4 py-2 border text-gray-800 border-gray-300 rounded-md w-full" required
-            />
+              className="px-4 py-2 border text-gray-800 border-gray-300 rounded-md w-full"
+              required
+            >
+              <option value="">Select Time</option>
+              <option value="20">20 Mins</option>
+              <option value="40">40 Mins</option>
+              <option value="60">60 Mins</option>
+              <option value="80">80 Mins</option>
+              <option value="100">100 Mins</option>
+              <option value="120">120 Mins</option>
+            </select>
           </div>
+
 
           {/* Submit and Cancel Buttons */}
           <div className="flex">

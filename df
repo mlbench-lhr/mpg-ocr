@@ -15,18 +15,13 @@ interface Job {
   everyTime: string;
 }
 
-const MasterPage = () => {
+const JobPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [jobs, setJobs] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
-  const handleSidebarToggle = (expanded: boolean) => {
-    setIsSidebarExpanded(expanded);
-  };
-
 
   const router = useRouter();
 
@@ -83,7 +78,7 @@ const MasterPage = () => {
     fetchJobs();
   }, [currentPage, fetchJobs]);
 
-  const handleEditJob = (jobId: string) => {
+   const handleEditJob = (jobId: string) => {
     console.log("Edit Job:", jobId);
     // Implement edit logic
   };
@@ -115,11 +110,8 @@ const MasterPage = () => {
 
   return (
     <div className="flex flex-row h-screen bg-white">
-      <Sidebar onToggleExpand={handleSidebarToggle} />
-      <div
-        className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isSidebarExpanded ? "ml-64" : "ml-20"
-          }`}
-      >
+      <Sidebar />
+      <div className={`flex-1 flex flex-col transition-all duration-300 ml-64`}>
         <Header
           leftContent="Jobs"
           totalContent={jobs.length.toString()}
@@ -139,7 +131,7 @@ const MasterPage = () => {
             </button>
           }
         />
-        <div className="flex-1 p-4">
+          <div className="flex-1 p-4 bg-white">
           <table className="min-w-full text-gray-800 bg-white border border-gray-300">
             <thead>
               <tr>
@@ -201,4 +193,4 @@ const MasterPage = () => {
   );
 };
 
-export default MasterPage;
+export default JobPage;
