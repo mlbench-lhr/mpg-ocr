@@ -19,7 +19,6 @@ export async function GET(req: NextRequest) {
     const db = client.db("my-next-app");
     const jobsCollection = db.collection("jobs");
 
-    // Find job by ID
     const job = await jobsCollection.findOne({ _id: new ObjectId(id) });
 
     if (!job) {
@@ -35,9 +34,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// PATCH request handler for updating the job
 // export async function PATCH(req: Request, { params }: { params: Params }) {
-  // const { id } = params; 
+// const { id } = params; 
 
 export async function PATCH(req: NextRequest) {
 
@@ -45,11 +43,9 @@ export async function PATCH(req: NextRequest) {
 
     const url = new URL(req.url);
     const id = url.pathname.split("/").pop(); 
-    // Parse the incoming JSON request body for the updated job details
     const body = await req.json();
     const { selectedDays, fromTime, toTime, everyTime, active } = body;
 
-    // Validate the input data
     if (!selectedDays || selectedDays.length === 0 || !fromTime || !toTime || !everyTime) {
       return NextResponse.json({ error: "All fields are required." }, { status: 400 });
     }
@@ -58,7 +54,6 @@ export async function PATCH(req: NextRequest) {
     const db = client.db("my-next-app");
     const jobsCollection = db.collection("jobs");
 
-    // Update the job data in the database
     const result = await jobsCollection.updateOne(
       { _id: new ObjectId(id) },
       {
@@ -67,8 +62,8 @@ export async function PATCH(req: NextRequest) {
           fromTime,
           toTime,
           everyTime,
-          active, // Update the active status (whether it's active or inactive)
-          updatedAt: new Date(), // Track the update time
+          active,
+          updatedAt: new Date(),
         },
       }
     );
@@ -77,7 +72,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Job not found." }, { status: 404 });
     }
 
-    return NextResponse.json({ message: "Job updated successfully." }); // Return success message
+    return NextResponse.json({ message: "Job updated successfully." });
   } catch (error) {
     console.error("Error updating job:", error);
     return NextResponse.json({ error: "Failed to update job." }, { status: 500 });

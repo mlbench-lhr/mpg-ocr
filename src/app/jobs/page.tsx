@@ -7,15 +7,15 @@ import Spinner from "../components/Spinner";
 import Header from "../components/Header";
 import AddJobModal from "../components/AddJobModal";
 import EditJobModal from "../components/EditJobModal";
-
+import Swal from "sweetalert2";
 import { BiSolidEditAlt } from "react-icons/bi";
 import { MdDelete } from "react-icons/md";
 import { RiArrowDropDownLine } from "react-icons/ri";
 
 
 interface Job {
-  _id: string;   // Assuming the job has an _id of type string
-  selectedDays: string[];  // Make sure this is defined
+  _id: string;
+  selectedDays: string[];
   fromTime: string;
   toTime: string;
   everyTime: string;
@@ -29,12 +29,15 @@ const JobPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   // const [jobs, setJobs] = useState([]);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [totalJobs, setTotalJobs] =  useState(0);
+
   const [currentPage, setCurrentPage] = useState(1);
   const jobsPerPage = 1;
   const [totalPages, setTotalPages] = useState(1);
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleSidebarToggle = (expanded: boolean) => {
     setIsSidebarExpanded(expanded);
@@ -89,11 +92,10 @@ const JobPage = () => {
         await fetchJobs();
       } else {
         const errorData = await res.json();
-        alert(errorData.error || "Failed to update status");
+        console.error("Error updating status:", errorData.error);
       }
     } catch (error) {
       console.error("Error updating status:", error);
-      alert("An unexpected error occurred. Please try again.");
     }
   };
 
@@ -126,19 +128,30 @@ const JobPage = () => {
 
 
   const handleDeleteJob = async (_id: string) => {
-    if (confirm("Are you sure you want to delete this job?")) {
+
+    const result = await Swal.fire({
+      title: "Delete Job",
+      text: "Are you sure you want to delete this Job??",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#005B97",
+      cancelButtonColor: "#F0F1F3",
+      cancelButtonText: "Cancel",
+      confirmButtonText: "Delete",
+    });
+
+    if (result.isConfirmed) {
+
+
       try {
         const response = await fetch(`/api/jobs/delete-job/${_id}`, {
           method: "DELETE",
         });
 
         if (response.ok) {
-          // Re-fetch jobs after deletion
           await fetchJobs();
           console.log("Job deleted successfully");
-          // Adjust the current page if the last job on the page was deleted
           if (jobs.length === 1 && currentPage > 1) {
-            // If there was only 1 job left on the page, move to the previous page
             setCurrentPage(currentPage - 1);
           }
         } else {
@@ -148,32 +161,41 @@ const JobPage = () => {
       } catch (error) {
         console.error("Error deleting job:", error);
       }
+
     }
+
   };
 
   const fetchJobs = useCallback(async () => {
     try {
       setLoadingTable(true);
-      const response = await fetch(`/api/jobs/add-job/?page=${currentPage}`);
+
+      // Build query string based on currentPage and searchQuery
+      //  const response = await fetch(`/api/jobs/add-job/?page=${currentPage}`);
+
+      const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : '';
+      const response = await fetch(`/api/jobs/add-job/?page=${currentPage}${searchParam}`);
 
       if (response.ok) {
         const data = await response.json();
         setJobs(data.jobs);
         setTotalPages(data.totalPages);
-        setLoadingTable(false);
+        setTotalJobs(data.totalJobs);
       } else {
         console.error("Failed to fetch jobs");
-        setLoadingTable(false);
       }
     } catch (error) {
       console.error("Error fetching jobs:", error);
+    } finally {
       setLoadingTable(false);
     }
-  }, [currentPage]);
+  }, [currentPage, searchQuery]);
 
   useEffect(() => {
     fetchJobs();
-  }, [currentPage, fetchJobs]);
+  }, [currentPage, fetchJobs, searchQuery]);
+  
+
 
   if (loading) return <Spinner />;
   if (!isAuthenticated) return <p>Access Denied. Redirecting...</p>;
@@ -187,12 +209,14 @@ const JobPage = () => {
       >
         <Header
           leftContent="Jobs"
-          totalContent={jobs.length.toString()}
+          totalContent={totalJobs}
           rightContent={
             <input
               type="text"
               placeholder="Search..."
               className="px-4 py-2 rounded-lg border border-gray-300"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           }
           buttonContent={
@@ -205,10 +229,17 @@ const JobPage = () => {
           }
         />
         <div className="flex-1 p-4">
-          <table className="min-w-full text-gray-800 bg-white">
+          <table className="min-w-full bg-white">
             <thead>
-              <tr>
+              <tr className="text-xl text-gray-800">
                 <th className="py-2 px-4 border-b text-start">Job Name</th>
+                <th className="py-2 px-4 border-b text-center">Mo</th>
+                <th className="py-2 px-4 border-b text-center">Tu</th>
+                <th className="py-2 px-4 border-b text-center">We</th>
+                <th className="py-2 px-4 border-b text-center">Th</th>
+                <th className="py-2 px-4 border-b text-center">Fr</th>
+                <th className="py-2 px-4 border-b text-center">Sa</th>
+                <th className="py-2 px-4 border-b text-center">Su</th>
                 <th className="py-2 px-4 border-b text-center">At/From</th>
                 <th className="py-2 px-4 border-b text-center">To</th>
                 <th className="py-2 px-4 border-b text-center">Every</th>
@@ -219,66 +250,71 @@ const JobPage = () => {
             {loadingTable ? (
               <tbody>
                 <tr>
-                  <td colSpan={6}>
+                  <td colSpan={13}>
                     <Spinner />
                   </td>
                 </tr>
               </tbody>
             ) : (
               <tbody>
-                {jobs.map((job: Job, index: number) => {
-                  // Ensure `currentPage` and `jobsPerPage` are defined in your component or passed as props.
-                  const jobNumber = (currentPage - 1) * jobsPerPage + index + 1;
+                {jobs.length === 0 ? (
+                  <tr className="mt-12 text-gray-700">
+                    <td colSpan={13} className="py-2 px-4 text-center text-lg font-medium mt-12">
+                      No jobs found.
+                    </td>
+                  </tr>
+                ) : (
+                  jobs.map((job: Job, index: number) => {
+                    const jobNumber = (currentPage - 1) * jobsPerPage + index + 1;
+                    return (
+                      <tr key={job._id} className="text-gray-600">
+                        <td className="py-2 px-4 border-b text-start text-xl font-medium">
+                          {`Job #${jobNumber}`}
+                        </td>
 
-                  return (
-                    <tr key={job._id}>
-                      <td className="py-2 px-4 border-b text-start text-xl font-medium">{`Job #${jobNumber}`}</td>
-                      <td className="py-2 px-4 border-b text-center">{job.fromTime}</td>
-                      <td className="py-2 px-4 border-b text-center">{job.toTime}</td>
-                      <td className="py-2 px-4 border-b text-center">{job.everyTime}</td>
-                      <td className="py-2 px-4 border-b text-center">
-                        <div className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${job.active ? "bg-blue-100 text-blue-600" : "bg-red-100 text-red-600"
-                          } group relative`}>
-                          <div>
-                            {job.active ? "Active" : "Inactive"}
+                        {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
+                          <td key={day} className="py-2 px-4 border-b text-center">
+                            <input
+                              type="checkbox"
+                              checked={job.selectedDays.includes(day)}
+                              className="w-4 h-4"
+                              readOnly
+                            />
+                          </td>
+                        ))}
+                        <td className="py-2 px-4 border-b text-center">{job.fromTime}</td>
+                        <td className="py-2 px-4 border-b text-center">{job.toTime}</td>
+                        <td className="py-2 px-4 border-b text-center">{job.everyTime}</td>
+                        <td className="py-2 px-4 border-b text-center">
+                          <div className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${job.active ? "bg-blue-100 text-blue-600" : "bg-red-100 text-red-600"} group relative`}>
+                            <div>{job.active ? "Active" : "Inactive"}</div>
+                            <div>
+                              <RiArrowDropDownLine className="text-2xl p-0" />
+                            </div>
+                            <ul className="absolute mt-2 bg-white border rounded-md shadow-lg w-24 hidden group-hover:block">
+                              <li onClick={() => toggleStatus(job._id, true)} className="cursor-pointer px-3 py-1 hover:bg-blue-100 text-blue-600">
+                                Active
+                              </li>
+                              <li onClick={() => toggleStatus(job._id, false)} className="cursor-pointer px-3 py-1 hover:bg-red-100 text-red-600">
+                                Inactive
+                              </li>
+                            </ul>
                           </div>
-                          <div>
-                            <RiArrowDropDownLine className="text-2xl p-0" />
-                          </div>
-                          <ul className="absolute mt-2 bg-white border rounded-md shadow-lg w-24 hidden group-hover:block">
-                            <li
-                              onClick={() => toggleStatus(job._id, true)}
-                              className="cursor-pointer px-3 py-1 hover:bg-blue-100 text-blue-600"
-                            >
-                              Active
-                            </li>
-                            <li
-                              onClick={() => toggleStatus(job._id, false)}
-                              className="cursor-pointer px-3 py-1 hover:bg-red-100 text-red-600"
-                            >
-                              Inactive
-                            </li>
-                          </ul>
-                        </div>
-                      </td>
-                      <td className="py-2 px-4 border-b text-center">
-                        <button
-                          onClick={() => handleEditJob(job._id)}
-                          className="mr-5"
-                        >
-                          <BiSolidEditAlt className="fill-[#005B97] text-2xl" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteJob(job._id)}
-                          className=""
-                        >
-                          <MdDelete className="fill-[red] text-2xl" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                        </td>
+                        <td className="py-2 px-4 border-b text-center">
+                          <button onClick={() => handleEditJob(job._id)} className="mr-5">
+                            <BiSolidEditAlt className="fill-[#005B97] text-2xl" />
+                          </button>
+                          <button onClick={() => handleDeleteJob(job._id)} className="">
+                            <MdDelete className="fill-[red] text-2xl" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
+
 
             )}
 
