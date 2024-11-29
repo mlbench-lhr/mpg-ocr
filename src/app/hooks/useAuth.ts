@@ -1,18 +1,51 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-export const useAuth = () => {
+export const useAuth = (redirectPath: string) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/login");
-    } else {
-      setIsAuthenticated(true);
-    }
-  }, [router]);
+    const authenticate = async () => {
+      const token = localStorage.getItem("token");
 
-  return isAuthenticated;
+      if (!token) {
+        setIsAuthenticated(false);
+        setLoading(false);
+        router.push(redirectPath);
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/auth/check-role", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setIsAuthenticated(true);
+          setUserRole(data.data);
+        } else {
+          setIsAuthenticated(false);
+          router.push(redirectPath);
+        }
+      } catch (error) {
+        console.error("Authentication error:", error);
+        setIsAuthenticated(false);
+        router.push(redirectPath);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    authenticate();
+  }, [router, redirectPath]);
+
+  return { isAuthenticated, userRole, loading };
 };

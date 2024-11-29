@@ -2,16 +2,21 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { MongoClient } from "mongodb";
 
-const client =  new MongoClient(process.env.MONGODB_URI || 'mongodb://localhost:27017');
-
+const client = new MongoClient(process.env.MONGODB_URI || 'mongodb://localhost:27017');
 
 export async function POST(req: Request) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password, role } = await req.json();
 
     if (!name || !email || !password) {
       return NextResponse.json(
         { message: "Name, email, and password are required" },
+        { status: 400 }
+      );
+    }
+    if (!role) {
+      return NextResponse.json(
+        { message: "Role is required" },
         { status: 400 }
       );
     }
@@ -22,6 +27,9 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
+    // Remove spaces from the role (convert to lowercase as well if you prefer consistency)
+    const formattedRole = role.replace(/\s+/g, '').toLowerCase();
 
     const db = client.db("my-next-app");
 
@@ -38,6 +46,8 @@ export async function POST(req: Request) {
     await db.collection("users").insertOne({
       name: name.trim(),
       email,
+      status: 0, // 3 for admin, 0 for pending, 1 for accepted, 2 for rejected 
+      role: formattedRole,
       password: hashedPassword,
       createdAt: new Date(),
     });
@@ -46,10 +56,12 @@ export async function POST(req: Request) {
       { message: "User created successfully" },
       { status: 201 }
     );
-  } catch {
+  } catch (error) {
+    console.error(error);
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 500 }
     );
   }
 }
+

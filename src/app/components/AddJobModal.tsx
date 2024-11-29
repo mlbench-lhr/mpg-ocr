@@ -18,6 +18,7 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
   const [toTime, setToTime] = useState("");
   const [everyTime, setEveryTime] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Handle day selection (checkbox change)
   const handleDayChange = (day: string) => {
@@ -31,19 +32,20 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate inputs
     if (selectedDays.length === 0) {
       setErrorMessage("Please select at least one day.");
       return;
     }
 
-    // Validate "From" and "To" times
-    if (fromTime === toTime) {
-      setErrorMessage('"From" time and "To" time cannot be the same.');
-      return;
-    }
+    // if (fromTime >= toTime) {
+    //   setErrorMessage('"From" time must be earlier than "To" time.');
+    //   return;
+    // }
 
-    // If validation passes, clear the error message and submit the data
-    setErrorMessage("");
+    setErrorMessage(""); // Clear errors if validation passes
+    setIsSubmitting(true); // Set loading state
+
     const jobData: JobData = { selectedDays, fromTime, toTime, everyTime };
 
     try {
@@ -69,6 +71,8 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
     } catch (error) {
       console.error("Error adding job:", error);
       setErrorMessage("An unexpected error occurred.");
+    } finally {
+      setIsSubmitting(false); // Reset loading state
     }
   };
 
@@ -92,7 +96,7 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
 
           {/* Day Selection - Checkboxes */}
           <div className="mb-4">
-            <label className="block font-semibold text-gray-800 mb-3">Select Day On which you want to add files</label>
+            <label className="block font-semibold text-gray-800 mb-3">Select Days</label>
             <div className="grid grid-cols-3 gap-4">
               {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
                 <div key={day} className="flex items-center">
@@ -111,12 +115,13 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
 
           {/* Time Fields */}
           <div className="mb-4">
-            <label className="block font-semibold text-gray-800">AT/From</label>
+            <label className="block font-semibold text-gray-800">From</label>
             <input
               type="time"
               value={fromTime}
               onChange={(e) => setFromTime(e.target.value)}
-              className="px-4 py-2 text-gray-800 border border-gray-300 rounded-md w-full" required
+              className="px-4 py-2 text-gray-800 border border-gray-300 rounded-md w-full"
+              required
             />
           </div>
 
@@ -126,7 +131,8 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
               type="time"
               value={toTime}
               onChange={(e) => setToTime(e.target.value)}
-              className="px-4 py-2 border text-gray-800 border-gray-300 rounded-md w-full" required
+              className="px-4 py-2 border text-gray-800 border-gray-300 rounded-md w-full"
+              required
             />
           </div>
 
@@ -148,14 +154,16 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
             </select>
           </div>
 
-
           {/* Submit and Cancel Buttons */}
           <div className="flex">
             <button
               type="submit"
-              className="w-full bg-[#005B97] text-white px-6 py-2 rounded-md"
+              className={`w-full px-6 py-2 rounded-md ${
+                isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-[#005B97] text-white"
+              }`}
+              disabled={isSubmitting}
             >
-              Add
+              {isSubmitting ? "Adding..." : "Add"}
             </button>
           </div>
         </form>

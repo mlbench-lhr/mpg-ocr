@@ -15,9 +15,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: emailError }, { status: 400 });
     }
 
-    const userExists = await checkUserExists(email);
+    const userExists = await checkStatus(email);
     if (!userExists) {
-        return NextResponse.json({ message: 'Email does not exist in our system.' }, { status: 404 });
+        return NextResponse.json({ message: 'Email does not exist in our system or the account is pending/rejected.' }, { status: 404 });
     }
 
     const otpData = await checkOtpExists(email);
@@ -63,14 +63,19 @@ function validateEmail(email: string) {
     return null;
 }
 
-async function checkUserExists(email: string) {
+async function checkStatus(email: string) {
     try {
         await client.connect();
         const db = client.db(dbName);
         const collection = db.collection(usersCollection);
 
-        const user = await collection.findOne({ email });
-        return !!user;
+        // Query to check if the user exists with status 0 (pending) or 2 (rejected)
+        const user = await collection.findOne({
+            email,
+            $or: [{ status: 1 }],
+        });
+
+        return !!user; // Returns true if the user exists, otherwise false
     } finally {
         await client.close();
     }

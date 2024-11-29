@@ -11,6 +11,7 @@ import Swal from "sweetalert2";
 import { BiSolidEditAlt } from "react-icons/bi";
 import { MdDelete } from "react-icons/md";
 import { RiArrowDropDownLine } from "react-icons/ri";
+import Image from "next/image";
 
 
 interface Job {
@@ -29,10 +30,10 @@ const JobPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   // const [jobs, setJobs] = useState([]);
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [totalJobs, setTotalJobs] =  useState(0);
+  const [totalJobs, setTotalJobs] = useState(0);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const jobsPerPage = 1;
+  const jobsPerPage = 10;
   const [totalPages, setTotalPages] = useState(1);
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -194,7 +195,7 @@ const JobPage = () => {
   useEffect(() => {
     fetchJobs();
   }, [currentPage, fetchJobs, searchQuery]);
-  
+
 
 
   if (loading) return <Spinner />;
@@ -228,98 +229,108 @@ const JobPage = () => {
             </button>
           }
         />
-        <div className="flex-1 p-4">
-          <table className="min-w-full bg-white">
-            <thead>
-              <tr className="text-xl text-gray-800">
-                <th className="py-2 px-4 border-b text-start">Job Name</th>
-                <th className="py-2 px-4 border-b text-center">Mo</th>
-                <th className="py-2 px-4 border-b text-center">Tu</th>
-                <th className="py-2 px-4 border-b text-center">We</th>
-                <th className="py-2 px-4 border-b text-center">Th</th>
-                <th className="py-2 px-4 border-b text-center">Fr</th>
-                <th className="py-2 px-4 border-b text-center">Sa</th>
-                <th className="py-2 px-4 border-b text-center">Su</th>
-                <th className="py-2 px-4 border-b text-center">At/From</th>
-                <th className="py-2 px-4 border-b text-center">To</th>
-                <th className="py-2 px-4 border-b text-center">Every</th>
-                <th className="py-2 px-4 border-b text-center">Status</th>
-                <th className="py-2 px-4 border-b text-center">Actions</th>
-              </tr>
-            </thead>
-            {loadingTable ? (
-              <tbody>
-                <tr>
-                  <td colSpan={13}>
-                    <Spinner />
-                  </td>
+        <div className="flex-1 p-4 bg-white">
+
+          {jobs.length === 0 ? (
+            <div className="flex flex-col items-center mt-40">
+              <Image
+                src="/images/no_jobs.svg"
+                alt="logo"
+                width={200}
+                height={200}
+                priority
+              />
+            </div>
+          ) : (
+            <table className="min-w-full bg-white">
+              <thead>
+                <tr className="text-xl text-gray-800">
+                  <th className="py-2 px-4 border-b text-start">Job Name</th>
+                  <th className="py-2 px-4 border-b text-center">Mo</th>
+                  <th className="py-2 px-4 border-b text-center">Tu</th>
+                  <th className="py-2 px-4 border-b text-center">We</th>
+                  <th className="py-2 px-4 border-b text-center">Th</th>
+                  <th className="py-2 px-4 border-b text-center">Fr</th>
+                  <th className="py-2 px-4 border-b text-center">Sa</th>
+                  <th className="py-2 px-4 border-b text-center">Su</th>
+                  <th className="py-2 px-4 border-b text-center">At/From</th>
+                  <th className="py-2 px-4 border-b text-center">To</th>
+                  <th className="py-2 px-4 border-b text-center">Every</th>
+                  <th className="py-2 px-4 border-b text-center">Status</th>
+                  <th className="py-2 px-4 border-b text-center">Actions</th>
                 </tr>
-              </tbody>
-            ) : (
-              <tbody>
-                {jobs.length === 0 ? (
-                  <tr className="mt-12 text-gray-700">
-                    <td colSpan={13} className="py-2 px-4 text-center text-lg font-medium mt-12">
-                      No jobs found.
+              </thead>
+              {loadingTable ? (
+                <tbody>
+                  <tr>
+                    <td colSpan={13}>
+                      <Spinner />
                     </td>
                   </tr>
-                ) : (
-                  jobs.map((job: Job, index: number) => {
-                    const jobNumber = (currentPage - 1) * jobsPerPage + index + 1;
-                    return (
-                      <tr key={job._id} className="text-gray-600">
-                        <td className="py-2 px-4 border-b text-start text-xl font-medium">
-                          {`Job #${jobNumber}`}
-                        </td>
+                </tbody>
+              ) : (
+                <tbody>
+                  {jobs.length === 0 ? (
+                    <tr className="mt-12 text-gray-700">
+                      <td colSpan={13} className="py-2 px-4 text-center text-lg font-medium mt-12">
+                        No jobs found.
+                      </td>
+                    </tr>
+                  ) : (
+                    jobs.map((job: Job, index: number) => {
+                      const jobNumber = (currentPage - 1) * jobsPerPage + (index + 1);
 
-                        {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
-                          <td key={day} className="py-2 px-4 border-b text-center">
-                            <input
-                              type="checkbox"
-                              checked={job.selectedDays.includes(day)}
-                              className="w-4 h-4"
-                              readOnly
-                            />
+                      return (
+                        <tr key={job._id} className="text-gray-600">
+                          <td className="py-2 px-4 border-b text-start text-xl font-medium">
+                            {`Job #${jobNumber}`}
                           </td>
-                        ))}
-                        <td className="py-2 px-4 border-b text-center">{job.fromTime}</td>
-                        <td className="py-2 px-4 border-b text-center">{job.toTime}</td>
-                        <td className="py-2 px-4 border-b text-center">{job.everyTime}</td>
-                        <td className="py-2 px-4 border-b text-center">
-                          <div className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${job.active ? "bg-blue-100 text-blue-600" : "bg-red-100 text-red-600"} group relative`}>
-                            <div>{job.active ? "Active" : "Inactive"}</div>
-                            <div>
-                              <RiArrowDropDownLine className="text-2xl p-0" />
+
+                          {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
+                            <td key={day} className="py-2 px-4 border-b text-center">
+                              <input
+                                type="checkbox"
+                                checked={job.selectedDays.includes(day)}
+                                className="w-4 h-4"
+                                readOnly
+                              />
+                            </td>
+                          ))}
+                          <td className="py-2 px-4 border-b text-center">{job.fromTime}</td>
+                          <td className="py-2 px-4 border-b text-center">{job.toTime}</td>
+                          <td className="py-2 px-4 border-b text-center">{job.everyTime}</td>
+                          <td className="py-2 px-4 border-b text-center">
+                            <div className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${job.active ? "bg-blue-100 text-blue-600" : "bg-red-100 text-red-600"} group relative`}>
+                              <div>{job.active ? "Active" : "Inactive"}</div>
+                              <div>
+                                <RiArrowDropDownLine className="text-2xl p-0" />
+                              </div>
+                              <ul className="absolute mt-2 bg-white border rounded-md shadow-lg w-24 hidden group-hover:block">
+                                <li onClick={() => toggleStatus(job._id, true)} className="cursor-pointer px-3 py-1 hover:bg-blue-100 text-blue-600">
+                                  Active
+                                </li>
+                                <li onClick={() => toggleStatus(job._id, false)} className="cursor-pointer px-3 py-1 hover:bg-red-100 text-red-600">
+                                  Inactive
+                                </li>
+                              </ul>
                             </div>
-                            <ul className="absolute mt-2 bg-white border rounded-md shadow-lg w-24 hidden group-hover:block">
-                              <li onClick={() => toggleStatus(job._id, true)} className="cursor-pointer px-3 py-1 hover:bg-blue-100 text-blue-600">
-                                Active
-                              </li>
-                              <li onClick={() => toggleStatus(job._id, false)} className="cursor-pointer px-3 py-1 hover:bg-red-100 text-red-600">
-                                Inactive
-                              </li>
-                            </ul>
-                          </div>
-                        </td>
-                        <td className="py-2 px-4 border-b text-center">
-                          <button onClick={() => handleEditJob(job._id)} className="mr-5">
-                            <BiSolidEditAlt className="fill-[#005B97] text-2xl" />
-                          </button>
-                          <button onClick={() => handleDeleteJob(job._id)} className="">
-                            <MdDelete className="fill-[red] text-2xl" />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-
-
-            )}
-
-          </table>
-
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            <button onClick={() => handleEditJob(job._id)} className="mr-5">
+                              <BiSolidEditAlt className="fill-[#005B97] text-2xl" />
+                            </button>
+                            <button onClick={() => handleDeleteJob(job._id)} className="">
+                              <MdDelete className="fill-[red] text-2xl" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              )}
+            </table>
+          )}
 
           {loadingTable || totalPages === 0 ?
             ''
@@ -342,8 +353,6 @@ const JobPage = () => {
               </button>
             </div>
           }
-
-
         </div>
       </div>
       {isModalOpen && (

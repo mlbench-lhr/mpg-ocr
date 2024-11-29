@@ -5,7 +5,8 @@ import { MongoClient, ObjectId } from "mongodb";
 
 // MongoDB client setup
 const client = new MongoClient(process.env.MONGODB_URI || "mongodb://localhost:27017");
-const SECRET_KEY = process.env.JWT_SECRET || "your_secret_key";
+const SECRET_KEY = process.env.NEXT_PUBLIC_JWT_SECRET as string;
+
 
 // Define the interface for Oracle DB credentials
 // interface OracleCredentials {

@@ -22,6 +22,7 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
     const [toTime, setToTime] = useState(job.toTime);
     const [everyTime, setEveryTime] = useState(job.everyTime);
     const [errorMessage, setErrorMessage] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         // Sync state when job data changes (if it changes)
@@ -54,6 +55,8 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
         }
 
         setErrorMessage("");
+        setIsSubmitting(true);
+
 
         const updatedJob: Job = { _id: job._id, selectedDays, fromTime, toTime, everyTime, active: job.active };
 
@@ -80,6 +83,8 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
         } catch (error) {
             console.error("Error updating job:", error);
             setErrorMessage("An unexpected error occurred.");
+        } finally {
+            setIsSubmitting(false); // Reset loading state
         }
     };
 
@@ -164,9 +169,11 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
                     <div className="flex">
                         <button
                             type="submit"
-                            className="w-full bg-[#005B97] text-white px-6 py-2 rounded-md"
+                            className={`w-full px-6 py-2 rounded-md ${isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-[#005B97] text-white"
+                                }`}
+                            disabled={isSubmitting}
                         >
-                            Update Job
+                            {isSubmitting ? "Updating..." : "Update Job"}
                         </button>
                     </div>
                 </form>

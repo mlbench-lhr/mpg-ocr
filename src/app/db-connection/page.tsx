@@ -9,8 +9,8 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 
 export default function DBConnectionPage() {
-    const isAuthenticated = useAuth();
 
+    const { isAuthenticated, userRole, loading } = useAuth("/admin-login");
     const [systemID, setSystemID] = useState("");
     const [userName, setUserName] = useState("");
     const [password, setPassword] = useState("");
@@ -25,6 +25,13 @@ export default function DBConnectionPage() {
     const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
 
+    useEffect(() => {
+        if (!loading) {
+            if (!isAuthenticated || userRole !== "admin") {
+                router.push("/admin-login");
+            }
+        }
+    }, [loading, isAuthenticated, userRole, router]);
 
     useEffect(() => {
         if (isLoading) {
@@ -97,8 +104,6 @@ export default function DBConnectionPage() {
             handleDBConnection();
         }
     }, [loadingComplete, handleDBConnection]);
-
-    if (!isAuthenticated) return null;
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-[url('/images/bg.jpg')] bg-cover bg-center">

@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Toastify from "toastify-js";
-import "toastify-js/src/toastify.css";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 type ResetPasswordModalProps = {
@@ -14,6 +12,7 @@ function ResetPasswordModal({ onClose, userEmail }: ResetPasswordModalProps) {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null); // Success message state
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -35,8 +34,8 @@ function ResetPasswordModal({ onClose, userEmail }: ResetPasswordModalProps) {
             setError("No email provided. Please try again.");
             return;
         }
-        setLoading(true);
 
+        setLoading(true);
         setError(null);
 
         const res = await fetch("/api/auth/reset-password", {
@@ -48,20 +47,15 @@ function ResetPasswordModal({ onClose, userEmail }: ResetPasswordModalProps) {
         if (!res.ok) {
             const errorData = await res.json();
             const errorMessage = errorData?.message || "Failed to reset password!";
-            Toastify({
-                text: errorMessage,
-                backgroundColor: "#FF0000",
-                close: true,
-            }).showToast();
+            setError(errorMessage);  // Display error message above the form
             setLoading(false);
         } else {
-            Toastify({
-                text: "Password reset successfully!",
-                backgroundColor: "#4CAF50",
-                close: true,
-            }).showToast();
+            setSuccessMessage("Password reset successfully!"); 
             setLoading(false);
-            onClose();
+            setTimeout(() => {
+                setSuccessMessage(null); 
+                onClose(); 
+            }, 10000); 
         }
     };
 
@@ -78,6 +72,11 @@ function ResetPasswordModal({ onClose, userEmail }: ResetPasswordModalProps) {
                 <p className="text-sm text-gray-500 text-center mb-10">
                     Please enter your new password. It should meet our security requirements.
                 </p>
+
+                {/* Display error or success message above the form */}
+                {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
+                {successMessage && <p className="text-green-500 text-sm mb-4 text-center">{successMessage}</p>}
+
                 <form>
                     <label className="block text-black font-semibold">New Password</label>
                     <div className="relative">
@@ -115,7 +114,7 @@ function ResetPasswordModal({ onClose, userEmail }: ResetPasswordModalProps) {
                             {showConfirmPassword ? <FaEye size={20} className="text-[#005B97]" /> : <FaEyeSlash size={20} className="text-[#005B97]" />}
                         </button>
                     </div>
-                    {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+
                     <button
                         type="button"
                         onClick={handleResetPassword}

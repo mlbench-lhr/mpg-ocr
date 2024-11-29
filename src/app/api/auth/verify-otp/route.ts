@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (otpData.otp === otp) {
-        const token = jwt.sign({ email }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
+        const token = jwt.sign({ email }, process.env.NEXT_PUBLIC_JWT_SECRET as string, { expiresIn: '1h' });
         return NextResponse.json({ message: 'OTP verified successfully.', token }, { status: 200 });
     } else {
         return NextResponse.json({ message: 'OTP verification failed.' }, { status: 400 });

@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Toastify from 'toastify-js';
-import 'toastify-js/src/toastify.css';
 
 type ForgotPasswordModalProps = {
     onClose: () => void;
@@ -11,11 +9,11 @@ type ForgotPasswordModalProps = {
 };
 
 function ForgotPasswordModal({ onClose, openResetPasswordModal, setUserEmail }: ForgotPasswordModalProps) {
-
     const [email, setEmail] = useState("");
     const [otp, setOtp] = useState(["", "", "", ""]);
     const [emailError, setEmailError] = useState<string | null>(null);
     const [otpError, setOtpError] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null); // New state for success message
     const [loading, setLoading] = useState(false);
     const [loadingText, setLoadingText] = useState(false);
     const [timer, setTimer] = useState(60);
@@ -67,22 +65,16 @@ function ForgotPasswordModal({ onClose, openResetPasswordModal, setUserEmail }: 
         if (!res.ok) {
             const errorData = await res.json();
             const errorMessage = errorData?.message || "Failed to send OTP!";
-            Toastify({
-                text: errorMessage,
-                backgroundColor: "#FF0000",
-                close: true,
-            }).showToast();
+            setEmailError(errorMessage); // Show error in the form
             setLoading(false);
         } else {
             setUserEmail(email);
-            Toastify({
-                text: "OTP sent to your email!",
-                backgroundColor: "#4CAF50",
-                close: true,
-            }).showToast();
+            setEmailError(null); // Clear any previous errors
+            setLoading(false);
+            setSuccessMessage("OTP sent to your email!");
+            setTimeout(() => setSuccessMessage(null), 10000); 
             startTimer();
         }
-
     };
 
     const startTimer = () => {
@@ -95,7 +87,6 @@ function ForgotPasswordModal({ onClose, openResetPasswordModal, setUserEmail }: 
                 clearInterval(interval);
                 setTimerActive(false);
                 setTimer(0);
-                setLoading(false);
             } else {
                 setTimer(countdown);
                 countdown -= 1;
@@ -122,7 +113,6 @@ function ForgotPasswordModal({ onClose, openResetPasswordModal, setUserEmail }: 
         }
         setLoadingText(true);
 
-
         setOtpError(null);
 
         const res = await fetch("/api/auth/verify-otp", {
@@ -130,22 +120,16 @@ function ForgotPasswordModal({ onClose, openResetPasswordModal, setUserEmail }: 
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, otp: otp.join("") }),
         });
-        if (!res.ok) {
-            Toastify({
-                text: "OTP verification failed!",
-                backgroundColor: "#FF0000",
-                close: true,
-            }).showToast();
-            setLoadingText(false);
 
+        if (!res.ok) {
+            setOtpError("OTP verification failed!"); // Show error in the form
+            setLoadingText(false);
         } else {
-            Toastify({
-                text: "OTP verified successfully!",
-                backgroundColor: "#4CAF50",
-                close: true,
-            }).showToast();
+            setOtpError(null);
             setUserEmail(email);
             setLoadingText(false);
+            setSuccessMessage("OTP verified successfully!");
+            setTimeout(() => setSuccessMessage(null), 20000);
             openResetPasswordModal();
         }
     };
@@ -174,6 +158,9 @@ function ForgotPasswordModal({ onClose, openResetPasswordModal, setUserEmail }: 
                         required
                     />
                     {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>}
+                    {successMessage && (
+                        <p className="text-green-500 text-sm mt-1">{successMessage}</p>
+                    )}
                     <div className="flex justify-end items-center mb-16 mt-2">
                         <button
                             type="button"

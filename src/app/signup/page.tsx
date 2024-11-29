@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaEye, FaEyeSlash, FaChevronDown } from "react-icons/fa";
 import Link from "next/link";
+import Image from "next/image";
+
 
 export default function SignupPage() {
     const [name, setName] = useState("");
@@ -12,10 +14,12 @@ export default function SignupPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    // const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [role, setRole] = useState("standard User");
+    const [role, setRole] = useState("");
     const [isOpen, setIsOpen] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+
 
     const handleSelect = (value: string) => {
         setRole(value);
@@ -25,7 +29,7 @@ export default function SignupPage() {
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-        setSuccessMessage(null);
+        // setSuccessMessage(null);
         setIsLoading(true);
 
         if (password !== confirmPassword) {
@@ -38,7 +42,7 @@ export default function SignupPage() {
             const res = await fetch("/api/auth/signup", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email, password }),
+                body: JSON.stringify({ name, email, password, role }),
             });
 
             if (!res.ok) {
@@ -46,18 +50,21 @@ export default function SignupPage() {
                 throw new Error(data.message);
             }
 
-            setSuccessMessage("Signup successful! You can now log in.");
+            // setSuccessMessage("Signup successful! You can now log in.");
             setName('');
             setEmail('');
             setPassword('');
             setConfirmPassword('');
             setShowPassword(false);
-            setRole("standard User");
+            setRole(role);
             setShowConfirmPassword(false);
 
-            setTimeout(() => {
-                setSuccessMessage(null);
-            }, 20000);
+            // setTimeout(() => {
+            //     setSuccessMessage(null);
+            // }, 20000);
+
+            setShowModal(true);
+
         } catch (err: unknown) {
             if (err instanceof Error) {
                 setError(err.message);
@@ -68,6 +75,16 @@ export default function SignupPage() {
             setIsLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (showModal) {
+            const timer = setTimeout(() => {
+                setShowModal(false);
+                setRole("");
+            }, 10000);
+            return () => clearTimeout(timer);
+        }
+    }, [showModal]);
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-[url('/images/bg.jpg')] bg-cover bg-center">
@@ -80,14 +97,14 @@ export default function SignupPage() {
                 {isLoading && (
                     <p className="text-blue-500 text-center mb-4">Processing your request...</p>
                 )}
-                {successMessage && (
+                {/* {successMessage && (
                     <div
                         className="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-green-100 dark:text-green-600"
                         role="alert"
                     >
                         <span className="font-medium">{successMessage}</span>
                     </div>
-                )}
+                )} */}
                 <form onSubmit={handleSignup}>
                     <div className="mb-4">
                         <label className="block text-black font-semibold">Name</label>
@@ -122,7 +139,7 @@ export default function SignupPage() {
                         >
                             <option value="admin">Admin</option>
                             <option value="reviewer">Reviewer</option>
-                            <option value="standard User">Standard User</option>
+                            <option value="Standard User">Standard User</option>
                         </select>
                         <span className="absolute inset-y-0 right-3 top-3/4 transform -translate-y-1/2 text-[#005B97]">
                             <FaChevronDown size={20} />
@@ -135,7 +152,7 @@ export default function SignupPage() {
                             className="w-full px-4 py-2 mt-1 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] pr-10 cursor-pointer"
                             onClick={() => setIsOpen(!isOpen)}
                         >
-                            {role || "Select a Role"}
+                            {role || "Select Your Role"}
                             <span className="absolute inset-y-0 right-3 top-3/4 transform -translate-y-1/2 text-[#005B97]">
                                 <FaChevronDown size={20} />
                             </span>
@@ -143,12 +160,12 @@ export default function SignupPage() {
 
                         {isOpen && (
                             <div className="absolute left-0 right-0 mt-1 bg-white shadow-lg rounded-md z-10">
-                                <div
+                                {/* <div
                                     onClick={() => handleSelect("Admin")}
                                     className="px-4 py-2 cursor-pointer  text-gray-800  hover:bg-[#005B97] hover:text-white"
                                 >
                                     Admin
-                                </div>
+                                </div> */}
                                 <div
                                     onClick={() => handleSelect("Reviewer")}
                                     className="px-4 py-2 cursor-pointer  text-gray-800  hover:bg-[#005B97] hover:text-white"
@@ -156,7 +173,7 @@ export default function SignupPage() {
                                     Reviewer
                                 </div>
                                 <div
-                                    onClick={() => handleSelect("standard User")}
+                                    onClick={() => handleSelect("Standard User")}
                                     className="px-4 py-2 cursor-pointer text-gray-800 hover:bg-[#005B97] hover:text-white"
                                 >
                                     Standard User
@@ -222,6 +239,34 @@ export default function SignupPage() {
                     </Link>
                 </p>
             </div>
+
+            {/* Modal */}
+            {showModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-sm mx-4">
+                        <div className="flex justify-end mb-5">
+                            <button
+                                onClick={() => { setShowModal(false); setRole(""); }}
+                                className="font-bold text-white bg-[#005B97] rounded-full px-[7px] py-0"
+                            >
+                                &times;
+                            </button>
+                        </div>
+
+                        <div className="flex justify-center mb-4">
+                            <Image
+                                src="/images/request_send.svg"
+                                alt="logo"
+                                width={200}
+                                height={200}
+                                priority
+                            />
+                        </div>
+                        <h3 className="text-xl text-center mb-4 text-gray-800 font-bold">Request Sent For Approval</h3>
+                        <p className="text-center mb-4 text-gray-400">Your request to access MPG OCR as a {role} has been sent to the admin. He will update you on your given email once he will review that.</p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

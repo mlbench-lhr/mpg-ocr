@@ -12,9 +12,7 @@ import { IoIosArrowForward } from "react-icons/io";
 import { RiTimeZoneFill } from "react-icons/ri";
 import { FaHouseSignal } from "react-icons/fa6";
 import { TbCloudDataConnection } from "react-icons/tb";
-
-
-
+import { useAuth } from "../hooks/useAuth";
 
 
 // export default function Sidebar() {
@@ -23,6 +21,7 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
     const [isExpanded, setIsExpanded] = useState(true);
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const [isAutoConfirmationOpen, setAutoConfirmationOpen] = useState(false);
+    const { userRole } = useAuth("/admin-login");
 
     // Toggle function
     const toggleAutoConfirmation = () => {
@@ -40,11 +39,16 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
 
             if (response.ok) {
                 localStorage.removeItem("token");
-                window.location.href = "/login";
+                if (userRole === "admin") {
+                    window.location.href = "/admin-login";
+                } else {
+                    window.location.href = "/login";
+                }
             } else {
                 const errorData = await response.json();
                 console.error('Logout failed:', errorData.message);
             }
+            
         } catch (error) {
             console.error('Error during logout:', error);
         }
