@@ -1,15 +1,13 @@
 "use client";
 
 import { useAuth } from "../hooks/useAuth";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 import { useState, useEffect, useCallback } from "react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useRouter } from "next/navigation";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
-
 export default function DBConnectionPage() {
-
     const { isAuthenticated, userRole, loading } = useAuth("/admin-login");
     const [systemID, setSystemID] = useState("");
     const [userName, setUserName] = useState("");
@@ -20,11 +18,11 @@ export default function DBConnectionPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [percentage, setPercentage] = useState(0);
-
     const [loadingComplete, setLoadingComplete] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
 
+    // Redirect if not authenticated
     useEffect(() => {
         if (!loading) {
             if (!isAuthenticated || userRole !== "admin") {
@@ -33,23 +31,52 @@ export default function DBConnectionPage() {
         }
     }, [loading, isAuthenticated, userRole, router]);
 
+    // Fetch existing data
     useEffect(() => {
-        if (isLoading) {
-            let progress = 0;
-            const interval = setInterval(() => {
-                if (progress < 100) {
-                    progress += 10;
-                    setPercentage(progress);
-                } else {
-                    clearInterval(interval);
-                    setLoadingComplete(true);
+        const fetchExistingData = async () => {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                setError("Authentication required. Please log in.");
+                router.push("/admin-login");
+                return;
+            }
+
+            const res = await fetch("/api/auth/db", {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                },
+            });
+
+            if (res.ok) {
+                const { data } = await res.json();
+                if (data) {
+                    setSystemID(data.systemID || "");
+                    setUserName(data.userName || "");
+                    setPassword(data.password || "");
+                    setIpAddress(data.ipAddress || "");
+                    setPortNumber(data.portNumber || "");
+                    setServiceName(data.serviceName || "");
                 }
-            }, 800);
+            }
+        };
 
-            return () => clearInterval(interval);
-        }
-    }, [isLoading]);
+        fetchExistingData();
+    }, [router]);
 
+    // Validate form inputs
+    const validateForm = () => {
+        if (!systemID.trim()) return "System ID is required.";
+        if (!userName.trim()) return "User Name is required.";
+        if (!password.trim()) return "Password is required.";
+        if (!ipAddress.trim() || !/^(\d{1,3}\.){3}\d{1,3}$/.test(ipAddress)) return "Invalid IP Address.";
+        if (!portNumber.trim()) return "Port Number must be a number.";
+        if (!serviceName.trim()) return "Service Name is required.";
+        return null;
+    };
+
+
+    // Handle form submission
     const handleDBConnection = useCallback(async () => {
         setError(null);
 
@@ -81,12 +108,21 @@ export default function DBConnectionPage() {
                 Swal.fire({
                     icon: "error",
                     title: "DB connection fails",
-                    text: "An error occurred while connecting to your DB Please try again",
+                    text: data.message || "An error occurred while connecting to your DB. Please try again.",
                     confirmButtonColor: "#005B97",
                     confirmButtonText: "Try Again",
                 });
                 throw new Error(data.message || "Failed to connect to the database");
             }
+
+            Swal.fire({
+                icon: "success",
+                title: "Success",
+                text: "Database connection saved successfully!",
+                timer: 3000, 
+                showConfirmButton: false,
+            });
+            
             router.push("/jobs");
         } catch (err: unknown) {
             if (err instanceof Error) {
@@ -99,32 +135,60 @@ export default function DBConnectionPage() {
         }
     }, [systemID, userName, password, ipAddress, portNumber, serviceName, router]);
 
+    // Progress bar logic
+    useEffect(() => {
+        if (isLoading) {
+            let progress = 0;
+            const interval = setInterval(() => {
+                if (progress < 100) {
+                    progress += 10;
+                    setPercentage(progress);
+                } else {
+                    clearInterval(interval);
+                    setLoadingComplete(true);
+                }
+            }, 800);
+
+            return () => clearInterval(interval);
+        }
+    }, [isLoading]);
+
     useEffect(() => {
         if (loadingComplete) {
             handleDBConnection();
         }
     }, [loadingComplete, handleDBConnection]);
 
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const validationError = validateForm();
+        if (validationError) {
+            setError(validationError);
+            return;
+        }
+
+        setIsLoading(true);
+        setPercentage(0);
+        setLoadingComplete(false);
+    };
+
     return (
         <div className="flex min-h-screen items-center justify-center bg-[url('/images/bg.jpg')] bg-cover bg-center">
             <div className="w-full max-w-md bg-white rounded-sm shadow-lg p-6 mx-5 my-5">
                 <h1 className="text-2xl font-bold text-center mb-2 text-black">DB Connection</h1>
 
-
                 {isLoading ? (
                     <LoadingSpinner percentage={percentage} />
                 ) : (
-
-
-                    <form
-                        onSubmit={(e) => {
-                            e.preventDefault();
-                            setIsLoading(true);
-                            setPercentage(0);
-                            setLoadingComplete(false);
-                        }}
-                    >
-
+                    // <form
+                    //     onSubmit={(e) => {
+                    //         e.preventDefault();
+                    //         setIsLoading(true);
+                    //         setPercentage(0);
+                    //         setLoadingComplete(false);
+                    //     }}
+                    // >
+                    <form onSubmit={handleSubmit}>
                         <div className="mb-6 text-center text-gray-400">
                             <p>If unchecked, connects through API, not DB</p>
                         </div>
@@ -143,7 +207,7 @@ export default function DBConnectionPage() {
                             />
                         </div>
 
-                        {/* Repeat for other fields */}
+                        {/* Remaining fields */}
                         <div className="mb-4">
                             <label className="block text-black font-semibold">User Name</label>
                             <input
@@ -175,9 +239,9 @@ export default function DBConnectionPage() {
                                     {showPassword ? <FaEye size={20} className="text-[#005B97]" /> : <FaEyeSlash size={20} className="text-[#005B97]" />}
                                 </button>
                             </div>
-
                         </div>
 
+                        {/* IP Address */}
                         <div className="mb-4">
                             <label className="block text-black font-semibold">IP Address</label>
                             <input
@@ -190,6 +254,7 @@ export default function DBConnectionPage() {
                             />
                         </div>
 
+                        {/* Port Number */}
                         <div className="mb-4">
                             <label className="block text-black font-semibold">Port Number</label>
                             <input
@@ -202,6 +267,7 @@ export default function DBConnectionPage() {
                             />
                         </div>
 
+                        {/* Service Name */}
                         <div className="mb-4">
                             <label className="block text-black font-semibold">Service Name</label>
                             <input
@@ -218,7 +284,7 @@ export default function DBConnectionPage() {
                             <div className="flex items-center">
                                 <input className="w-4 h-4 text-[#005B97] bg-slate-600 border-gray-300 rounded active:bg-transparent cursor-pointer" type="checkbox" name="" id="" />
                             </div>
-                            <div className=" text-gray-800 font-[550]">
+                            <div className="text-gray-800 font-[550]">
                                 Initiating connection to the system
                             </div>
                         </div>

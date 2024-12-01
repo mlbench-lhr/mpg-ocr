@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { MongoClient } from "mongodb";
+// import { MongoClient } from "mongodb";
 import jwt from "jsonwebtoken";
+import clientPromise from "@/lib/mongodb";
 
-const client = new MongoClient(process.env.MONGODB_URI || "mongodb://localhost:27017");
+// const client = new MongoClient(process.env.MONGODB_URI || "mongodb://localhost:27017");
 const SECRET_KEY = process.env.NEXT_PUBLIC_JWT_SECRET as string;
 
 export async function POST(req: Request) {
@@ -17,7 +18,8 @@ export async function POST(req: Request) {
     }
 
     try {
-        await client.connect();
+        // await client.connect();
+        const client = await clientPromise;
         const db = client.db("my-next-app");
 
         // Build the query dynamically based on role
@@ -72,8 +74,5 @@ export async function POST(req: Request) {
             { message: "Internal server error" },
             { status: 500 }
         );
-    } finally {
-        // Ensure the database connection is closed after the operation
-        await client.close();
     }
 }
