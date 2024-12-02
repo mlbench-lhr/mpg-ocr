@@ -269,7 +269,7 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
             {/* Expand button */}
             <button
                 onClick={toggleExpand}
-                className={`absolute top-16 ${isExpanded ? "left-60" : "left-20"
+                className={`fixed top-16 ${isExpanded ? "left-60" : "left-20"
                     } z-50 bg-gray-400 text-white px-[8px] rounded-full transition-all duration-300`}
             >
                 {isExpanded ? "<" : ">"}
