@@ -48,7 +48,7 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
                 const errorData = await response.json();
                 console.error('Logout failed:', errorData.message);
             }
-            
+
         } catch (error) {
             console.error('Error during logout:', error);
         }
@@ -109,21 +109,23 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
                 {/* Navigation */}
                 <nav className="mt-8 flex-grow p-4 bg-gray-100">
                     <ul className="space-y-4">
-                        <Link href="/jobs">
-                            <li
-                                className={`flex items-center ${isExpanded ? 'justify-start' : 'justify-center'
-                                    } space-x-3 px-4 py-2 rounded-lg transition-all ${isActive("/jobs") ? "bg-blue-200 font-bold" : "hover:bg-gray-200"
-                                    }`}
-                            >
-                                <BsClipboard2CheckFill className="text-[#005B97] text-2xl" />
-                                {isExpanded && (
-                                    <p className="text-gray-800 text-lg">
-                                        Jobs
-                                    </p>
-                                )}
+                        {userRole === "admin" && (
+                            <Link href="/jobs">
+                                <li
+                                    className={`flex items-center ${isExpanded ? "justify-start" : "justify-center"
+                                        } space-x-3 px-4 py-2 rounded-lg transition-all ${isActive("/jobs")
+                                            ? "bg-blue-200 font-bold"
+                                            : "hover:bg-gray-200"
+                                        }`}
+                                >
+                                    <BsClipboard2CheckFill className="text-[#005B97] text-2xl" />
+                                    {isExpanded && (
+                                        <p className="text-gray-800 text-lg">Jobs</p>
+                                    )}
+                                </li>
+                            </Link>
+                        )}
 
-                            </li>
-                        </Link>
 
                         <li
                             className={`flex items-center ${isExpanded ? 'justify-start' : 'justify-center'
@@ -142,23 +144,27 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
                                 </Link>
                             )}
                         </li>
-                        <li
-                            className={`flex items-center ${isExpanded ? 'justify-start' : 'justify-center'
-                                } space-x-3 px-4 py-2 rounded-lg transition-all ${isActive("/roles-requests")
-                                    ? "bg-blue-200 font-bold"
-                                    : "hover:bg-gray-200"
-                                }`}
-                        >
-                            <FaUserPlus className="text-[#005B97] text-2xl" />
-                            {isExpanded && (
-                                <Link
-                                    href="/roles-requests"
-                                    className="text-gray-800 text-lg"
-                                >
-                                    Roles Requests
-                                </Link>
-                            )}
-                        </li>
+
+                        {userRole === "admin" && (
+                            <li
+                                className={`flex items-center ${isExpanded ? 'justify-start' : 'justify-center'
+                                    } space-x-3 px-4 py-2 rounded-lg transition-all ${isActive("/roles-requests")
+                                        ? "bg-blue-200 font-bold"
+                                        : "hover:bg-gray-200"
+                                    }`}
+                            >
+                                <FaUserPlus className="text-[#005B97] text-2xl" />
+                                {isExpanded && (
+                                    <Link
+                                        href="/roles-requests"
+                                        className="text-gray-800 text-lg"
+                                    >
+                                        Roles Requests
+                                    </Link>
+                                )}
+                            </li>
+                        )}
+
                     </ul>
                 </nav>
 
