@@ -204,41 +204,42 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
                                         <IoLogOut className="text-[#005B97] text-2xl" />
                                     </p>
                                 </li>
-                                <li className="p-2 hover:bg-gray-200 cursor-pointer">
-                                    <Link href="" className="flex justify-between items-center">
-                                        <span>Time Zone</span>
-                                        <RiTimeZoneFill className="text-[#005B97] text-2xl" />
-                                    </Link>
-                                </li>
-                                <li className="p-2 hover:bg-gray-200 cursor-pointer">
-                                    <Link href="" className="flex justify-between items-center">
-                                        <span>DB Connection</span>
-                                        <FaHouseSignal className="text-[#005B97] text-2xl" />
-                                    </Link>
-                                </li>
-                                <li className="p-2 hover:bg-gray-200 cursor-pointer">
-                                    <Link href="" className="flex justify-between items-center">
-                                        <span>Batch Frequency</span>
-                                        <TbCloudDataConnection className="text-[#005B97] text-2xl" />
-                                    </Link>
-                                </li>
-                                <li className="p-2">
-                                    <div className="flex justify-between items-center">
-                                        <span>Auto Confirmation</span>
-                                        <label className="inline-flex items-center cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                className="sr-only peer"
-                                                id="auto-confirmation-toggle"
-                                                checked={isAutoConfirmationOpen}
-                                                onChange={toggleAutoConfirmation}
-                                            />
-                                            <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#005B97]"></div>
-                                        </label>
-                                    </div>
-                                </li>
-
-
+                                {userRole === "admin" && (<>
+                                    <li className="p-2 hover:bg-gray-200 cursor-pointer">
+                                        <Link href="" className="flex justify-between items-center">
+                                            <span>Time Zone</span>
+                                            <RiTimeZoneFill className="text-[#005B97] text-2xl" />
+                                        </Link>
+                                    </li>
+                                    <li className="p-2 hover:bg-gray-200 cursor-pointer">
+                                        <Link href="" className="flex justify-between items-center">
+                                            <span>DB Connection</span>
+                                            <FaHouseSignal className="text-[#005B97] text-2xl" />
+                                        </Link>
+                                    </li>
+                                    <li className="p-2 hover:bg-gray-200 cursor-pointer">
+                                        <Link href="" className="flex justify-between items-center">
+                                            <span>Batch Frequency</span>
+                                            <TbCloudDataConnection className="text-[#005B97] text-2xl" />
+                                        </Link>
+                                    </li>
+                                    <li className="p-2">
+                                        <div className="flex justify-between items-center">
+                                            <span>Auto Confirmation</span>
+                                            <label className="inline-flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    className="sr-only peer"
+                                                    id="auto-confirmation-toggle"
+                                                    checked={isAutoConfirmationOpen}
+                                                    onChange={toggleAutoConfirmation}
+                                                />
+                                                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#005B97]"></div>
+                                            </label>
+                                        </div>
+                                    </li>
+                                </>
+                                )}
                             </ul>
                         </div>
                     )}
@@ -253,9 +254,11 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
                         {isExpanded && (
                             <div className="flex flex-col">
                                 <h1 className="text-lg font-semibold text-gray-800">
-                                    Paul Melone
+                                    {userRole === "admin" ? "Alex Hill" : "Paul Melone"}
                                 </h1>
-                                <p className="text-gray-400">Admin</p>
+                                <p className="text-gray-400">
+                                    {userRole === "admin" ? "Admin" : "User"}
+                                </p>
                             </div>
                         )}
                     </div>

@@ -103,6 +103,7 @@ const JobPage = () => {
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
   };
+  
 
   // Handle opening the edit modal
   const handleEditJob = async (_id: string) => {
