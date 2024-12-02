@@ -39,7 +39,7 @@ export default function LoginPage() {
 
       const { token } = await res.json();
       localStorage.setItem("token", token);
-      router.push("/jobs");
+      router.push("/master-table");
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -134,9 +134,8 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className={`w-full bg-[#005B97] text-white py-2 px-4 font-bold rounded-md hover:bg-[#005b97f0] transition duration-300 ${
-              loading ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            className={`w-full bg-[#005B97] text-white py-2 px-4 font-bold rounded-md hover:bg-[#005b97f0] transition duration-300 ${loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             disabled={loading}
           >
             {loading ? "Signing In..." : "Sign In"}

@@ -121,8 +121,8 @@ const MasterPage = () => {
           }`}
       >
         <Header
-          leftContent="Jobs"
-          totalContent={jobs.length.toString()}
+          leftContent="MasterTable"
+          totalContent={0}
           rightContent={
             <input
               type="text"
