@@ -2,9 +2,8 @@ import { NextResponse } from "next/server";
 import { Filter, ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 
-// Job interface
 interface Job {
-    _id: ObjectId; // Use ObjectId type
+    _id: ObjectId;
     blNumber: string;
     carrier: string;
     podDate: string;
@@ -62,7 +61,6 @@ export async function GET(req: Request) {
     }
 }
 
-// OPTIONS: Define Allowed Methods
 export async function OPTIONS() {
     return NextResponse.json({ allowedMethods: ["GET"] });
 }

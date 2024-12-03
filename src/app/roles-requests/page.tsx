@@ -18,7 +18,7 @@ interface User {
 }
 
 export default function Page() {
-    const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+    const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
     const [totalUsers, setTotalUsers] = useState(0);
     const [searchQuery, setSearchQuery] = useState("");
     const [loadingTable, setLoadingTable] = useState(false);

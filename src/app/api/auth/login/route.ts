@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-// import { MongoClient } from "mongodb";
 import jwt from "jsonwebtoken";
 import clientPromise from "@/lib/mongodb";
 
-// const client = new MongoClient(process.env.MONGODB_URI || "mongodb://localhost:27017");
 const SECRET_KEY = process.env.NEXT_PUBLIC_JWT_SECRET as string;
 
 export async function POST(req: Request) {
     const { email, password, role } = await req.json();
+    console.log(role);
 
     if (!email || !password) {
         return NextResponse.json(
@@ -18,11 +17,9 @@ export async function POST(req: Request) {
     }
 
     try {
-        // await client.connect();
         const client = await clientPromise;
         const db = client.db("my-next-app");
 
-        // Build the query dynamically based on role
         const query = role ? { email, role } : { email };
         const user = await db.collection("users").findOne(query);
 
@@ -33,7 +30,6 @@ export async function POST(req: Request) {
             );
         }
 
-        // Check the user's status
         if (user.status === 0) {
             return NextResponse.json(
                 { message: "Your account is pending approval. Please wait for admin approval." },
@@ -47,8 +43,13 @@ export async function POST(req: Request) {
                 { status: 403 }
             );
         }
+        if (!role && user.role === "admin") {
+            return NextResponse.json(
+                { message: "Admins are not permitted to log in as users." },
+                { status: 403 }
+            );
+        }
 
-        // Check the password using bcrypt
         const passwordMatch = await bcrypt.compare(password, user.password);
         if (!passwordMatch) {
             return NextResponse.json(
@@ -57,15 +58,16 @@ export async function POST(req: Request) {
             );
         }
 
-        // Generate JWT
         const token = jwt.sign(
-            { email: user.email, id: user._id, role: user.role },
+            { email: user.email, id: user._id, role: user.role, },
             SECRET_KEY,
             { expiresIn: "24h" }
         );
 
+        const name = user.name;
+
         return NextResponse.json(
-            { message: "Login successful", token },
+            { message: "Login successful", token, name },
             { status: 200 }
         );
     } catch (error) {

@@ -18,10 +18,21 @@ import { useAuth } from "../hooks/useAuth";
 // export default function Sidebar() {
 export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded: boolean) => void }) {
 
-    const [isExpanded, setIsExpanded] = useState(true);
+    const [isExpanded, setIsExpanded] = useState(false);
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const [isAutoConfirmationOpen, setAutoConfirmationOpen] = useState(false);
     const { userRole } = useAuth("/admin-login");
+
+    const [isDropdownOpenZone, setIsDropdownOpenZone] = useState(false);
+    const [selectedTimeZone, setSelectedTimeZone] = useState("");
+    const [userName, setUserName] = useState("User");
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const username = localStorage.getItem("username");
+            setUserName(username || "User");
+        }
+    }, []);
 
     // Toggle function
     const toggleAutoConfirmation = () => {
@@ -58,6 +69,45 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
 
 
 
+    const timeZones = [
+        "UTC-12:00",
+        "UTC-11:00",
+        "UTC-10:00",
+        "UTC-09:00",
+        "UTC-08:00",
+        "UTC-07:00",
+        "UTC-06:00",
+        "UTC-05:00",
+        "UTC-04:00",
+        "UTC-03:00",
+        "UTC-02:00",
+        "UTC-01:00",
+        "UTC+00:00",
+        "UTC+01:00",
+        "UTC+02:00",
+        "UTC+03:00",
+        "UTC+04:00",
+        "UTC+05:00",
+        "UTC+06:00",
+        "UTC+07:00",
+        "UTC+08:00",
+        "UTC+09:00",
+        "UTC+10:00",
+        "UTC+11:00",
+        "UTC+12:00",
+    ];
+
+    // const toggleDropdownZone = () => {
+    //     setIsDropdownOpenZone(!isDropdownOpen);
+    // };
+
+    const handleSelectTimeZone = (zone: string) => {
+        setSelectedTimeZone(zone);
+        setIsDropdownOpenZone(false);
+        console.log(`Selected Time Zone: ${zone}`);
+    };
+
+
     const toggleDropdown = () => {
         setDropdownOpen(!isDropdownOpen);
     };
@@ -67,7 +117,7 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
     useEffect(() => {
         const handleResize = () => {
             if (window.innerWidth >= 768) {
-                setIsExpanded(true);
+                setIsExpanded(false);
             } else {
                 setIsExpanded(false);
             }
@@ -112,7 +162,7 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
                         {userRole === "admin" && (
                             <Link href="/jobs">
                                 <li
-                                    className={`flex items-center ${isExpanded ? "justify-start" : "justify-center"
+                                    className={`flex items-center mb-2 ${isExpanded ? "justify-start" : "justify-center"
                                         } space-x-3 px-4 py-2 rounded-lg transition-all ${isActive("/jobs")
                                             ? "bg-blue-200 font-bold"
                                             : "hover:bg-gray-200"
@@ -125,44 +175,40 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
                                 </li>
                             </Link>
                         )}
-
-
-                        <li
-                            className={`flex items-center ${isExpanded ? 'justify-start' : 'justify-center'
-                                } space-x-3 px-4 py-2 rounded-lg transition-all ${isActive("/master-table")
-                                    ? "bg-blue-200 font-bold"
-                                    : "hover:bg-gray-200"
-                                }`}
-                        >
-                            <FaClipboardList className="text-[#005B97] text-2xl" />
-                            {isExpanded && (
-                                <Link
-                                    href="/master-table"
-                                    className="text-gray-800 text-lg"
-                                >
-                                    Master Table
-                                </Link>
-                            )}
-                        </li>
-
-                        {userRole === "admin" && (
+                        <Link href="/master-table">
                             <li
-                                className={`flex items-center ${isExpanded ? 'justify-start' : 'justify-center'
-                                    } space-x-3 px-4 py-2 rounded-lg transition-all ${isActive("/roles-requests")
+                                className={`flex items-center mb-2 ${isExpanded ? 'justify-start' : 'justify-center'
+                                    } space-x-3 px-4 py-2 rounded-lg transition-all ${isActive("/master-table")
                                         ? "bg-blue-200 font-bold"
                                         : "hover:bg-gray-200"
                                     }`}
                             >
-                                <FaUserPlus className="text-[#005B97] text-2xl" />
+                                <FaClipboardList className="text-[#005B97] text-2xl" />
                                 {isExpanded && (
-                                    <Link
-                                        href="/roles-requests"
-                                        className="text-gray-800 text-lg"
-                                    >
-                                        Roles Requests
-                                    </Link>
+                                    <p className="text-gray-800 text-lg">
+                                        Master Table
+                                    </p>
                                 )}
                             </li>
+                        </Link>
+
+                        {userRole === "admin" && (
+                            <Link href="/roles-requests">
+                                <li
+                                    className={`flex items-center ${isExpanded ? 'justify-start' : 'justify-center'
+                                        } space-x-3 px-4 py-2 rounded-lg transition-all ${isActive("/roles-requests")
+                                            ? "bg-blue-200 font-bold"
+                                            : "hover:bg-gray-200"
+                                        }`}
+                                >
+                                    <FaUserPlus className="text-[#005B97] text-2xl" />
+                                    {isExpanded && (
+                                        <p className="text-gray-800 text-lg">
+                                            Roles Requests
+                                        </p>
+                                    )}
+                                </li>
+                            </Link>
                         )}
 
                     </ul>
@@ -170,79 +216,124 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
 
                 {/* Footer */}
                 <div className="p-4 bg-gray-100 mt-auto">
-                    <ul className="mb-5 relative">
-                        <li
-                            className={`flex items-center ${isExpanded ? 'justify-start' : 'justify-center'
-                                } justify-between px-4 py-2 rounded-lg transition-all`}
-                        >
-                            <div className="flex items-center gap-2">
-                                <IoSettingsSharp className="text-[#005B97] text-2xl hover:bg-none" />
-                                {isExpanded && (
-                                    <p className="text-gray-800 text-lg cursor-pointer" onClick={toggleDropdown}>
-                                        Settings
-                                    </p>
-                                )}
-                            </div>
 
-                            {isExpanded && (
-                                <IoIosArrowForward
-                                    className="text-lg text-gray-600 transition-transform duration-300 cursor-pointer"
-                                    onClick={toggleDropdown}
-                                />
-                            )}
-                        </li>
-                    </ul>
+                    {userRole === 'admin' &&
+                        <ul className="mb-5 relative">
+                            <li
+                                className={`flex items-center ${isExpanded ? 'justify-start' : 'justify-center'
+                                    } justify-between px-4 py-2 rounded-lg transition-all`}
+                            >
+                                <div className="flex items-center gap-2">
+                                    <IoSettingsSharp className="text-[#005B97] text-2xl hover:bg-none" />
+                                    {isExpanded && (
+                                        <p className="text-gray-800 text-lg cursor-pointer" onClick={toggleDropdown}>
+                                            Settings
+                                        </p>
+                                    )}
+                                </div>
+
+                                {isExpanded && (
+                                    <IoIosArrowForward
+                                        className="text-lg text-gray-600 transition-transform duration-300 cursor-pointer"
+                                        onClick={toggleDropdown}
+                                    />
+                                )}
+                            </li>
+                        </ul>
+                    }
 
                     {/* Dropdown List */}
                     {isDropdownOpen && (
-                        <div className="absolute left-60 bottom-24 w-80 bg-white rounded-lg shadow-xl">
-                            <h1 className="mt-1 p-2 text-xl font-medium">Settings</h1>
-                            <ul className="text-gray-600 mt-2">
-                                <li className="p-2 hover:bg-gray-200 cursor-pointer">
-                                    <p onClick={handleLogout} className="flex justify-between items-center">
-                                        <span className="text-gray-800 font-medium">Logout</span>
-                                        <IoLogOut className="text-[#005B97] text-2xl" />
-                                    </p>
-                                </li>
-                                {userRole === "admin" && (<>
-                                    <li className="p-2 hover:bg-gray-200 cursor-pointer">
-                                        <Link href="" className="flex justify-between items-center">
-                                            <span>Time Zone</span>
-                                            <RiTimeZoneFill className="text-[#005B97] text-2xl" />
-                                        </Link>
-                                    </li>
-                                    <li className="p-2 hover:bg-gray-200 cursor-pointer">
-                                        <Link href="" className="flex justify-between items-center">
-                                            <span>DB Connection</span>
-                                            <FaHouseSignal className="text-[#005B97] text-2xl" />
-                                        </Link>
-                                    </li>
-                                    <li className="p-2 hover:bg-gray-200 cursor-pointer">
-                                        <Link href="" className="flex justify-between items-center">
-                                            <span>Batch Frequency</span>
-                                            <TbCloudDataConnection className="text-[#005B97] text-2xl" />
-                                        </Link>
-                                    </li>
-                                    <li className="p-2">
-                                        <div className="flex justify-between items-center">
-                                            <span>Auto Confirmation</span>
-                                            <label className="inline-flex items-center cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    className="sr-only peer"
-                                                    id="auto-confirmation-toggle"
-                                                    checked={isAutoConfirmationOpen}
-                                                    onChange={toggleAutoConfirmation}
-                                                />
-                                                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#005B97]"></div>
-                                            </label>
-                                        </div>
-                                    </li>
-                                </>
-                                )}
-                            </ul>
-                        </div>
+                        <>
+                            {userRole !== 'admin' && (
+                                <div className="absolute left-56 bottom-18 w-32 bg-white rounded-lg shadow-xl">
+                                    <ul className="text-gray-600">
+                                        <li className="p-2 cursor-pointer">
+                                            <p onClick={handleLogout} className="flex justify-start gap-3 items-center transform transition-transform hover:translate-x-2">
+                                                <IoLogOut className="text-[#005B97] text-2xl" />
+                                                <span className="font-medium text-[#005B97]">Logout</span>
+                                            </p>
+                                        </li>
+                                    </ul>
+                                </div>
+                            )}
+
+                            {userRole === 'admin' && (
+                                <div className="absolute left-60 bottom-24 w-80 bg-white rounded-lg shadow-xl">
+                                    <h1 className="mt-1 p-2 text-xl font-medium">Settings</h1>
+                                    <ul className="text-gray-600 mt-2">
+                                        <li className="p-2 hover:bg-gray-200 cursor-pointer">
+                                            <p onClick={handleLogout} className="flex justify-between items-center">
+                                                <span className="text-gray-800 font-medium">Logout</span>
+                                                <IoLogOut className="text-[#005B97] text-2xl" />
+                                            </p>
+                                        </li>
+                                        <li className="p-2 hover:bg-gray-200 cursor-pointer relative">
+                                            <div
+                                                onClick={() => setIsDropdownOpenZone(!isDropdownOpenZone)} // Toggle dropdown
+                                                className="flex justify-between items-center cursor-pointer"
+                                            >
+                                                <span>Time Zone</span>
+                                                <span>
+                                                    {selectedTimeZone ? selectedTimeZone :
+                                                        <RiTimeZoneFill className="text-[#005B97] text-2xl" />
+                                                    }
+                                                </span>
+                                            </div>
+
+                                            {/* Dropdown Options */}
+                                            {isDropdownOpenZone && (
+                                                <ul
+                                                    className="absolute mt-2 left-0 w-40 bg-white border rounded-lg shadow-lg z-10 overflow-y-auto max-h-48"
+                                                >
+                                                    {timeZones.map((zone) => (
+                                                        <li
+                                                            key={zone}
+                                                            onClick={() => handleSelectTimeZone(zone)}
+                                                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                                                        >
+                                                            {zone}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+
+                                        </li>
+
+                                        <li className="p-2 hover:bg-gray-200 cursor-pointer">
+                                            <Link href="/db-connection" className="flex justify-between items-center">
+                                                <span>DB Connection</span>
+                                                <FaHouseSignal className="text-[#005B97] text-2xl" />
+                                            </Link>
+                                        </li>
+                                        <li className="p-2 hover:bg-gray-200 cursor-pointer">
+                                            <Link href="/jobs" className="flex justify-between items-center">
+                                                <span>Batch Frequency</span>
+                                                <TbCloudDataConnection className="text-[#005B97] text-2xl" />
+                                            </Link>
+                                        </li>
+                                        <li className="p-2">
+                                            <div className="flex justify-between items-center">
+                                                <span>Auto Confirmation</span>
+                                                <label className="inline-flex items-center cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="sr-only peer"
+                                                        id="auto-confirmation-toggle"
+                                                        checked={isAutoConfirmationOpen}
+                                                        onChange={toggleAutoConfirmation}
+                                                    />
+                                                    <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#005B97]"></div>
+                                                </label>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            )}
+                        </>
                     )}
+
+
                     <div className="flex items-center gap-3 px-1">
                         <Image
                             src="/images/user.svg"
@@ -252,28 +343,40 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
                             className="rounded-full"
                         />
                         {isExpanded && (
-                            <div className="flex flex-col">
-                                <h1 className="text-lg font-semibold text-gray-800">
-                                    {userRole === "admin" ? "Alex Hill" : "Paul Melone"}
-                                </h1>
-                                <p className="text-gray-400">
-                                    {userRole === "admin" ? "Admin" : "User"}
-                                </p>
+                            <div className="flex justify-between items-center gap-10">
+                                <div className="flex flex-col">
+                                    <h1 className="text-lg font-semibold text-gray-800">
+                                        {userRole === "admin" ? "Admin" : userName}
+                                    </h1>
+                                    <p className="text-gray-400">
+                                        {userRole === "admin" ? "" : "User"}
+                                    </p>
+                                </div>
+                                {userRole !== 'admin' && (
+                                    <div>
+                                        <IoIosArrowForward
+                                            className="text-lg text-gray-600 transition-transform duration-300 cursor-pointer"
+                                            onClick={toggleDropdown}
+                                        />
+                                    </div>
+                                )}
                             </div>
+
                         )}
                     </div>
                 </div>
 
-            </div>
+            </div >
 
             {/* Expand button */}
             <button
                 onClick={toggleExpand}
                 className={`fixed top-16 ${isExpanded ? "left-60" : "left-20"
-                    } z-50 bg-gray-400 text-white px-[8px] rounded-full transition-all duration-300`}
+                    } z-50 bg-gray-400 text-white px-[8px] rounded-full transition-all duration-300`
+                }
             >
                 {isExpanded ? "<" : ">"}
-            </button>
+            </button >
         </>
     );
 }

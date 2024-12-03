@@ -37,8 +37,10 @@ export default function LoginPage() {
         throw new Error(data.message);
       }
 
-      const { token } = await res.json();
+      const { token, name } = await res.json();
       localStorage.setItem("token", token);
+      localStorage.setItem("username", name);
+
       router.push("/master-table");
     } catch (err: unknown) {
       if (err instanceof Error) {
