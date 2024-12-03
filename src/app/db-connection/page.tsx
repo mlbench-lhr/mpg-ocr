@@ -75,7 +75,6 @@ export default function DBConnectionPage() {
         return null;
     };
 
-
     // Handle form submission
     const handleDBConnection = useCallback(async () => {
         setError(null);
@@ -119,10 +118,10 @@ export default function DBConnectionPage() {
                 icon: "success",
                 title: "Success",
                 text: "Database connection saved successfully!",
-                timer: 3000, 
+                timer: 3000,
                 showConfirmButton: false,
             });
-            
+
             router.push("/jobs");
         } catch (err: unknown) {
             if (err instanceof Error) {

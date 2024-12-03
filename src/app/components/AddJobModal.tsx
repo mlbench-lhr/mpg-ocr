@@ -38,13 +38,18 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
       return;
     }
 
+    if (fromTime === toTime) {
+      setErrorMessage('"From" time and "To" time cannot be the same.');
+      return;
+    }
+
     // if (fromTime >= toTime) {
     //   setErrorMessage('"From" time must be earlier than "To" time.');
     //   return;
     // }
 
-    setErrorMessage(""); // Clear errors if validation passes
-    setIsSubmitting(true); // Set loading state
+    setErrorMessage(""); 
+    setIsSubmitting(true);
 
     const jobData: JobData = { selectedDays, fromTime, toTime, everyTime };
 
@@ -158,9 +163,8 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
           <div className="flex">
             <button
               type="submit"
-              className={`w-full px-6 py-2 rounded-md ${
-                isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-[#005B97] text-white"
-              }`}
+              className={`w-full px-6 py-2 rounded-md ${isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-[#005B97] text-white"
+                }`}
               disabled={isSubmitting}
             >
               {isSubmitting ? "Adding..." : "Add"}

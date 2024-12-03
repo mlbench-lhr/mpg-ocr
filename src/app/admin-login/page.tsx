@@ -73,7 +73,7 @@ export default function LoginPage() {
                         style={{ width: "auto", height: "auto" }}
                     />
                 </div>
-                <h1 className="text-2xl font-bold text-center mb-4 text-black">Sign In</h1>
+                <h1 className="text-2xl font-bold text-center mb-4 text-black">Sign In As Admin</h1>
                 <p className="text-center text-gray-500 mb-6">
                     Sign in with your email and password to continue to MPG OCR
                 </p>
