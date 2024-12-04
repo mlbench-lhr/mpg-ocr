@@ -80,6 +80,25 @@ const JobPage = () => {
     setLoading(false);
   }, [router]);
 
+  // const toggleStatus = async (_id: string, active: boolean) => {
+  //   try {
+  //     const res = await fetch(`/api/jobs/add-job`, {
+  //       method: "PATCH",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ id: _id, active }),
+  //     });
+
+  //     if (res.ok) {
+  //       await fetchJobs();
+  //     } else {
+  //       const errorData = await res.json();
+  //       console.error("Error updating status:", errorData.error);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating status:", error);
+  //   }
+  // };
+
   const toggleStatus = async (_id: string, active: boolean) => {
     try {
       const res = await fetch(`/api/jobs/add-job`, {
@@ -87,9 +106,13 @@ const JobPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: _id, active }),
       });
-
+  
       if (res.ok) {
-        await fetchJobs();
+        setJobs((prevJobs) =>
+          prevJobs.map((job) =>
+            job._id === _id ? { ...job, active } : job
+          )
+        );
       } else {
         const errorData = await res.json();
         console.error("Error updating status:", errorData.error);
