@@ -174,33 +174,31 @@ const MasterPage = () => {
   // Function to handle "Select All" checkbox
   const handleSelectAll = () => {
     if (selectedRows.length === master.length) {
-      // If all rows are selected, unselect all
       setSelectedRows([]);
     } else {
-      // Select all rows
       setSelectedRows(master.map((job) => job._id));
     }
   };
 
-  const isAllSelected = selectedRows.length === master.length;
+  // const isAllSelected = selectedRows.length === master.length;
+  const isAllSelected = selectedRows.length === master.length && master.length > 0;
+
 
 
   const fetchJobs = useCallback(async () => {
     try {
       setLoadingTable(true);
-
       const queryParams = new URLSearchParams();
-
       queryParams.set("page", currentPage.toString());
-      if (bolNumberFilter) queryParams.set("bolNumber", bolNumberFilter);
+      if (bolNumberFilter) queryParams.set("bolNumber", bolNumberFilter.trim());
       if (finalStatusFilter) queryParams.set("finalStatus", finalStatusFilter);
       if (reviewStatusFilter) queryParams.set("reviewStatus", reviewStatusFilter);
       if (reviewByStatusFilter) queryParams.set("reviewByStatus", reviewByStatusFilter);
       if (podDateFilter) queryParams.set("podDate", podDateFilter);
-      if (podDateSignatureFilter) queryParams.set("podDateSignature", podDateSignatureFilter);
+      if (podDateSignatureFilter) queryParams.set("podDateSignature", podDateSignatureFilter.trim());
       if (carrierFilter) queryParams.set("carrier", carrierFilter.trim());
 
-      console.log("Query Params:", queryParams.toString()); // Debugging query parameters
+      console.log("Query Params:", queryParams.toString());
 
       const response = await fetch(`/api/process-data/get-data/?${queryParams.toString()}`);
 
@@ -402,8 +400,11 @@ const MasterPage = () => {
                     onChange={(e) => setReviewStatusFilter(e.target.value)}
                   >
                     <option value="">Select</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Reviewed">Reviewed</option>
+                    <option value="unConfirmed">unConfirmed</option>
+                    <option value="confirmed">confirmed</option>
+                    <option value="deleted">deleted</option>
+                    <option value="denied">denied</option>
+
                   </select>
                   <button
                     type="button"
@@ -500,8 +501,11 @@ const MasterPage = () => {
                     onChange={(e) => setReviewByStatusFilter(e.target.value)}
                   >
                     <option value="">Select</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Reviewed">Reviewed</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Standard User">Standard User</option>
+                    <option value="Reviewer">Reviewer</option>
+                    <option value="OCR Engine">OCR Engine</option>
+
                   </select>
                   <button
                     type="button"
@@ -539,7 +543,13 @@ const MasterPage = () => {
 
 
             {loadingTable ? (
-              <Spinner />
+              <div className="flex justify-center items-end">
+                <Spinner />
+              </div>
+            ) : master.length === 0 ? (
+              <div className="flex flex-col items-center mt-20">
+                <span className=" text-gray-800 text-xl shadow-xl p-4 rounded-lg">No data found</span>
+              </div>
             ) : (
               <div className="overflow-x-auto py-5">
                 <table>
@@ -630,7 +640,6 @@ const MasterPage = () => {
                             </span>
                           ) : job.sealIntact}
                         </td>
-
                         <td className="py-2 px-4 border-b text-center">
                           <div
                             className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.finalStatus === "new"
@@ -681,7 +690,6 @@ const MasterPage = () => {
                             </div>
                           </div>
                         </td>
-
                         <td className="py-2 px-4 border-b text-center">
                           <div
                             className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.reviewStatus === "unConfirmed"
@@ -722,7 +730,6 @@ const MasterPage = () => {
                             </div>
                           </div>
                         </td>
-
                         <td className="py-2 px-4 border-b text-center">
                           <div
                             className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.recognitionStatus === "new"
@@ -803,16 +810,16 @@ const MasterPage = () => {
                                   none
                                 </li>
                                 <li className={`cursor-pointer px-3 py-1 hover:bg-yellow-100 text-yellow-600 ${job.breakdownReason === 'damaged' ? 'bg-yellow-100 text-yellow-600' : ''}`}>
-                                damaged
+                                  damaged
                                 </li>
                                 <li className={`cursor-pointer px-3 py-1 hover:bg-green-100 text-green-600 ${job.breakdownReason === 'shortage' ? 'bg-green-100 text-green-600' : ''} `}>
-                                shortage
+                                  shortage
                                 </li>
                                 <li className={`cursor-pointer px-3 py-1 hover:bg-[#faf1be] text-[#AF9918] ${job.breakdownReason === 'overage' ? 'hover:bg-[#faf1be] text-[#AF9918]' : ''} `}>
-                                overage
+                                  overage
                                 </li>
                                 <li className={`cursor-pointer px-3 py-1 hover:bg-red-100 text-red-600 ${job.breakdownReason === 'refused' ? ' hover:bg-red-100 text-red-600' : ''} `}>
-                                refused
+                                  refused
                                 </li>
                               </ul>
                             </div>
@@ -832,24 +839,25 @@ const MasterPage = () => {
                 </table>
               </div>
             )}
-
-            <div className="mt-5 flex justify-end gap-5 items-center text-gray-800">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`px-4 py-2 rounded-md ${currentPage === 1 ? "bg-gray-300 cursor-not-allowed" : "bg-blue-500 text-white hover:bg-blue-600"}`}
-              >
-                Previous
-              </button>
-              <span>Page {currentPage} of {totalPages}</span>
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className={`px-4 py-2 rounded-md ${currentPage === totalPages ? "bg-gray-300 cursor-not-allowed" : "bg-blue-500 text-white hover:bg-blue-600"}`}
-              >
-                Next
-              </button>
-            </div>
+            {master.length !== 0 && (
+              <div className="mt-5 flex justify-end gap-5 items-center text-gray-800">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-md ${currentPage === 1 ? "bg-gray-300 cursor-not-allowed" : "bg-blue-500 text-white hover:bg-blue-600"}`}
+                >
+                  Previous
+                </button>
+                <span>Page {currentPage} of {totalPages}</span>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className={`px-4 py-2 rounded-md ${currentPage === totalPages ? "bg-gray-300 cursor-not-allowed" : "bg-blue-500 text-white hover:bg-blue-600"}`}
+                >
+                  Next
+                </button>
+              </div>
+            )}
 
           </div>
 
