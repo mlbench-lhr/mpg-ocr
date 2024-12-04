@@ -23,6 +23,6 @@
       "@lib/*": ["./src/lib/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/api/process-data/upload-file"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/api/process-data/upload-file", "src/app/api/process-data/detail-data/[id]"],
   "exclude": ["node_modules"]
 }

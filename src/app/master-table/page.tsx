@@ -184,6 +184,32 @@ const MasterPage = () => {
   const isAllSelected = selectedRows.length === master.length && master.length > 0;
 
 
+  const updateStatus = async (id: string, field: string, value: string): Promise<void> => {
+    try {
+      // Send the PATCH request to update the status
+      const res = await fetch(`/api/process-data/update-status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, field, value }),
+      });
+
+      if (res.ok) {
+        console.log(`Status updated successfully for field: ${field}`);
+        await fetchJobs(); // Reload the jobs after the update
+      } else {
+        const errorData = await res.json();
+        console.error(
+          `Failed to update status: ${errorData.message || "Unknown error"}`
+        );
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
+  };
+
+
+
+
 
   const fetchJobs = useCallback(async () => {
     try {
@@ -303,9 +329,12 @@ const MasterPage = () => {
             </>
             }
             buttonContent={
-              <button className="bg-[#005B97] rounded-lg py-2 px-10 text-white md:mt-0 w-60 md:w-auto">
-                History
-              </button>
+              <Link href="/history">
+                <button className="bg-[#005B97] rounded-lg py-2 px-10 text-white md:mt-0 w-60 md:w-auto">
+                  History
+                </button>
+              </Link>
+
             }
           />
         </div>
@@ -581,7 +610,11 @@ const MasterPage = () => {
                     {master.map((job) => (
                       <tr key={job._id} className="text-gray-500">
                         <td className="py-2 px-4 border-b text-start"><span className="mr-3"><input type="checkbox" checked={selectedRows.includes(job._id)}
-                          onChange={() => handleRowSelection(job._id)} /></span><span className="text-[#005B97] underline">{job.blNumber}</span></td>
+                          onChange={() => handleRowSelection(job._id)} /></span>
+                          <Link href={`/master-table/${job._id}`}>
+                            <span className="text-[#005B97] underline">{job.blNumber}</span>
+                          </Link>
+                        </td>
                         <td className="py-2 px-4 border-b text-center">{job.carrier}</td>
                         <td className="py-2 px-4 border-b text-center">{job.podDate}</td>
                         <td className="py-2 px-4 border-b text-center">
@@ -640,7 +673,7 @@ const MasterPage = () => {
                             </span>
                           ) : job.sealIntact}
                         </td>
-                        <td className="py-2 px-4 border-b text-center">
+                        {/* <td className="py-2 px-4 border-b text-center">
                           <div
                             className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.finalStatus === "new"
                               ? "bg-blue-100 text-blue-600"
@@ -686,6 +719,55 @@ const MasterPage = () => {
                                 <li className={`cursor-pointer px-3 py-1 hover:bg-green-100 text-green-600 ${job.finalStatus === 'sent' ? 'hover:bg-green-100 text-green-600' : ''} `}>
                                   sent
                                 </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </td> */}
+                        <td className="py-2 px-4 border-b text-center">
+                          <div
+                            className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.finalStatus === "new"
+                              ? "bg-blue-100 text-blue-600"
+                              : job.finalStatus === "inProgress"
+                                ? "bg-yellow-100 text-yellow-600"
+                                : job.finalStatus === "valid"
+                                  ? "bg-green-100 text-green-600"
+                                  : job.finalStatus === "partiallyValid"
+                                    ? "bg-[#faf1be] text-[#AF9918]"
+                                    : job.finalStatus === "failure"
+                                      ? "bg-red-100 text-red-600"
+                                      : job.finalStatus === "sent"
+                                        ? "bg-green-100 text-green-600"
+                                        : "bg-gray-100 text-gray-600"
+                              }`}
+                            onClick={() => toggleDropdown(job._id)}
+                          >
+                            <div>{job.finalStatus}</div>
+                            <div className="relative">
+                              <RiArrowDropDownLine
+                                className={`text-2xl p-0 ${dropdownStates === job._id ? "rotate-180" : ""
+                                  }`}
+                              />
+                              <ul
+                                className={`absolute mt-2 right-1 z-50 bg-white border rounded-md shadow-lg w-32 ${dropdownStates === job._id ? "block" : "hidden"
+                                  }`}
+                              >
+                                {[
+                                  { status: "new", color: "text-blue-600", bgColor: "bg-blue-100" },
+                                  { status: "inProgress", color: "text-yellow-600", bgColor: "bg-yellow-100" },
+                                  { status: "valid", color: "text-green-600", bgColor: "bg-green-100" },
+                                  { status: "partiallyValid", color: "text-[#AF9918]", bgColor: "bg-[#faf1be]" },
+                                  { status: "failure", color: "text-red-600", bgColor: "bg-red-100" },
+                                  { status: "sent", color: "text-green-600", bgColor: "bg-green-100" },
+                                ].map(({ status, color, bgColor }) => (
+                                  <li
+                                    key={status}
+                                    className={`cursor-pointer px-3 py-1 hover:bg-gray-300 hover:text-white ${job.finalStatus === status ? `${color} ${bgColor}` : color
+                                      }`}
+                                    onClick={() => updateStatus(job._id, "finalStatus", status)}
+                                  >
+                                    {status}
+                                  </li>
+                                ))}
                               </ul>
                             </div>
                           </div>
@@ -827,7 +909,7 @@ const MasterPage = () => {
                         </td>
                         <td className="py-2 px-4 border-b text-center">{job.reviewedBy}</td>
                         <td className="py-2 px-4 border-b text-center">
-                          <Link href="" className="underline text-[#005B97] flex items-center gap-1">
+                          <Link href={`/master-table/${job._id}`} className="underline text-[#005B97] flex items-center gap-1">
                             Detail <span>
                               <IoIosArrowForward className="text-xl p-0" />
                             </span>

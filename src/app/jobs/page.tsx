@@ -231,7 +231,7 @@ const JobPage = () => {
           rightContent={
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="Search status..."
               className="px-4 py-2 rounded-lg border border-gray-300"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
