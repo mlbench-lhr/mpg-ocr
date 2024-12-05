@@ -14,6 +14,7 @@ interface Job {
   short: number;
   over: number;
   refused: number;
+  noOfPages: number;
   sealIntact: string;
   finalStatus: string;
   reviewStatus: string;
@@ -21,6 +22,7 @@ interface Job {
   breakdownReason: string;
   reviewedBy: string;
   cargoDescription: string;
+  receiverSignature: string;
 }
 
 // Handle GET requests for a single job by ID
@@ -52,6 +54,44 @@ export async function GET(req: Request) {
   }
 }
 
+// Handle PATCH requests to update job data
+export async function PATCH(req: Request) {
+  try {
+    const url = new URL(req.url);
+    const id = url.pathname.split("/").pop(); // Extract the ID from the URL path
+
+    if (!id) {
+      return NextResponse.json({ error: "Job ID is required" }, { status: 400 });
+    }
+
+    // Parse the request body to get updated job data
+    const updatedJobData = await req.json();
+
+    const client = await clientPromise;
+    const db = client.db("my-next-app");
+
+    const dataCollection = db.collection<Job>("mockData");
+
+    // Update the job in the database
+    const result = await dataCollection.updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: updatedJobData,
+      }
+    );
+
+    if (result.modifiedCount === 0) {
+      return NextResponse.json({ error: "Job not found or no changes made" }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: "Job updated successfully" }, { status: 200 });
+  } catch (error) {
+    console.error("Error updating job:", error);
+    return NextResponse.json({ error: "Failed to update job." }, { status: 500 });
+  }
+}
+
+// Handle OPTIONS requests
 export async function OPTIONS() {
-  return NextResponse.json({ allowedMethods: ["GET"] });
+  return NextResponse.json({ allowedMethods: ["GET", "PATCH"] });
 }

@@ -32,18 +32,20 @@ interface Job {
   over: number;
   refused: number;
   sealIntact: number;
+  noOfPages: number;
   finalStatus: string;
   reviewStatus: string;
   recognitionStatus: string;
   breakdownReason: string;
   reviewedBy: string;
   cargoDescription: string;
+  receiverSignature: string;
 }
 
 const MasterPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [isFilterDropDownOpen, setIsFilterDropDownOpen] = useState(false);
+  const [isFilterDropDownOpen, setIsFilterDropDownOpen] = useState(true);
   const [loadingTable, setLoadingTable] = useState(false);
   const [master, setMaster] = useState<Job[]>([]);
   const [totalJobs, setTotalJobs] = useState(0);
@@ -124,45 +126,6 @@ const MasterPage = () => {
     setLoading(false);
   }, [router]);
 
-  // const fetchJobs = useCallback(async () => {
-  //   try {
-  //     setLoadingTable(true);
-
-  //     const queryParams = new URLSearchParams({
-  //       page: currentPage.toString(),
-  //       finalStatus: finalStatusFilter || "",
-  //       reviewStatus: reviewStatusFilter || "",
-  //       reviewByStatus: reviewByStatusFilter || "",
-  //       podDate: podDateFilter || "",
-  //       podDateSignature: podDateSignatureFilter || "",
-  //       carrier: carrierFilter || "",
-  //       bolNumber: bolNumberFilter ?? "",
-  //     });
-
-  //     console.log(bolNumberFilter);
-
-
-  //     const response = await fetch(`/api/process-data/get-data/?${queryParams.toString()}`);
-
-  //     // const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : '';
-  //     // const response = await fetch(`/api/process-data/get-data/?page=${currentPage}${searchParam}`);
-
-  //     if (response.ok) {
-  //       const data = await response.json();
-  //       setMaster(data.jobs);
-  //       setTotalPages(data.totalPages);
-  //       setTotalJobs(data.totalJobs);
-  //     } else {
-  //       console.error("Failed to fetch jobs");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching jobs:", error);
-  //   } finally {
-  //     setLoadingTable(false);
-  //   }
-  // }, [currentPage]);
-
-
   const handleRowSelection = (id: string) => {
     setSelectedRows((prevSelectedRows) =>
       prevSelectedRows.includes(id)
@@ -171,7 +134,6 @@ const MasterPage = () => {
     );
   };
 
-  // Function to handle "Select All" checkbox
   const handleSelectAll = () => {
     if (selectedRows.length === master.length) {
       setSelectedRows([]);
@@ -208,21 +170,113 @@ const MasterPage = () => {
   };
 
 
+  // const fetchJobs = useCallback(async () => {
+  //   try {
+  //     setLoadingTable(true);
+  //     const queryParams = new URLSearchParams();
+  //     queryParams.set("page", currentPage.toString());
+  //     if (bolNumberFilter) queryParams.set("bolNumber", bolNumberFilter.trim());
+  //     if (finalStatusFilter) queryParams.set("finalStatus", finalStatusFilter);
+  //     if (reviewStatusFilter) queryParams.set("reviewStatus", reviewStatusFilter);
+  //     if (reviewByStatusFilter) queryParams.set("reviewByStatus", reviewByStatusFilter);
+  //     if (podDateFilter) queryParams.set("podDate", podDateFilter);
+  //     if (podDateSignatureFilter) queryParams.set("podDateSignature", podDateSignatureFilter.trim());
+  //     if (carrierFilter) queryParams.set("carrier", carrierFilter.trim());
 
+  //     console.log("Query Params:", queryParams.toString());
+
+  //     const response = await fetch(`/api/process-data/get-data/?${queryParams.toString()}`);
+
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       setMaster(data.jobs);
+  //       setTotalPages(data.totalPages);
+  //       setTotalJobs(data.totalJobs);
+  //     } else {
+  //       console.error("Failed to fetch jobs");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching jobs:", error);
+  //   } finally {
+  //     setLoadingTable(false);
+  //   }
+  // }, [
+  //   currentPage,
+  //   bolNumberFilter,
+  //   finalStatusFilter,
+  //   reviewStatusFilter,
+  //   reviewByStatusFilter,
+  //   podDateFilter,
+  //   podDateSignatureFilter,
+  //   carrierFilter,
+  // ]);
+
+  // useEffect(() => {
+  //   fetchJobs();
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [currentPage]);
+
+  // const handleFilterApply = (e: React.FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
+  //   fetchJobs(); 
+  // };
+
+  // const resetFiltersAndFetch = () => {
+  //   Promise.resolve().then(() => {
+  //     setFinalStatusFilter("");
+  //     setReviewStatusFilter("");
+  //     setReviewByStatusFilter("");
+  //     setCarrierFilter("");
+  //     setBolNumberFilter("");
+  //     setPodDateFilter("");
+  //     setPodDateSignatureFilter("");
+  //   }).then(() => {
+  //     fetchJobs();
+  //   });
+  // };
 
 
   const fetchJobs = useCallback(async () => {
     try {
       setLoadingTable(true);
+
       const queryParams = new URLSearchParams();
       queryParams.set("page", currentPage.toString());
-      if (bolNumberFilter) queryParams.set("bolNumber", bolNumberFilter.trim());
-      if (finalStatusFilter) queryParams.set("finalStatus", finalStatusFilter);
-      if (reviewStatusFilter) queryParams.set("reviewStatus", reviewStatusFilter);
-      if (reviewByStatusFilter) queryParams.set("reviewByStatus", reviewByStatusFilter);
-      if (podDateFilter) queryParams.set("podDate", podDateFilter);
-      if (podDateSignatureFilter) queryParams.set("podDateSignature", podDateSignatureFilter.trim());
-      if (carrierFilter) queryParams.set("carrier", carrierFilter.trim());
+
+      let hasFilters = false;
+      if (bolNumberFilter) {
+        queryParams.set("bolNumber", bolNumberFilter.trim());
+        hasFilters = true;
+      }
+      if (finalStatusFilter) {
+        queryParams.set("finalStatus", finalStatusFilter);
+        hasFilters = true;
+      }
+      if (reviewStatusFilter) {
+        queryParams.set("reviewStatus", reviewStatusFilter);
+        hasFilters = true;
+      }
+      if (reviewByStatusFilter) {
+        queryParams.set("reviewByStatus", reviewByStatusFilter);
+        hasFilters = true;
+      }
+      if (podDateFilter) {
+        queryParams.set("podDate", podDateFilter);
+        hasFilters = true;
+      }
+      if (podDateSignatureFilter) {
+        queryParams.set("podDateSignature", podDateSignatureFilter.trim());
+        hasFilters = true;
+      }
+      if (carrierFilter) {
+        queryParams.set("carrier", carrierFilter.trim());
+        hasFilters = true;
+      }
+
+      if (!hasFilters && currentPage === 1) {
+        console.log("No filters applied, skipping data fetch.");
+        return;
+      }
 
       console.log("Query Params:", queryParams.toString());
 
@@ -257,11 +311,9 @@ const MasterPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
 
-
-
   const handleFilterApply = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // Prevent form default behavior
-    fetchJobs(); // Manually call fetchJobs
+    e.preventDefault();
+    fetchJobs();
   };
 
   const resetFiltersAndFetch = () => {
@@ -274,7 +326,9 @@ const MasterPage = () => {
       setPodDateFilter("");
       setPodDateSignatureFilter("");
     }).then(() => {
-      fetchJobs();
+      setMaster([]);
+      setTotalPages(0);
+      setTotalJobs(0);
     });
   };
 
@@ -588,7 +642,7 @@ const MasterPage = () => {
                         onChange={handleSelectAll} /></span>BL Number</th>
                       <th className="py-2 px-4 border-b text-center min-w-32">Carrier</th>
                       <th className="py-2 px-4 border-b text-center min-w-32">POD Date</th>
-                      <th className="py-2 px-4 border-b text-center min-w-32">POD Signature</th>
+                      <th className="py-2 px-4 border-b text-center min-w-40">POD Signature</th>
                       <th className="py-2 px-4 border-b text-center min-w-28">Total Qty</th>
                       <th className="py-2 px-4 border-b text-center min-w-24">Delivered</th>
                       <th className="py-2 px-4 border-b text-center min-w-24">Damaged</th>
@@ -596,12 +650,10 @@ const MasterPage = () => {
                       <th className="py-2 px-4 border-b text-center min-w-20">Over</th>
                       <th className="py-2 px-4 border-b text-center min-w-24">Refused</th>
                       <th className="py-2 px-4 border-b text-center min-w-32">Seal Intact</th>
-
                       <th className="py-2 px-4 border-b text-center min-w-32">Final Status</th>
                       <th className="py-2 px-4 border-b text-center min-w-36">Review Status</th>
                       <th className="py-2 px-4 border-b text-center min-w-48">Recognition Status</th>
                       <th className="py-2 px-4 border-b text-center min-w-48">Breakdown Reason</th>
-
                       <th className="py-2 px-4 border-b text-center min-w-36">Reviewed By</th>
                       <th className="py-2 px-4 border-b text-center min-w-28">Action</th>
                     </tr>
@@ -909,7 +961,7 @@ const MasterPage = () => {
                         </td>
                         <td className="py-2 px-4 border-b text-center">{job.reviewedBy}</td>
                         <td className="py-2 px-4 border-b text-center">
-                          <Link href={`/master-table/${job._id}`} className="underline text-[#005B97] flex items-center gap-1">
+                          <Link href={`/master-table/edit-pdf/${job._id}`} className="underline text-[#005B97] flex items-center gap-1">
                             Detail <span>
                               <IoIosArrowForward className="text-xl p-0" />
                             </span>

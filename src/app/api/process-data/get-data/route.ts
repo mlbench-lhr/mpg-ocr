@@ -14,6 +14,7 @@ interface Job {
     short: number;
     over: number;
     refused: number;
+    noOfPages: number;
     sealIntact: string;
     finalStatus: string;
     reviewStatus: string;
@@ -21,6 +22,7 @@ interface Job {
     breakdownReason: string;
     reviewedBy: string;
     cargoDescription: string;
+    receiverSignature: string;
 }
 
 // Handle GET requests
