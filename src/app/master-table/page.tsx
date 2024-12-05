@@ -16,9 +16,6 @@ import { FiSearch } from "react-icons/fi";
 import { FaChevronDown } from "react-icons/fa";
 import { IoCopyOutline, IoCalendar } from "react-icons/io5";
 
-
-
-
 interface Job {
   _id: string;
   blNumber: string;
@@ -68,7 +65,6 @@ const MasterPage = () => {
   const [dropdownStatesFirst, setDropdownStatesFirst] = useState<string | null>(null);
   const [dropdownStatesSecond, setDropdownStatesSecond] = useState<string | null>(null);
   const [dropdownStatesThird, setDropdownStatesThird] = useState<string | null>(null);
-
 
   const router = useRouter();
 
@@ -168,7 +164,6 @@ const MasterPage = () => {
       console.error("Error updating status:", error);
     }
   };
-
 
   // const fetchJobs = useCallback(async () => {
   //   try {
@@ -332,8 +327,6 @@ const MasterPage = () => {
     });
   };
 
-
-
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
   };
@@ -348,56 +341,53 @@ const MasterPage = () => {
         className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isSidebarExpanded ? "ml-64" : "ml-24"
           }`}
       >
-        <div className="">
-
-          <Header
-            leftContent="Master Tables"
-            totalContent={totalJobs}
-            rightContent={<>
-              <div className="flex gap-4 mr-3">
-                <div className="flex gap-2">
-                  <span>
-                    <BiSolidEditAlt className="fill-[#005B97] text-2xl" />
-                  </span>
-                  <span className="text-[#005B97]">
-                    Edit
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <span>
-                    <MdDelete className="fill-[red] text-2xl" />
-                  </span>
-                  <span className="text-[red]">
-                    Delete
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <span>
-                    <GiShare className="fill-[#AF9918] text-2xl" />
-                  </span>
-                  <span className="text-[#AF9918]">
-                    Send
-                  </span>
-                </div>
+        <Header
+          leftContent="Master Tables"
+          totalContent={totalJobs}
+          rightContent={<>
+            <div className="flex gap-4 mr-3">
+              <div className="flex gap-2">
+                <span>
+                  <BiSolidEditAlt className="fill-[#005B97] text-2xl" />
+                </span>
+                <span className="text-[#005B97]">
+                  Edit
+                </span>
               </div>
-            </>
-            }
-            buttonContent={
-              <Link href="/history">
-                <button className="bg-[#005B97] rounded-lg py-2 px-10 text-white md:mt-0 w-60 md:w-auto">
-                  History
-                </button>
-              </Link>
+              <div className="flex gap-2">
+                <span>
+                  <MdDelete className="fill-[red] text-2xl" />
+                </span>
+                <span className="text-[red]">
+                  Delete
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <span>
+                  <GiShare className="fill-[#AF9918] text-2xl" />
+                </span>
+                <span className="text-[#AF9918]">
+                  Send
+                </span>
+              </div>
+            </div>
+          </>
+          }
+          buttonContent={
+            <Link href="/history">
+              <button className="bg-[#005B97] rounded-lg py-2 px-10 text-white md:mt-0 w-60 md:w-auto">
+                History
+              </button>
+            </Link>
 
-            }
-          />
-        </div>
+          }
+        />
 
 
         <div className="flex-1 p-4 bg-white">
-          {/* Filters Section */}
+
           <div
-            className={`bg-gray-200 p-3 w-7/12 transition-all duration-500 ease-in-out xl:w-[70rem] 2xl:w-[90rem] ${isFilterDropDownOpen ? "rounded-t-lg" : "rounded-lg"
+            className={`bg-gray-200 p-3 mb-0 transition-all duration-500 ease-in-out w-auto ${isFilterDropDownOpen ? "rounded-t-lg" : "rounded-lg"
               }`}
           >
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setIsFilterDropDownOpen(!isFilterDropDownOpen)}>
@@ -410,8 +400,8 @@ const MasterPage = () => {
             </div>
           </div>
           <div
-            className={`overflow-hidden transition-all duration-500 ease-in-out xl:w-[70rem] 2xl:w-[90rem] ${isFilterDropDownOpen ? "max-h-[1000px] p-3" : "max-h-0"
-              } flex flex-wrap gap-4 w-7/12  bg-gray-200 rounded-b-lg`}
+            className={`overflow-hidden transition-all duration-500 ease-in-out w-auto ${isFilterDropDownOpen ? "max-h-[1000px] p-3" : "max-h-0"
+              } flex flex-wrap gap-4 mt-0 bg-gray-200 rounded-b-lg`}
           >
 
             <form
@@ -419,7 +409,6 @@ const MasterPage = () => {
               className="w-full grid grid-cols-3 gap-4"
             >
 
-              {/* Bl Search Filter */}
               <div className="flex flex-col">
                 <label htmlFor="search" className="text-sm font-semibold text-gray-800">
                   BL Number
@@ -441,7 +430,6 @@ const MasterPage = () => {
                 </div>
               </div>
 
-              {/* Final Status Filter */}
               <div className="flex flex-col">
                 <label htmlFor="finalStatusFilter" className="text-sm font-semibold text-gray-800">
                   Recognition Status
@@ -470,7 +458,6 @@ const MasterPage = () => {
                 </div>
               </div>
 
-              {/* Review Status Filter */}
               <div className="flex flex-col">
                 <label htmlFor="finalStatusFilter" className="text-sm font-semibold text-gray-800">
                   Review Status
@@ -498,7 +485,6 @@ const MasterPage = () => {
                 </div>
               </div>
 
-              {/* Carrier Filter */}
               <div className="flex flex-col">
                 <label htmlFor="search" className="text-sm font-semibold text-gray-800">
                   Carrier
@@ -520,7 +506,6 @@ const MasterPage = () => {
                 </div>
               </div>
 
-              {/* POD Date Filter */}
               <div className="flex flex-col">
                 <label htmlFor="search" className="text-sm font-semibold text-gray-800">
                   POD Date
@@ -540,7 +525,7 @@ const MasterPage = () => {
                     onClick={() => {
                       const dateInput = document.getElementById('dateInput') as HTMLInputElement;
                       if (dateInput) {
-                        dateInput.showPicker();  // Now TypeScript knows dateInput has showPicker()
+                        dateInput.showPicker();
                       }
                     }}
                   >
@@ -549,7 +534,6 @@ const MasterPage = () => {
                 </div>
               </div>
 
-              {/* POD Signature Filter */}
               <div className="flex flex-col">
                 <label htmlFor="search" className="text-sm font-semibold text-gray-800">
                   POD Signature
@@ -566,12 +550,10 @@ const MasterPage = () => {
                     type="button"
                     className="absolute inset-y-0 right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
                   >
-                    {/* <FiSearch size={20} className="text-[#005B97]" /> */}
                   </button>
                 </div>
               </div>
 
-              {/* Reviewed By Filter */}
               <div className="flex flex-col">
                 <label htmlFor="finalStatusFilter" className="text-sm font-semibold text-gray-800">
                   Reviewed By
@@ -599,7 +581,6 @@ const MasterPage = () => {
                 </div>
               </div>
 
-              {/* Buttons Section */}
               <div className="flex justify-end items-center gap-4 col-span-3">
                 <button
                   className="text-[#005B97] underline cursor-pointer"
@@ -622,8 +603,8 @@ const MasterPage = () => {
           <div className="mb-5">
 
           </div>
-          <div className="md:w-[80rem] sm:w-[50rem] lg:w-[80rem] xl:w-[80rem] 2xl:w-[110rem] py-3">
 
+          <div className="py-3">
 
             {loadingTable ? (
               <div className="flex justify-center items-end">
@@ -634,345 +615,299 @@ const MasterPage = () => {
                 <span className=" text-gray-800 text-xl shadow-xl p-4 rounded-lg">No data found</span>
               </div>
             ) : (
-              <div className="overflow-x-auto py-5">
-                <table>
-                  <thead>
-                    <tr className="text-gray-800">
-                      <th className="py-2 px-4 border-b text-start min-w-36"><span className="mr-3"><input type="checkbox" checked={isAllSelected}
-                        onChange={handleSelectAll} /></span>BL Number</th>
-                      <th className="py-2 px-4 border-b text-center min-w-32">Carrier</th>
-                      <th className="py-2 px-4 border-b text-center min-w-32">POD Date</th>
-                      <th className="py-2 px-4 border-b text-center min-w-40">POD Signature</th>
-                      <th className="py-2 px-4 border-b text-center min-w-28">Total Qty</th>
-                      <th className="py-2 px-4 border-b text-center min-w-24">Delivered</th>
-                      <th className="py-2 px-4 border-b text-center min-w-24">Damaged</th>
-                      <th className="py-2 px-4 border-b text-center min-w-20">Short</th>
-                      <th className="py-2 px-4 border-b text-center min-w-20">Over</th>
-                      <th className="py-2 px-4 border-b text-center min-w-24">Refused</th>
-                      <th className="py-2 px-4 border-b text-center min-w-32">Seal Intact</th>
-                      <th className="py-2 px-4 border-b text-center min-w-32">Final Status</th>
-                      <th className="py-2 px-4 border-b text-center min-w-36">Review Status</th>
-                      <th className="py-2 px-4 border-b text-center min-w-48">Recognition Status</th>
-                      <th className="py-2 px-4 border-b text-center min-w-48">Breakdown Reason</th>
-                      <th className="py-2 px-4 border-b text-center min-w-36">Reviewed By</th>
-                      <th className="py-2 px-4 border-b text-center min-w-28">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {master.map((job) => (
-                      <tr key={job._id} className="text-gray-500">
-                        <td className="py-2 px-4 border-b text-start"><span className="mr-3"><input type="checkbox" checked={selectedRows.includes(job._id)}
-                          onChange={() => handleRowSelection(job._id)} /></span>
-                          <Link href={`/master-table/${job._id}`}>
-                            <span className="text-[#005B97] underline">{job.blNumber}</span>
-                          </Link>
-                        </td>
-                        <td className="py-2 px-4 border-b text-center">{job.carrier}</td>
-                        <td className="py-2 px-4 border-b text-center">{job.podDate}</td>
-                        <td className="py-2 px-4 border-b text-center">
-                          {job.podSignature === "" || job.podSignature === null ? (
-                            <span className="flex justify-center items-center">
-                              <IoIosInformationCircle className="text-2xl text-red-500" />
-                            </span>
-                          ) : job.podSignature}
-                        </td>
-                        <td className="py-2 px-4 border-b text-center">
-                          {job.totalQty === null ? (
-                            <span className="flex justify-center items-center">
-                              <IoIosInformationCircle className="text-2xl text-red-500" />
-                            </span>
-                          ) : job.totalQty}
-                        </td>
-                        <td className="py-2 px-4 border-b text-center">
-                          {job.delivered === null ? (
-                            <span className="flex justify-center items-center">
-                              <IoIosInformationCircle className="text-2xl text-red-500" />
-                            </span>
-                          ) : job.delivered}
-                        </td>
-                        <td className="py-2 px-4 border-b text-center">
-                          {job.damaged === null ? (
-                            <span className="flex justify-center items-center">
-                              <IoIosInformationCircle className="text-2xl text-red-500" />
-                            </span>
-                          ) : job.damaged}
-                        </td>
-                        <td className="py-2 px-4 border-b text-center">
-                          {job.short === null ? (
-                            <span className="flex justify-center items-center">
-                              <IoIosInformationCircle className="text-2xl text-red-500" />
-                            </span>
-                          ) : job.short}
-                        </td>
-                        <td className="py-2 px-4 border-b text-center">
-                          {job.over === null ? (
-                            <span className="flex justify-center items-center">
-                              <IoIosInformationCircle className="text-2xl text-red-500" />
-                            </span>
-                          ) : job.over}
-                        </td>
-                        <td className="py-2 px-4 border-b text-center">
-                          {job.refused === null ? (
-                            <span className="flex justify-center items-center">
-                              <IoIosInformationCircle className="text-2xl text-red-500" />
-                            </span>
-                          ) : job.refused}
-                        </td>
-                        <td className="py-2 px-4 border-b text-center">
-                          {job.sealIntact === null ? (
-                            <span className="flex justify-center items-center">
-                              <IoIosInformationCircle className="text-2xl text-red-500" />
-                            </span>
-                          ) : job.sealIntact}
-                        </td>
-                        {/* <td className="py-2 px-4 border-b text-center">
-                          <div
-                            className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.finalStatus === "new"
-                              ? "bg-blue-100 text-blue-600"
-                              : job.finalStatus === "inProgress"
-                                ? "bg-yellow-100 text-yellow-600"
-                                : job.finalStatus === "valid"
-                                  ? "bg-green-100 text-green-600"
-                                  : job.finalStatus === "partiallyValid"
-                                    ? "bg-[#faf1be] text-[#AF9918]"
-                                    : job.finalStatus === "failure"
-                                      ? "bg-red-100 text-red-600"
-                                      : job.finalStatus === "sent"
-                                        ? "bg-green-100 text-green-600"
-                                        : "bg-red-100 text-red-600"
-                              }`}
-                            onClick={() => toggleDropdown(job._id)}
-                          >
-                            <div>{job.finalStatus}</div>
-                            <div className="relative">
-                              <RiArrowDropDownLine
-                                className={`text-2xl p-0 ${dropdownStates === job._id ? "rotate-180" : ""
-                                  }`}
-                              />
-                              <ul
-                                className={`absolute mt-2 right-1 z-50 bg-white border rounded-md shadow-lg w-24 ${dropdownStates === job._id ? "block" : "hidden"
-                                  }`}
-                              >
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-blue-100 text-blue-600 ${job.finalStatus === 'new' ? 'bg-blue-100 text-blue-600' : ''}`}>
-                                  new
-                                </li>
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-yellow-100 text-yellow-600 ${job.finalStatus === 'inProgress' ? 'bg-yellow-100 text-yellow-600' : ''}`}>
-                                  inProgress
-                                </li>
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-green-100 text-green-600 ${job.finalStatus === 'valid' ? 'bg-green-100 text-green-600' : ''} `}>
-                                  valid
-                                </li>
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-[#faf1be] text-[#AF9918] ${job.finalStatus === 'partiallyValid' ? 'hover:bg-[#faf1be] text-[#AF9918]' : ''} `}>
-                                  partiallyValid
-                                </li>
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-red-100 text-red-600 ${job.finalStatus === 'failure' ? ' hover:bg-red-100 text-red-600' : ''} `}>
-                                  failure
-                                </li>
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-green-100 text-green-600 ${job.finalStatus === 'sent' ? 'hover:bg-green-100 text-green-600' : ''} `}>
-                                  sent
-                                </li>
-                              </ul>
+              <div className="w-[91vw]">
+                <div className="overflow-x-auto py-5">
+                  <table className="table-auto border-collapse w-full">
+                    <thead>
+                      <tr className="text-gray-800">
+                        <th className="py-2 px-4 border-b text-start min-w-36"><span className="mr-3"><input type="checkbox" checked={isAllSelected}
+                          onChange={handleSelectAll} /></span>BL Number</th>
+                        <th className="py-2 px-4 border-b text-center min-w-32">Carrier</th>
+                        <th className="py-2 px-4 border-b text-center min-w-32">POD Date</th>
+                        <th className="py-2 px-4 border-b text-center min-w-40">POD Signature</th>
+                        <th className="py-2 px-4 border-b text-center min-w-28">Total Qty</th>
+                        <th className="py-2 px-4 border-b text-center min-w-24">Delivered</th>
+                        <th className="py-2 px-4 border-b text-center min-w-24">Damaged</th>
+                        <th className="py-2 px-4 border-b text-center min-w-20">Short</th>
+                        <th className="py-2 px-4 border-b text-center min-w-20">Over</th>
+                        <th className="py-2 px-4 border-b text-center min-w-24">Refused</th>
+                        <th className="py-2 px-4 border-b text-center min-w-32">Seal Intact</th>
+                        <th className="py-2 px-4 border-b text-center min-w-32">Final Status</th>
+                        <th className="py-2 px-4 border-b text-center min-w-36">Review Status</th>
+                        <th className="py-2 px-4 border-b text-center min-w-48">Recognition Status</th>
+                        <th className="py-2 px-4 border-b text-center min-w-48">Breakdown Reason</th>
+                        <th className="py-2 px-4 border-b text-center min-w-36">Reviewed By</th>
+                        <th className="py-2 px-4 border-b text-center min-w-28">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {master.map((job) => (
+                        <tr key={job._id} className="text-gray-500">
+                          <td className="py-2 px-4 border-b text-start"><span className="mr-3"><input type="checkbox" checked={selectedRows.includes(job._id)}
+                            onChange={() => handleRowSelection(job._id)} /></span>
+                            <Link href={`/master-table/${job._id}`}>
+                              <span className="text-[#005B97] underline">{job.blNumber}</span>
+                            </Link>
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">{job.carrier}</td>
+                          <td className="py-2 px-4 border-b text-center">{job.podDate}</td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.podSignature === "" || job.podSignature === null ? (
+                              <span className="flex justify-center items-center">
+                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                              </span>
+                            ) : job.podSignature}
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.totalQty === null ? (
+                              <span className="flex justify-center items-center">
+                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                              </span>
+                            ) : job.totalQty}
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.delivered === null ? (
+                              <span className="flex justify-center items-center">
+                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                              </span>
+                            ) : job.delivered}
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.damaged === null ? (
+                              <span className="flex justify-center items-center">
+                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                              </span>
+                            ) : job.damaged}
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.short === null ? (
+                              <span className="flex justify-center items-center">
+                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                              </span>
+                            ) : job.short}
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.over === null ? (
+                              <span className="flex justify-center items-center">
+                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                              </span>
+                            ) : job.over}
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.refused === null ? (
+                              <span className="flex justify-center items-center">
+                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                              </span>
+                            ) : job.refused}
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.sealIntact === null ? (
+                              <span className="flex justify-center items-center">
+                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                              </span>
+                            ) : job.sealIntact}
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            <div
+                              className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.finalStatus === "new"
+                                ? "bg-blue-100 text-blue-600"
+                                : job.finalStatus === "inProgress"
+                                  ? "bg-yellow-100 text-yellow-600"
+                                  : job.finalStatus === "valid"
+                                    ? "bg-green-100 text-green-600"
+                                    : job.finalStatus === "partiallyValid"
+                                      ? "bg-[#faf1be] text-[#AF9918]"
+                                      : job.finalStatus === "failure"
+                                        ? "bg-red-100 text-red-600"
+                                        : job.finalStatus === "sent"
+                                          ? "bg-green-100 text-green-600"
+                                          : "bg-gray-100 text-gray-600"
+                                }`}
+                              onClick={() => toggleDropdown(job._id)}
+                            >
+                              <div>{job.finalStatus}</div>
+                              <div className="relative">
+                                <RiArrowDropDownLine
+                                  className={`text-2xl p-0 ${dropdownStates === job._id ? "rotate-180" : ""
+                                    }`}
+                                />
+                                <ul
+                                  className={`absolute mt-2 right-1 z-50 bg-white border rounded-md shadow-lg w-32 ${dropdownStates === job._id ? "block" : "hidden"
+                                    }`}
+                                >
+                                  {[
+                                    { status: "new", color: "text-blue-600", bgColor: "bg-blue-100" },
+                                    { status: "inProgress", color: "text-yellow-600", bgColor: "bg-yellow-100" },
+                                    { status: "valid", color: "text-green-600", bgColor: "bg-green-100" },
+                                    { status: "partiallyValid", color: "text-[#AF9918]", bgColor: "bg-[#faf1be]" },
+                                    { status: "failure", color: "text-red-600", bgColor: "bg-red-100" },
+                                    { status: "sent", color: "text-green-600", bgColor: "bg-green-100" },
+                                  ].map(({ status, color, bgColor }) => (
+                                    <li
+                                      key={status}
+                                      className={`cursor-pointer px-3 py-1 hover:bg-gray-300 hover:text-white ${job.finalStatus === status ? `${color} ${bgColor}` : color
+                                        }`}
+                                      onClick={() => updateStatus(job._id, "finalStatus", status)}
+                                    >
+                                      {status}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
                             </div>
-                          </div>
-                        </td> */}
-                        <td className="py-2 px-4 border-b text-center">
-                          <div
-                            className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.finalStatus === "new"
-                              ? "bg-blue-100 text-blue-600"
-                              : job.finalStatus === "inProgress"
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            <div
+                              className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.reviewStatus === "unConfirmed"
                                 ? "bg-yellow-100 text-yellow-600"
-                                : job.finalStatus === "valid"
+                                : job.reviewStatus === "confirmed"
                                   ? "bg-green-100 text-green-600"
-                                  : job.finalStatus === "partiallyValid"
+                                  : job.reviewStatus === "denied"
                                     ? "bg-[#faf1be] text-[#AF9918]"
-                                    : job.finalStatus === "failure"
-                                      ? "bg-red-100 text-red-600"
-                                      : job.finalStatus === "sent"
-                                        ? "bg-green-100 text-green-600"
-                                        : "bg-gray-100 text-gray-600"
-                              }`}
-                            onClick={() => toggleDropdown(job._id)}
-                          >
-                            <div>{job.finalStatus}</div>
-                            <div className="relative">
-                              <RiArrowDropDownLine
-                                className={`text-2xl p-0 ${dropdownStates === job._id ? "rotate-180" : ""
-                                  }`}
-                              />
-                              <ul
-                                className={`absolute mt-2 right-1 z-50 bg-white border rounded-md shadow-lg w-32 ${dropdownStates === job._id ? "block" : "hidden"
-                                  }`}
-                              >
-                                {[
-                                  { status: "new", color: "text-blue-600", bgColor: "bg-blue-100" },
-                                  { status: "inProgress", color: "text-yellow-600", bgColor: "bg-yellow-100" },
-                                  { status: "valid", color: "text-green-600", bgColor: "bg-green-100" },
-                                  { status: "partiallyValid", color: "text-[#AF9918]", bgColor: "bg-[#faf1be]" },
-                                  { status: "failure", color: "text-red-600", bgColor: "bg-red-100" },
-                                  { status: "sent", color: "text-green-600", bgColor: "bg-green-100" },
-                                ].map(({ status, color, bgColor }) => (
-                                  <li
-                                    key={status}
-                                    className={`cursor-pointer px-3 py-1 hover:bg-gray-300 hover:text-white ${job.finalStatus === status ? `${color} ${bgColor}` : color
-                                      }`}
-                                    onClick={() => updateStatus(job._id, "finalStatus", status)}
-                                  >
-                                    {status}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-2 px-4 border-b text-center">
-                          <div
-                            className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.reviewStatus === "unConfirmed"
-                              ? "bg-yellow-100 text-yellow-600"
-                              : job.reviewStatus === "confirmed"
-                                ? "bg-green-100 text-green-600"
-                                : job.reviewStatus === "denied"
-                                  ? "bg-[#faf1be] text-[#AF9918]"
-                                  : job.reviewStatus === "deleted"
-                                    ? "bg-red-100 text-red-600"
-                                    : ""
-                              }`}
-                            onClick={() => toggleDropdownFirst(job._id)}
-                          >
-                            <div>{job.reviewStatus}</div>
-                            <div className="relative">
-                              <RiArrowDropDownLine
-                                className={`text-2xl p-0 ${dropdownStatesFirst === job._id ? "rotate-180" : ""
-                                  }`}
-                              />
-                              <ul
-                                className={`absolute mt-2 right-1 z-50 bg-white border rounded-md shadow-lg w-28 ${dropdownStatesFirst === job._id ? "block" : "hidden"
-                                  }`}
-                              >
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-blue-100 text-blue-600 ${job.reviewStatus === 'unConfirmed' ? 'bg-blue-100 text-blue-600' : ''}`}>
-                                  unConfirmed
-                                </li>
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-[#faf1be] text-[#AF9918] ${job.reviewStatus === 'confirmed' ? 'hover:bg-[#faf1be] text-[#AF9918]' : ''} `}>
-                                  confirmed
-                                </li>
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-red-100 text-red-600 ${job.reviewStatus === 'deleted' ? ' hover:bg-red-100 text-red-600' : ''} `}>
-                                  deleted
-                                </li>
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-green-100 text-green-600 ${job.reviewStatus === 'denied' ? 'hover:bg-green-100 text-green-600' : ''} `}>
-                                  denied
-                                </li>
-                              </ul>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-2 px-4 border-b text-center">
-                          <div
-                            className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.recognitionStatus === "new"
-                              ? "bg-blue-100 text-blue-600"
-                              : job.recognitionStatus === "inProgress"
-                                ? "bg-yellow-100 text-yellow-600"
-                                : job.recognitionStatus === "valid"
-                                  ? "bg-green-100 text-green-600"
-                                  : job.recognitionStatus === "partiallyValid"
-                                    ? "bg-[#faf1be] text-[#AF9918]"
-                                    : job.recognitionStatus === "failure"
-                                      ? "bg-red-100 text-red-600"
-                                      : job.recognitionStatus === "sent"
-                                        ? "bg-green-100 text-green-600"
-                                        : ""
-                              }`}
-                            onClick={() => toggleDropdownSecond(job._id)}
-                          >
-                            <div>{job.recognitionStatus}</div>
-                            <div className="relative">
-                              <RiArrowDropDownLine
-                                className={`text-2xl p-0 ${dropdownStatesSecond === job._id ? "rotate-180" : ""
-                                  }`}
-                              />
-                              <ul
-                                className={`absolute mt-2 right-1 z-50 bg-white border rounded-md shadow-lg w-24 ${dropdownStatesSecond === job._id ? "block" : "hidden"
-                                  }`}
-                              >
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-blue-100 text-blue-600 ${job.recognitionStatus === 'new' ? 'bg-blue-100 text-blue-600' : ''}`}>
-                                  new
-                                </li>
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-yellow-100 text-yellow-600 ${job.recognitionStatus === 'inProgress' ? 'bg-yellow-100 text-yellow-600' : ''}`}>
-                                  inProgress
-                                </li>
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-green-100 text-green-600 ${job.recognitionStatus === 'valid' ? 'bg-green-100 text-green-600' : ''} `}>
-                                  valid
-                                </li>
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-[#faf1be] text-[#AF9918] ${job.recognitionStatus === 'partiallyValid' ? 'hover:bg-[#faf1be] text-[#AF9918]' : ''} `}>
-                                  partiallyValid
-                                </li>
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-red-100 text-red-600 ${job.recognitionStatus === 'failure' ? ' hover:bg-red-100 text-red-600' : ''} `}>
-                                  failure
-                                </li>
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-green-100 text-green-600 ${job.recognitionStatus === 'sent' ? 'hover:bg-green-100 text-green-600' : ''} `}>
-                                  sent
-                                </li>
-                              </ul>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-2 px-4 border-b text-center">
-                          <div
-                            className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.breakdownReason === "none"
-                              ? "bg-blue-100 text-blue-600"
-                              : job.breakdownReason === "damaged"
-                                ? "bg-yellow-100 text-yellow-600"
-                                : job.breakdownReason === "shortage"
-                                  ? "bg-green-100 text-green-600"
-                                  : job.breakdownReason === "overage"
-                                    ? "bg-[#faf1be] text-[#AF9918]"
-                                    : job.breakdownReason === "refused"
+                                    : job.reviewStatus === "deleted"
                                       ? "bg-red-100 text-red-600"
                                       : ""
-                              }`}
-                            onClick={() => toggleDropdownThird(job._id)}
-                          >
-                            <div>{job.breakdownReason}</div>
-                            <div className="relative">
-                              <RiArrowDropDownLine
-                                className={`text-2xl p-0 ${dropdownStatesThird === job._id ? "rotate-180" : ""
-                                  }`}
-                              />
-                              <ul
-                                className={`absolute mt-2 right-1 z-50 bg-white border rounded-md shadow-lg w-24 ${dropdownStatesThird === job._id ? "block" : "hidden"
-                                  }`}
-                              >
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-blue-100 text-blue-600 ${job.breakdownReason === 'none' ? 'bg-blue-100 text-blue-600' : ''}`}>
-                                  none
-                                </li>
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-yellow-100 text-yellow-600 ${job.breakdownReason === 'damaged' ? 'bg-yellow-100 text-yellow-600' : ''}`}>
-                                  damaged
-                                </li>
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-green-100 text-green-600 ${job.breakdownReason === 'shortage' ? 'bg-green-100 text-green-600' : ''} `}>
-                                  shortage
-                                </li>
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-[#faf1be] text-[#AF9918] ${job.breakdownReason === 'overage' ? 'hover:bg-[#faf1be] text-[#AF9918]' : ''} `}>
-                                  overage
-                                </li>
-                                <li className={`cursor-pointer px-3 py-1 hover:bg-red-100 text-red-600 ${job.breakdownReason === 'refused' ? ' hover:bg-red-100 text-red-600' : ''} `}>
-                                  refused
-                                </li>
-                              </ul>
+                                }`}
+                              onClick={() => toggleDropdownFirst(job._id)}
+                            >
+                              <div>{job.reviewStatus}</div>
+                              <div className="relative">
+                                <RiArrowDropDownLine
+                                  className={`text-2xl p-0 ${dropdownStatesFirst === job._id ? "rotate-180" : ""
+                                    }`}
+                                />
+                                <ul
+                                  className={`absolute mt-2 right-1 z-50 bg-white border rounded-md shadow-lg w-28 ${dropdownStatesFirst === job._id ? "block" : "hidden"
+                                    }`}
+                                >
+                                  <li className={`cursor-pointer px-3 py-1 hover:bg-blue-100 text-blue-600 ${job.reviewStatus === 'unConfirmed' ? 'bg-blue-100 text-blue-600' : ''}`}>
+                                    unConfirmed
+                                  </li>
+                                  <li className={`cursor-pointer px-3 py-1 hover:bg-[#faf1be] text-[#AF9918] ${job.reviewStatus === 'confirmed' ? 'hover:bg-[#faf1be] text-[#AF9918]' : ''} `}>
+                                    confirmed
+                                  </li>
+                                  <li className={`cursor-pointer px-3 py-1 hover:bg-red-100 text-red-600 ${job.reviewStatus === 'deleted' ? ' hover:bg-red-100 text-red-600' : ''} `}>
+                                    deleted
+                                  </li>
+                                  <li className={`cursor-pointer px-3 py-1 hover:bg-green-100 text-green-600 ${job.reviewStatus === 'denied' ? 'hover:bg-green-100 text-green-600' : ''} `}>
+                                    denied
+                                  </li>
+                                </ul>
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="py-2 px-4 border-b text-center">{job.reviewedBy}</td>
-                        <td className="py-2 px-4 border-b text-center">
-                          <Link href={`/master-table/edit-pdf/${job._id}`} className="underline text-[#005B97] flex items-center gap-1">
-                            Detail <span>
-                              <IoIosArrowForward className="text-xl p-0" />
-                            </span>
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            <div
+                              className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.recognitionStatus === "new"
+                                ? "bg-blue-100 text-blue-600"
+                                : job.recognitionStatus === "inProgress"
+                                  ? "bg-yellow-100 text-yellow-600"
+                                  : job.recognitionStatus === "valid"
+                                    ? "bg-green-100 text-green-600"
+                                    : job.recognitionStatus === "partiallyValid"
+                                      ? "bg-[#faf1be] text-[#AF9918]"
+                                      : job.recognitionStatus === "failure"
+                                        ? "bg-red-100 text-red-600"
+                                        : job.recognitionStatus === "sent"
+                                          ? "bg-green-100 text-green-600"
+                                          : ""
+                                }`}
+                              onClick={() => toggleDropdownSecond(job._id)}
+                            >
+                              <div>{job.recognitionStatus}</div>
+                              <div className="relative">
+                                <RiArrowDropDownLine
+                                  className={`text-2xl p-0 ${dropdownStatesSecond === job._id ? "rotate-180" : ""
+                                    }`}
+                                />
+                                <ul
+                                  className={`absolute mt-2 right-1 z-50 bg-white border rounded-md shadow-lg w-24 ${dropdownStatesSecond === job._id ? "block" : "hidden"
+                                    }`}
+                                >
+                                  <li className={`cursor-pointer px-3 py-1 hover:bg-blue-100 text-blue-600 ${job.recognitionStatus === 'new' ? 'bg-blue-100 text-blue-600' : ''}`}>
+                                    new
+                                  </li>
+                                  <li className={`cursor-pointer px-3 py-1 hover:bg-yellow-100 text-yellow-600 ${job.recognitionStatus === 'inProgress' ? 'bg-yellow-100 text-yellow-600' : ''}`}>
+                                    inProgress
+                                  </li>
+                                  <li className={`cursor-pointer px-3 py-1 hover:bg-green-100 text-green-600 ${job.recognitionStatus === 'valid' ? 'bg-green-100 text-green-600' : ''} `}>
+                                    valid
+                                  </li>
+                                  <li className={`cursor-pointer px-3 py-1 hover:bg-[#faf1be] text-[#AF9918] ${job.recognitionStatus === 'partiallyValid' ? 'hover:bg-[#faf1be] text-[#AF9918]' : ''} `}>
+                                    partiallyValid
+                                  </li>
+                                  <li className={`cursor-pointer px-3 py-1 hover:bg-red-100 text-red-600 ${job.recognitionStatus === 'failure' ? ' hover:bg-red-100 text-red-600' : ''} `}>
+                                    failure
+                                  </li>
+                                  <li className={`cursor-pointer px-3 py-1 hover:bg-green-100 text-green-600 ${job.recognitionStatus === 'sent' ? 'hover:bg-green-100 text-green-600' : ''} `}>
+                                    sent
+                                  </li>
+                                </ul>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            <div
+                              className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.breakdownReason === "none"
+                                ? "bg-blue-100 text-blue-600"
+                                : job.breakdownReason === "damaged"
+                                  ? "bg-yellow-100 text-yellow-600"
+                                  : job.breakdownReason === "shortage"
+                                    ? "bg-green-100 text-green-600"
+                                    : job.breakdownReason === "overage"
+                                      ? "bg-[#faf1be] text-[#AF9918]"
+                                      : job.breakdownReason === "refused"
+                                        ? "bg-red-100 text-red-600"
+                                        : ""
+                                }`}
+                              onClick={() => toggleDropdownThird(job._id)}
+                            >
+                              <div>{job.breakdownReason}</div>
+                              <div className="relative">
+                                <RiArrowDropDownLine
+                                  className={`text-2xl p-0 ${dropdownStatesThird === job._id ? "rotate-180" : ""
+                                    }`}
+                                />
+                                <ul
+                                  className={`absolute mt-2 right-1 z-50 bg-white border rounded-md shadow-lg w-24 ${dropdownStatesThird === job._id ? "block" : "hidden"
+                                    }`}
+                                >
+                                  <li className={`cursor-pointer px-3 py-1 hover:bg-blue-100 text-blue-600 ${job.breakdownReason === 'none' ? 'bg-blue-100 text-blue-600' : ''}`}>
+                                    none
+                                  </li>
+                                  <li className={`cursor-pointer px-3 py-1 hover:bg-yellow-100 text-yellow-600 ${job.breakdownReason === 'damaged' ? 'bg-yellow-100 text-yellow-600' : ''}`}>
+                                    damaged
+                                  </li>
+                                  <li className={`cursor-pointer px-3 py-1 hover:bg-green-100 text-green-600 ${job.breakdownReason === 'shortage' ? 'bg-green-100 text-green-600' : ''} `}>
+                                    shortage
+                                  </li>
+                                  <li className={`cursor-pointer px-3 py-1 hover:bg-[#faf1be] text-[#AF9918] ${job.breakdownReason === 'overage' ? 'hover:bg-[#faf1be] text-[#AF9918]' : ''} `}>
+                                    overage
+                                  </li>
+                                  <li className={`cursor-pointer px-3 py-1 hover:bg-red-100 text-red-600 ${job.breakdownReason === 'refused' ? ' hover:bg-red-100 text-red-600' : ''} `}>
+                                    refused
+                                  </li>
+                                </ul>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">{job.reviewedBy}</td>
+                          <td className="py-2 px-4 border-b text-center">
+                            <Link href={`/master-table/edit-pdf/${job._id}`} className="underline text-[#005B97] flex items-center gap-1">
+                              Detail <span>
+                                <IoIosArrowForward className="text-xl p-0" />
+                              </span>
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
+
             )}
+
             {master.length !== 0 && (
               <div className="mt-5 flex justify-end gap-5 items-center text-gray-800">
                 <button
@@ -998,7 +933,7 @@ const MasterPage = () => {
         </div>
 
       </div>
-    </div >
+    </div>
   );
 };
 

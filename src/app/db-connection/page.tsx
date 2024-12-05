@@ -68,10 +68,14 @@ export default function DBConnectionPage() {
     const validateForm = () => {
         if (!systemID.trim()) return "System ID is required.";
         if (!userName.trim()) return "User Name is required.";
+        if (!/^[a-zA-Z0-9_]{1,30}$/.test(userName)) return "User Name must be between 1 and 30 characters and contain only alphanumeric characters or underscores.";
         if (!password.trim()) return "Password is required.";
         if (!ipAddress.trim() || !/^(\d{1,3}\.){3}\d{1,3}$/.test(ipAddress)) return "Invalid IP Address.";
-        if (!portNumber.trim()) return "Port Number must be a number.";
+        const portNumberParsed = parseInt(portNumber, 10);
+        if (!portNumber.trim() || isNaN(portNumberParsed) || portNumberParsed <= 0 || portNumberParsed > 65535)
+            return "Port Number must be a valid number between 1 and 65535.";
         if (!serviceName.trim()) return "Service Name is required.";
+        if (!/^[a-zA-Z0-9_]+$/.test(serviceName)) return "Service Name can only contain alphanumeric characters and underscores.";
         return null;
     };
 

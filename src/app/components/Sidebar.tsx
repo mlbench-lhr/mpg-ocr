@@ -224,7 +224,7 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
                                     } justify-between px-4 py-2 rounded-lg transition-all`}
                             >
                                 <div className="flex items-center gap-2">
-                                    <IoSettingsSharp className="text-[#005B97] text-2xl hover:bg-none" />
+                                    <IoSettingsSharp className="text-[#005B97] text-2xl hover:bg-none cursor-pointer" onClick={toggleDropdown}/>
                                     {isExpanded && (
                                         <p className="text-gray-800 text-lg cursor-pointer" onClick={toggleDropdown}>
                                             Settings
@@ -259,7 +259,8 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
                             )}
 
                             {userRole === 'admin' && (
-                                <div className="absolute left-60 bottom-24 w-80 bg-white rounded-lg shadow-xl">
+                                <div className={`absolute  ${isExpanded ? 'left-60 bottom-24' : 'left-16 bottom-24'
+                                    }  w-80 bg-white rounded-lg shadow-xl`}>
                                     <h1 className="mt-1 p-2 text-xl font-medium">Settings</h1>
                                     <ul className="text-gray-600 mt-2">
                                         <li className="p-2 hover:bg-gray-200 cursor-pointer">
