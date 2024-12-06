@@ -15,6 +15,7 @@ export default function DBConnectionPage() {
     const [ipAddress, setIpAddress] = useState("");
     const [portNumber, setPortNumber] = useState("");
     const [serviceName, setServiceName] = useState("");
+    const [checkbox, setCheckBox] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [percentage, setPercentage] = useState(0);
@@ -70,7 +71,13 @@ export default function DBConnectionPage() {
         if (!userName.trim()) return "User Name is required.";
         if (!/^[a-zA-Z0-9_]{1,30}$/.test(userName)) return "User Name must be between 1 and 30 characters and contain only alphanumeric characters or underscores.";
         if (!password.trim()) return "Password is required.";
-        if (!ipAddress.trim() || !/^(\d{1,3}\.){3}\d{1,3}$/.test(ipAddress)) return "Invalid IP Address.";
+        if (
+            !ipAddress.trim() ||
+            !/^[\d.]+$/.test(ipAddress) ||
+            !/^(\d{1,3}\.){3}\d{1,3}$/.test(ipAddress)
+          ) {
+            return "Invalid IP Address. Ensure it contains only numbers, dots, and is properly formatted (e.g., 192.168.1.1).";
+          }
         const portNumberParsed = parseInt(portNumber, 10);
         if (!portNumber.trim() || isNaN(portNumberParsed) || portNumberParsed <= 0 || portNumberParsed > 65535)
             return "Port Number must be a valid number between 1 and 65535.";
@@ -164,15 +171,20 @@ export default function DBConnectionPage() {
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const validationError = validateForm();
-        if (validationError) {
-            setError(validationError);
-            return;
+        if (!checkbox) {
+            router.push("/jobs");
+        } else {
+            const validationError = validateForm();
+            if (validationError) {
+                setError(validationError);
+                return;
+            }
+
+            setIsLoading(true);
+            setPercentage(0);
+            setLoadingComplete(false);
         }
 
-        setIsLoading(true);
-        setPercentage(0);
-        setLoadingComplete(false);
     };
 
     return (
@@ -285,7 +297,12 @@ export default function DBConnectionPage() {
 
                         <div className="mb-8 flex items-center justify-start gap-5">
                             <div className="flex items-center">
-                                <input className="w-4 h-4 text-[#005B97] bg-slate-600 border-gray-300 rounded active:bg-transparent cursor-pointer" type="checkbox" name="" id="" />
+                                <input
+                                    className="w-4 h-4 text-[#005B97] bg-slate-600 border-gray-300 rounded active:bg-transparent cursor-pointer"
+                                    type="checkbox"
+                                    checked={checkbox}
+                                    onChange={(e) => setCheckBox(e.target.checked)}
+                                />
                             </div>
                             <div className="text-gray-800 font-[550]">
                                 Initiating connection to the system

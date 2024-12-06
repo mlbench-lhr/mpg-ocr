@@ -38,6 +38,7 @@ const JobPage = () => {
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
+  const [dropdownStates, setDropdownStates] = useState<string | null>(null);
 
 
   const handleSidebarToggle = (expanded: boolean) => {
@@ -80,6 +81,10 @@ const JobPage = () => {
     setLoading(false);
   }, [router]);
 
+  const toggleDropdown = (id: string) => {
+    setDropdownStates((prevState) => (prevState === id ? null : id));
+  };
+
   // const toggleStatus = async (_id: string, active: boolean) => {
   //   try {
   //     const res = await fetch(`/api/jobs/add-job`, {
@@ -106,7 +111,7 @@ const JobPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: _id, active }),
       });
-  
+
       if (res.ok) {
         setJobs((prevJobs) =>
           prevJobs.map((job) =>
@@ -305,7 +310,7 @@ const JobPage = () => {
                       <td className="py-2 px-4 border-b text-center">{job.toTime}</td>
                       <td className="py-2 px-4 border-b text-center">{job.everyTime}</td>
                       <td className="py-2 px-4 border-b text-center">
-                        <div
+                        {/* <div
                           className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${job.active ? "bg-blue-100 text-blue-600" : "bg-red-100 text-red-600"
                             } group relative`}
                         >
@@ -327,7 +332,41 @@ const JobPage = () => {
                               Inactive
                             </li>
                           </ul>
+                        </div> */}
+
+                        <div
+                          className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium transition-all duration-500 ease-in-out cursor-pointer ${job.active ? "bg-blue-100 text-blue-600" : "bg-red-100 text-red-600"
+                            }`} onClick={() => toggleDropdown(job._id)}
+                        >
+                          <div>{job.active ? "Active" : "Inactive"}</div>
+                          <div className="relative">
+                            <RiArrowDropDownLine
+                              className={`text-2xl p-0 transform transition-transform duration-300 ${dropdownStates === job._id ? "rotate-180" : ""
+                                }`}
+                            />
+                            <ul
+                              className={`absolute mt-2 right-1 z-50 bg-white border rounded-md shadow-lg w-24 transform origin-top transition-all duration-300 ease-in-out ${dropdownStates === job._id
+                                ? "scale-100 opacity-100 pointer-events-auto"
+                                : "scale-95 opacity-0 pointer-events-none"
+                                }`}
+                            >
+                              <li
+                                onClick={() => toggleStatus(job._id, true)}
+                                className="cursor-pointer px-3 py-1 hover:bg-blue-100 text-blue-600"
+                              >
+                                Active
+                              </li>
+                              <li
+                                onClick={() => toggleStatus(job._id, false)}
+                                className="cursor-pointer px-3 py-1 hover:bg-red-100 text-red-600"
+                              >
+                                Inactive
+                              </li>
+                            </ul>
+                          </div>
+
                         </div>
+
                       </td>
                       <td className="py-2 px-4 border-b text-center">
                         <button onClick={() => handleEditJob(job._id)} className="mr-5">

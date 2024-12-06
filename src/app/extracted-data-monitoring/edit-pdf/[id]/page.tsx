@@ -1,8 +1,8 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import Sidebar from '@/app/components/Sidebar';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import { FaArrowLeftLong } from "react-icons/fa6";
 import Spinner from '@/app/components/Spinner';
 import Link from 'next/link';
@@ -32,7 +32,6 @@ interface Job {
 }
 
 const JobDetail = () => {
-    const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
     const { id } = useParams();
     const [job, setJob] = useState<Job | null>(null);
     const [loading, setLoading] = useState(true);
@@ -45,9 +44,22 @@ const JobDetail = () => {
         podSignature: "",
         totalQty: "",
         receiverSignature: "",
+        delivered: "",
+        damaged: "",
+        short: "",
+        over: "",
+        refused: "",
+        sealIntact: "",
     });
     const [isEditMode, setIsEditMode] = useState(false);
+    const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+    const [saving, setSaving] = useState(false); // Added saving state
     const router = useRouter();
+
+    const handleSidebarToggle = (expanded: boolean) => {
+        setIsSidebarExpanded(expanded);
+    };
+
 
     useEffect(() => {
         if (id) {
@@ -66,6 +78,12 @@ const JobDetail = () => {
                             podSignature: data.podSignature || "",
                             totalQty: data.totalQty?.toString() || "",
                             receiverSignature: data.receiverSignature || "",
+                            delivered: data.delivered || "",
+                            damaged: data.damaged || "",
+                            short: data.short || "",
+                            over: data.over || "",
+                            refused: data.refused || "",
+                            sealIntact: data.sealIntact || "",
                         });
                     }
                     setLoading(false);
@@ -82,21 +100,13 @@ const JobDetail = () => {
         router.back();
     };
 
-    const handleSidebarToggle = (expanded: boolean) => {
-        setIsSidebarExpanded(expanded);
-    };
-
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
 
-    // const handleSave = () => {
-    //     console.log("Form Data Saved:", formData);
-    //     setIsEditMode(false);
-    // };
-
     const handleSave = async () => {
+        setSaving(true);
         try {
             const response = await fetch(`/api/process-data/detail-data/${id}`, {
                 method: "PATCH",
@@ -112,12 +122,17 @@ const JobDetail = () => {
                 console.log("Form data saved successfully:", result);
                 setIsEditMode(false);
             } else {
-                console.error("Failed to save form data:", result.error);
+                setIsEditMode(false);
+                setSaving(false);
+                // console.error("Failed to save form data:", result.error);
             }
         } catch (error) {
             console.error("Error saving data:", error);
+        } finally {
+            setSaving(false);
         }
     };
+
 
 
     const handleEditClick = () => {
@@ -134,7 +149,6 @@ const JobDetail = () => {
             <div
                 className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isSidebarExpanded ? "ml-64" : "ml-24"}`}
             >
-                {/* Header Section */}
                 <div className="bg-gray-100 py-4 flex justify-between items-center my-10 mx-5 rounded-lg px-8">
                     <div className="flex items-center gap-5">
                         <span className="text-[#005B97] cursor-pointer" onClick={handleGoBack}>
@@ -163,7 +177,7 @@ const JobDetail = () => {
                         />
                     </div>
 
-                    <div className="flex-1 bg-gray-100 rounded-xl p-6 flex flex-col  xl:h-[calc(140vh-6rem)] 2xl:h-[calc(110vh-6rem)]"> {/* Flex column to push button to bottom */}
+                    <div className="flex-1 bg-gray-100 rounded-xl p-6 flex flex-col  xl:h-[calc(220vh-6rem)] 2xl:h-[calc(170vh-6rem)]">
                         <div className='flex justify-between items-center mb-4'>
                             <span>
                                 <h3 className="text-xl font-medium text-gray-800">Extracted Data</h3>
@@ -193,19 +207,20 @@ const JobDetail = () => {
                                         className="p-2 text-gray-800 border-none focus:outline-none"
                                     />
                                 </div>
-
                             ))}
                         </form>
+
                         {isEditMode && (
-
-                            <button
-                                type="button"
-                                onClick={handleSave}
-                                className="w-full bg-[#005B97] text-white font-medium py-3 rounded-lg hover:bg-[#2772a3] mt-auto"
-                            >
-                                Save Changes
-                            </button>
-
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={handleSave}
+                                    className="w-full bg-[#005B97] text-white font-medium py-3 rounded-lg hover:bg-[#2772a3] mt-auto"
+                                    disabled={saving}
+                                >
+                                    {saving ? "Saving..." : "Save Changes"}
+                                </button>
+                            </>
                         )}
                     </div>
                 </div>

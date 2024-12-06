@@ -15,7 +15,7 @@ const Header: React.FC<HeaderProps> = ({ leftContent, rightContent, totalContent
             {/* Left side content */}
             <div className="flex flex-col items-start">
                 <div className="text-xl font-bold">{leftContent}</div>
-                <p className="text-gray-400">Total {leftContent == 'Master Tables' ? 'Rows' : leftContent} : {totalContent}</p>
+                <p className="text-gray-400">Total {leftContent == 'Extracted Data Monitoring' ? 'Rows' : leftContent} : {totalContent}</p>
             </div>
 
             {/* Right side content */}

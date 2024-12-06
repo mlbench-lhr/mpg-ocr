@@ -175,10 +175,10 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
                                 </li>
                             </Link>
                         )}
-                        <Link href="/master-table">
+                        <Link href="/extracted-data-monitoring">
                             <li
                                 className={`flex items-center mb-2 ${isExpanded ? 'justify-start' : 'justify-center'
-                                    } space-x-3 px-4 py-2 rounded-lg transition-all ${isActive("/master-table")
+                                    } space-x-3 px-4 py-2 rounded-lg transition-all ${isActive("/extracted-data-monitoring")
                                         ? "bg-blue-200 font-bold"
                                         : "hover:bg-gray-200"
                                     }`}
@@ -186,7 +186,7 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
                                 <FaClipboardList className="text-[#005B97] text-2xl" />
                                 {isExpanded && (
                                     <p className="text-gray-800 text-lg">
-                                        Master Table
+                                        Extracted Data
                                     </p>
                                 )}
                             </li>
@@ -224,7 +224,7 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
                                     } justify-between px-4 py-2 rounded-lg transition-all`}
                             >
                                 <div className="flex items-center gap-2">
-                                    <IoSettingsSharp className="text-[#005B97] text-2xl hover:bg-none cursor-pointer" onClick={toggleDropdown}/>
+                                    <IoSettingsSharp className="text-[#005B97] text-2xl hover:bg-none cursor-pointer" onClick={toggleDropdown} />
                                     {isExpanded && (
                                         <p className="text-gray-800 text-lg cursor-pointer" onClick={toggleDropdown}>
                                             Settings
@@ -246,7 +246,8 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
                     {isDropdownOpen && (
                         <>
                             {userRole !== 'admin' && (
-                                <div className="absolute left-56 bottom-18 w-32 bg-white rounded-lg shadow-xl">
+                                <div className={`absolute ${isExpanded ? 'left-56 bottom-18' : 'left-16 bottom-16'
+                                    }  w-32 bg-white rounded-lg shadow-xl`}>
                                     <ul className="text-gray-600">
                                         <li className="p-2 cursor-pointer">
                                             <p onClick={handleLogout} className="flex justify-start gap-3 items-center transform transition-transform hover:translate-x-2">
@@ -342,6 +343,7 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
                             width={50}
                             height={50}
                             className="rounded-full"
+                            onClick={toggleDropdown}
                         />
                         {isExpanded && (
                             <div className="flex justify-between items-center gap-10">

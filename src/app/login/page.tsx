@@ -41,7 +41,7 @@ export default function LoginPage() {
       localStorage.setItem("token", token);
       localStorage.setItem("username", name);
 
-      router.push("/master-table");
+      router.push("/extracted-data-monitoring");
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
