@@ -58,7 +58,7 @@ const MasterPage = () => {
   const [reviewByStatusFilter, setReviewByStatusFilter] = useState("");
   const [podDateFilter, setPodDateFilter] = useState("");
   const [podDateSignatureFilter, setPodDateSignatureFilter] = useState("");
-  const [carrierFilter, setCarrierFilter] = useState("Carrier B");
+  const [carrierFilter, setCarrierFilter] = useState("");
   const [bolNumberFilter, setBolNumberFilter] = useState("");
 
   const [dropdownStates, setDropdownStates] = useState<string | null>(null);
