@@ -1,15 +1,19 @@
 import { useState } from "react";
+import { Job } from "../../types"; // Import the shared Job type
 
-interface JobData {
-  selectedDays: string[];
-  fromTime: string;
-  toTime: string;
-  everyTime: string;
-}
+
+// interface Job {
+//   _id?: string;
+//   selectedDays: string[];
+//   fromTime: string;
+//   toTime: string;
+//   everyTime: string;
+//   active?: boolean;
+// }
 
 interface AddJobModalProps {
   onClose: () => void;
-  onSubmit: (data: JobData) => void;
+  onSubmit: (data: Job) => void; // Updated to Job type
 }
 
 const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
@@ -43,15 +47,10 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
       return;
     }
 
-    // if (fromTime >= toTime) {
-    //   setErrorMessage('"From" time must be earlier than "To" time.');
-    //   return;
-    // }
-
     setErrorMessage(""); 
     setIsSubmitting(true);
 
-    const jobData: JobData = { selectedDays, fromTime, toTime, everyTime };
+    const jobData: Job = { selectedDays, fromTime, toTime, everyTime, _id: "", active: false }; // Add default _id
 
     try {
       const response = await fetch("/api/jobs/add-job", {
@@ -71,8 +70,8 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
       const responseData = await response.json();
       console.log("Job added successfully:", responseData);
 
-      onSubmit(jobData);
-      onClose();
+      onSubmit(jobData);  // Pass the new job data to the parent
+      onClose();          // Close the modal
     } catch (error) {
       console.error("Error adding job:", error);
       setErrorMessage("An unexpected error occurred.");

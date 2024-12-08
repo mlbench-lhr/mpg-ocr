@@ -2,26 +2,28 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 import Sidebar from "../components/Sidebar";
 import Spinner from "../components/Spinner";
 import Header from "../components/Header";
 import AddJobModal from "../components/AddJobModal";
 import EditJobModal from "../components/EditJobModal";
-import Swal from "sweetalert2";
 import { BiSolidEditAlt } from "react-icons/bi";
 import { MdDelete } from "react-icons/md";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import Image from "next/image";
+import { Job } from "../../types"; // Import the shared Job type
 
 
-interface Job {
-  _id: string;
-  selectedDays: string[];
-  fromTime: string;
-  toTime: string;
-  everyTime: string;
-  active: boolean;
-}
+
+// interface Job {
+//   _id: string;
+//   selectedDays: string[];
+//   fromTime: string;
+//   toTime: string;
+//   everyTime: string;
+//   active: boolean;
+// }
 
 const JobPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -104,6 +106,29 @@ const JobPage = () => {
   //   }
   // };
 
+  // const toggleStatus = async (_id: string, active: boolean) => {
+  //   try {
+  //     const res = await fetch(`/api/jobs/add-job`, {
+  //       method: "PATCH",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ id: _id, active }),
+  //     });
+
+  //     if (res.ok) {
+  //       setJobs((prevJobs) =>
+  //         prevJobs.map((job) =>
+  //           job._id === _id ? { ...job, active } : job
+  //         )
+  //       );
+  //     } else {
+  //       const errorData = await res.json();
+  //       console.error("Error updating status:", errorData.error);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating status:", error);
+  //   }
+  // };
+
   const toggleStatus = async (_id: string, active: boolean) => {
     try {
       const res = await fetch(`/api/jobs/add-job`, {
@@ -118,14 +143,45 @@ const JobPage = () => {
             job._id === _id ? { ...job, active } : job
           )
         );
+
+        // Show success alert
+        Swal.fire({
+          icon: "success",
+          title: "Status Updated",
+          text: `The job status has been ${active ? "activated" : "deactivated"}.`,
+          timer: 2000,
+          showConfirmButton: false,
+        });
       } else {
         const errorData = await res.json();
         console.error("Error updating status:", errorData.error);
+
+        // Show error alert
+        Swal.fire({
+          icon: "error",
+          title: "Update Failed",
+          text: errorData.error || "Something went wrong.",
+        });
       }
     } catch (error) {
       console.error("Error updating status:", error);
+
+      // Show error alert for unexpected errors
+      Swal.fire({
+        icon: "error",
+        title: "Unexpected Error",
+        text: "An error occurred while updating the status. Please try again.",
+      });
     }
   };
+
+  // Function to add a new job to the local state
+  // const handleAddJob = (newJob: Job) => {
+  //   alert(JSON.stringify(newJob, null, 5)); 
+  //   setJobs((prevJobs) => [...prevJobs, newJob]);
+  // };
+
+
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
@@ -151,13 +207,118 @@ const JobPage = () => {
     setJobs((prevJobs) =>
       prevJobs.map((job) => (job._id === updatedJob._id ? updatedJob : job))
     );
+
+    Swal.fire({
+      icon: "success",
+      title: "Job Updated",
+      text: `The job data has been updated successfully.`,
+      timer: 2000,
+      showConfirmButton: false,
+    });
   };
 
-  const handleDeleteJob = async (_id: string) => {
+  // const handleDeleteJob = async (_id: string) => {
 
+  //   const result = await Swal.fire({
+  //     title: "Delete Job",
+  //     text: "Are you sure you want to delete this Job??",
+  //     icon: "warning",
+  //     showCancelButton: true,
+  //     confirmButtonColor: "#005B97",
+  //     cancelButtonColor: "#F0F1F3",
+  //     cancelButtonText: "Cancel",
+  //     confirmButtonText: "Delete",
+  //   });
+
+  //   if (result.isConfirmed) {
+
+
+  //     try {
+  //       const response = await fetch(`/api/jobs/delete-job/${_id}`, {
+  //         method: "DELETE",
+  //       });
+
+  //       if (response.ok) {
+  //         await fetchJobs();
+  //         console.log("Job deleted successfully");
+  //         if (jobs.length === 1 && currentPage > 1) {
+  //           setCurrentPage(currentPage - 1);
+  //         }
+  //       } else {
+  //         const errorData = await response.json();
+  //         console.error("Failed to delete job:", errorData.error || "Unknown error");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error deleting job:", error);
+  //     }
+
+  //   }
+
+  // };
+
+
+  // const handleDeleteJob = async (_id: string) => {
+  //   // Confirm deletion using SweetAlert
+  //   const result = await Swal.fire({
+  //     title: "Delete Job",
+  //     text: "Are you sure you want to delete this Job?",
+  //     icon: "warning",
+  //     showCancelButton: true,
+  //     confirmButtonColor: "#d33",
+  //     cancelButtonColor: "#3085d6",
+  //     confirmButtonText: "Delete",
+  //     cancelButtonText: "Cancel",
+  //   });
+
+  //   if (result.isConfirmed) {
+  //     try {
+  //       // Perform the delete operation
+  //       const response = await fetch(`/api/jobs/delete-job/${_id}`, {
+  //         method: "DELETE",
+  //       });
+
+  //       if (response.ok) {
+  //         // Update the jobs state locally
+  //         setJobs((prevJobs) => prevJobs.filter((job) => job._id !== _id));
+
+  //         // Show success alert
+  //         Swal.fire({
+  //           icon: "success",
+  //           title: "Job Deleted",
+  //           text: "The job has been deleted successfully.",
+  //           timer: 2000,
+  //           showConfirmButton: false,
+  //         });
+  //       } else {
+  //         const errorData = await response.json();
+  //         console.error("Failed to delete job:", errorData.error || "Unknown error");
+
+  //         // Show error alert
+  //         Swal.fire({
+  //           icon: "error",
+  //           title: "Delete Failed",
+  //           text: errorData.error || "Something went wrong while deleting the job.",
+  //         });
+  //       }
+  //     } catch (error) {
+  //       console.error("Error deleting job:", error);
+
+  //       // Show error alert for unexpected errors
+  //       Swal.fire({
+  //         icon: "error",
+  //         title: "Unexpected Error",
+  //         text: "An error occurred while deleting the job. Please try again.",
+  //       });
+  //     }
+  //   }
+  // };
+
+
+  const handleDeleteJob = async (_id: string) => {
+    // Confirm deletion using SweetAlert
     const result = await Swal.fire({
       title: "Delete Job",
-      text: "Are you sure you want to delete this Job??",
+      text: "Are you sure you want to delete this job?",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#005B97",
@@ -167,30 +328,61 @@ const JobPage = () => {
     });
 
     if (result.isConfirmed) {
-
-
       try {
+        // Perform the delete operation
         const response = await fetch(`/api/jobs/delete-job/${_id}`, {
           method: "DELETE",
         });
 
         if (response.ok) {
-          await fetchJobs();
-          console.log("Job deleted successfully");
-          if (jobs.length === 1 && currentPage > 1) {
-            setCurrentPage(currentPage - 1);
-          }
+          // Update the jobs state locally
+          setJobs((prevJobs) => {
+            const updatedJobs = prevJobs.filter((job) => job._id !== _id);
+
+            // Adjust pagination if the last job on the current page is deleted
+            if (updatedJobs.length === 0 && currentPage > 1) {
+              setCurrentPage((prevPage) => prevPage - 1);
+            }
+
+            setTotalJobs(() => {
+              return totalJobs - 1;
+            });
+
+            return updatedJobs;
+          });
+
+          // Show success alert
+          Swal.fire({
+            icon: "success",
+            title: "Job Deleted",
+            text: "The job has been deleted successfully.",
+            timer: 2000,
+            showConfirmButton: false,
+          });
         } else {
           const errorData = await response.json();
           console.error("Failed to delete job:", errorData.error || "Unknown error");
+
+          // Show error alert
+          Swal.fire({
+            icon: "error",
+            title: "Delete Failed",
+            text: errorData.error || "Something went wrong while deleting the job.",
+          });
         }
       } catch (error) {
         console.error("Error deleting job:", error);
+
+        // Show error alert for unexpected errors
+        Swal.fire({
+          icon: "error",
+          title: "Unexpected Error",
+          text: "An error occurred while deleting the job. Please try again.",
+        });
       }
-
     }
-
   };
+
 
   const fetchJobs = useCallback(async () => {
     try {
@@ -409,6 +601,9 @@ const JobPage = () => {
       {isModalOpen && (
         <AddJobModal onClose={() => setIsModalOpen(false)} onSubmit={() => fetchJobs()} />
       )}
+      {/* {isModalOpen && (
+        <AddJobModal onClose={() => setIsModalOpen(false)} onSubmit={handleAddJob} />
+      )} */}
       {isEditModalOpen && editingJob && (
         <EditJobModal
           job={editingJob}

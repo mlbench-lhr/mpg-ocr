@@ -1,21 +1,14 @@
-import { MongoClient, ObjectId } from "mongodb";
+import clientPromise from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
 import { NextResponse, NextRequest } from "next/server";
 
-const client = new MongoClient(process.env.MONGODB_URI || "mongodb://localhost:27017");
-
-// interface Params {
-//   id: string;
-// }
-
-// export async function GET(req: Request, { params }: { params: Params }) {
-  // const { id } = params; 
-
+// Use the MongoClient promise directly to avoid creating new instances on each request.
+const client = await clientPromise; 
 
 export async function GET(req: NextRequest) {
   try {
-    const url = new URL(req.url);
-    const id = url.pathname.split("/").pop(); 
-    await client.connect();
+    const id = new URL(req.url).pathname.split("/").pop();  // Extract job ID from URL path
+
     const db = client.db("my-next-app");
     const jobsCollection = db.collection("jobs");
 
@@ -29,20 +22,12 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("Error fetching job:", error);
     return NextResponse.json({ error: "Failed to fetch job." }, { status: 500 });
-  } finally {
-    await client.close();
   }
 }
 
-// export async function PATCH(req: Request, { params }: { params: Params }) {
-// const { id } = params; 
-
 export async function PATCH(req: NextRequest) {
-
   try {
-
-    const url = new URL(req.url);
-    const id = url.pathname.split("/").pop(); 
+    const id = new URL(req.url).pathname.split("/").pop();  // Extract job ID from URL path
     const body = await req.json();
     const { selectedDays, fromTime, toTime, everyTime, active } = body;
 
@@ -50,7 +35,6 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "All fields are required." }, { status: 400 });
     }
 
-    await client.connect();
     const db = client.db("my-next-app");
     const jobsCollection = db.collection("jobs");
 
@@ -76,7 +60,5 @@ export async function PATCH(req: NextRequest) {
   } catch (error) {
     console.error("Error updating job:", error);
     return NextResponse.json({ error: "Failed to update job." }, { status: 500 });
-  } finally {
-    await client.close();
   }
 }

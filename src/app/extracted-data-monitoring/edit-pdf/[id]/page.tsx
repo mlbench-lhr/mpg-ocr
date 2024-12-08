@@ -170,7 +170,7 @@ const JobDetail = () => {
                 </div>
 
                 <div className="mx-5 flex bg-white pt-3 h-5/6">
-                    <div className="flex-auto border-gray-900 xl:h-[calc(130vh-6rem)] 2xl:h-screen">
+                    <div className="flex-auto border-gray-900 xl:h-[calc(140vh-6rem)] 2xl:h-screen">
                         <iframe
                             src='/file/sample.pdf'
                             className='w-11/12 h-full'
@@ -194,8 +194,8 @@ const JobDetail = () => {
                         </div>
                         <form className="space-y-10 flex-1 overflow-y-auto">
                             {Object.keys(formData).map((key) => (
-                                <div key={key} className="flex items-center gap-3 bg-white px-2 border-l-8 border-[#005B97] rounded-lg py-2">
-                                    <label className="font-medium text-gray-500 capitalize">
+                                <div key={key} className="flex items-center gap-3 bg-white px-2 border-l-8 border-[#005B97] rounded-lg py-[7px]">
+                                    <label className="font-medium text-gray-500 capitalize w-32">
                                         {key.replace(/([A-Z])/g, " $1")} :
                                     </label>
                                     <input
@@ -204,7 +204,7 @@ const JobDetail = () => {
                                         value={formData[key as keyof typeof formData]}
                                         onChange={handleChange}
                                         disabled={!isEditMode}
-                                        className="p-2 text-gray-800 border-none focus:outline-none"
+                                        className="p-2 text-gray-800 border-none focus:outline-none w-80"
                                     />
                                 </div>
                             ))}

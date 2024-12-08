@@ -1,15 +1,15 @@
 "use client";
 
 import Sidebar from '@/app/components/Sidebar';
+import EditModal from "@/app/components/EditModal";
 import { format } from 'date-fns';
 import Spinner from '@/app/components/Spinner';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { FaArrowLeftLong } from "react-icons/fa6";
 import { useRouter } from 'next/navigation';
+import { BiSolidEditAlt } from 'react-icons/bi';
 
-
-// Define the Job type
 interface Job {
     _id: string;
     blNumber: string;
@@ -36,25 +36,22 @@ interface Job {
 
 const JobDetail = () => {
     const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
-
-    const { id } = useParams(); // Use useParams to get the dynamic ID from the URL
-    const [job, setJob] = useState<Job | null>(null); // Explicitly type as Job or null
+    const [isModalOpen, setIsModalOpen] = useState(false); // Control modal visibility
+    const [job, setJob] = useState<Job | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+    const { id } = useParams();
 
-
-    // Fetch job details after the component has mounted and the id is available
     useEffect(() => {
         if (id) {
-            // Fetch job details using the API route
             fetch(`/api/process-data/detail-data/${id}`)
                 .then((res) => res.json())
                 .then((data) => {
                     if (data.error) {
-                        setError(data.error); // Set error if the job is not found
+                        setError(data.error);
                     } else {
-                        setJob(data); // Set the job data if fetched successfully
+                        setJob(data);
                     }
                     setLoading(false);
                 })
@@ -70,9 +67,23 @@ const JobDetail = () => {
         router.back();
     };
 
-    // Handle sidebar toggle
     const handleSidebarToggle = (expanded: boolean) => {
         setIsSidebarExpanded(expanded);
+    };
+
+    const handleOpenModal = () => {
+        setIsModalOpen(true); // Open the modal
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false); // Close the modal
+    };
+
+
+
+    const handleUpdateJob = (updatedJob: Job) => {
+        setJob(updatedJob);
+        setIsModalOpen(false);
     };
 
     if (loading) return <div><Spinner /></div>;
@@ -80,22 +91,34 @@ const JobDetail = () => {
     if (!job) return <div>Job not found</div>;
 
     return (
-
         <div className="flex flex-row h-screen bg-white">
             <Sidebar onToggleExpand={handleSidebarToggle} />
             <div
                 className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isSidebarExpanded ? "ml-64" : "ml-24"
                     }`}
             >
-                <div className='bg-gray-100 py-4 flex items-center gap-5 my-10 mx-5 rounded-lg px-8'>
-                    <span className='text-[#005B97] cursor-pointer' onClick={handleGoBack}>
-                        <FaArrowLeftLong size={30} />
-                    </span>
-                    <span className='text-gray-800 text-xl font-[550]'>
-                        {job.blNumber}
-                    </span>
-                </div>
 
+                <div className="bg-gray-100 py-3 flex justify-between items-center my-10 mx-5 rounded-lg px-8">
+                    <div className="flex items-center gap-5">
+                        <span className="text-[#005B97] cursor-pointer" onClick={handleGoBack}>
+                            <FaArrowLeftLong size={30} />
+                        </span>
+                        <span className="text-gray-800 text-xl font-[550]">
+                            {job.blNumber}
+                        </span>
+                    </div>
+                    <div>
+                        <button
+                            className="text-[#005B97] rounded-lg py-2 px-10 md:mt-0 w-60 md:w-auto flex items-center gap-3 cursor-pointer"
+                            onClick={handleOpenModal} // Open modal on button click
+                        >
+                            <span>
+                                <BiSolidEditAlt className="fill-[#005B97] text-2xl" />
+                            </span>
+                            <span>Edit Data</span>
+                        </button>
+                    </div>
+                </div>
                 <div className='mx-5'>
                     <h1 className='text-3xl text-gray-800 font-semibold mb-5'>Shipment Information</h1>
 
@@ -145,6 +168,15 @@ const JobDetail = () => {
                 </div>
 
             </div>
+
+            {/* Edit Modal */}
+            {isModalOpen && (
+                <EditModal
+                    job={job}
+                    onClose={handleCloseModal}
+                    onUpdate={handleUpdateJob}
+                />
+            )}
         </div>
     );
 };

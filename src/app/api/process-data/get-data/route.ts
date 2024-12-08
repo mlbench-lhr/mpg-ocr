@@ -45,6 +45,7 @@ export async function GET(req: Request) {
         const finalStatus = url.searchParams.get("finalStatus") || "";
         const reviewStatus = url.searchParams.get("reviewStatus") || "";
         const reviewByStatus = url.searchParams.get("reviewByStatus") || "";
+        const breakdownReason = url.searchParams.get("breakdownReason") || "";
         const podDate = url.searchParams.get("podDate") || "";
         const podDateSignature = url.searchParams.get("podDateSignature") || "";
         const carrier = url.searchParams.get("carrier") || "";
@@ -64,6 +65,7 @@ export async function GET(req: Request) {
         if (finalStatus) filter.recognitionStatus = finalStatus;
         if (reviewStatus) filter.reviewStatus = reviewStatus;
         if (reviewByStatus) filter.reviewedBy = reviewByStatus;
+        if (breakdownReason) filter.breakdownReason = breakdownReason;
         if (podDate) filter.podDate = podDate;
         if (podDateSignature) filter.podSignature = podDateSignature;
         if (carrier) filter.carrier = carrier;

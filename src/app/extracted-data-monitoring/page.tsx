@@ -49,15 +49,21 @@ const MasterPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+  const [showButton, setShowButton] = useState(false);
+
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
 
 
   const [finalStatusFilter, setFinalStatusFilter] = useState("");
   const [reviewStatusFilter, setReviewStatusFilter] = useState("");
+
+  const [reasonStatusFilter, setReasonStatusFilter] = useState("");
+
   const [reviewByStatusFilter, setReviewByStatusFilter] = useState("");
   const [podDateFilter, setPodDateFilter] = useState("");
   const [podDateSignatureFilter, setPodDateSignatureFilter] = useState("");
+  const [jobNameFilter, setJobNameFilter] = useState("");
   const [carrierFilter, setCarrierFilter] = useState("");
   const [bolNumberFilter, setBolNumberFilter] = useState("");
 
@@ -166,18 +172,118 @@ const MasterPage = () => {
     }
   };
 
+  const fetchJobs = useCallback(async () => {
+    try {
+      setLoadingTable(true);
+      const queryParams = new URLSearchParams();
+      queryParams.set("page", currentPage.toString());
+      if (bolNumberFilter) queryParams.set("bolNumber", bolNumberFilter.trim());
+      if (finalStatusFilter) queryParams.set("finalStatus", finalStatusFilter);
+      if (reviewStatusFilter) queryParams.set("reviewStatus", reviewStatusFilter);
+      if (reasonStatusFilter) queryParams.set("breakdownReason", reasonStatusFilter);
+      if (reviewByStatusFilter) queryParams.set("reviewByStatus", reviewByStatusFilter);
+      if (podDateFilter) queryParams.set("podDate", podDateFilter);
+      if (podDateSignatureFilter) queryParams.set("podDateSignature", podDateSignatureFilter.trim());
+      if (jobNameFilter) queryParams.set("jobName", jobNameFilter.trim());
+      if (carrierFilter) queryParams.set("carrier", carrierFilter.trim());
+
+      console.log("Query Params:", queryParams.toString());
+
+      const response = await fetch(`/api/process-data/get-data/?${queryParams.toString()}`);
+
+      if (response.ok) {
+        const data = await response.json();
+        setMaster(data.jobs);
+        setTotalPages(data.totalPages);
+        setTotalJobs(data.totalJobs);
+      } else {
+        console.error("Failed to fetch jobs");
+      }
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+    } finally {
+      setLoadingTable(false);
+    }
+  }, [
+    currentPage,
+    bolNumberFilter,
+    finalStatusFilter,
+    reviewStatusFilter,
+    reasonStatusFilter,
+    reviewByStatusFilter,
+    podDateFilter,
+    podDateSignatureFilter,
+    jobNameFilter,
+    carrierFilter,
+  ]);
+
+  useEffect(() => {
+    fetchJobs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage]);
+
+  const handleFilterApply = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    fetchJobs();
+  };
+
+  const resetFiltersAndFetch = () => {
+    Promise.resolve().then(() => {
+      setFinalStatusFilter("");
+      setReviewStatusFilter("");
+      setReasonStatusFilter("");
+      setReviewByStatusFilter("");
+      setCarrierFilter("");
+      setBolNumberFilter("");
+      setPodDateFilter("");
+      setPodDateSignatureFilter("");
+      setJobNameFilter("");
+    }).then(() => {
+      fetchJobs();
+    });
+  };
+
   // const fetchJobs = useCallback(async () => {
   //   try {
   //     setLoadingTable(true);
+
   //     const queryParams = new URLSearchParams();
   //     queryParams.set("page", currentPage.toString());
-  //     if (bolNumberFilter) queryParams.set("bolNumber", bolNumberFilter.trim());
-  //     if (finalStatusFilter) queryParams.set("finalStatus", finalStatusFilter);
-  //     if (reviewStatusFilter) queryParams.set("reviewStatus", reviewStatusFilter);
-  //     if (reviewByStatusFilter) queryParams.set("reviewByStatus", reviewByStatusFilter);
-  //     if (podDateFilter) queryParams.set("podDate", podDateFilter);
-  //     if (podDateSignatureFilter) queryParams.set("podDateSignature", podDateSignatureFilter.trim());
-  //     if (carrierFilter) queryParams.set("carrier", carrierFilter.trim());
+
+  //     let hasFilters = false;
+  //     if (bolNumberFilter) {
+  //       queryParams.set("bolNumber", bolNumberFilter.trim());
+  //       hasFilters = true;
+  //     }
+  //     if (finalStatusFilter) {
+  //       queryParams.set("finalStatus", finalStatusFilter);
+  //       hasFilters = true;
+  //     }
+  //     if (reviewStatusFilter) {
+  //       queryParams.set("reviewStatus", reviewStatusFilter);
+  //       hasFilters = true;
+  //     }
+  //     if (reviewByStatusFilter) {
+  //       queryParams.set("reviewByStatus", reviewByStatusFilter);
+  //       hasFilters = true;
+  //     }
+  //     if (podDateFilter) {
+  //       queryParams.set("podDate", podDateFilter);
+  //       hasFilters = true;
+  //     }
+  //     if (podDateSignatureFilter) {
+  //       queryParams.set("podDateSignature", podDateSignatureFilter.trim());
+  //       hasFilters = true;
+  //     }
+  //     if (carrierFilter) {
+  //       queryParams.set("carrier", carrierFilter.trim());
+  //       hasFilters = true;
+  //     }
+
+  //     if (!hasFilters && currentPage === 1) {
+  //       console.log("No filters applied, skipping data fetch.");
+  //       return;
+  //     }
 
   //     console.log("Query Params:", queryParams.toString());
 
@@ -214,7 +320,7 @@ const MasterPage = () => {
 
   // const handleFilterApply = (e: React.FormEvent<HTMLFormElement>) => {
   //   e.preventDefault();
-  //   fetchJobs(); 
+  //   fetchJobs();
   // };
 
   // const resetFiltersAndFetch = () => {
@@ -227,106 +333,11 @@ const MasterPage = () => {
   //     setPodDateFilter("");
   //     setPodDateSignatureFilter("");
   //   }).then(() => {
-  //     fetchJobs();
+  //     setMaster([]);
+  //     setTotalPages(0);
+  //     setTotalJobs(0);
   //   });
   // };
-
-
-  const fetchJobs = useCallback(async () => {
-    try {
-      setLoadingTable(true);
-
-      const queryParams = new URLSearchParams();
-      queryParams.set("page", currentPage.toString());
-
-      let hasFilters = false;
-      if (bolNumberFilter) {
-        queryParams.set("bolNumber", bolNumberFilter.trim());
-        hasFilters = true;
-      }
-      if (finalStatusFilter) {
-        queryParams.set("finalStatus", finalStatusFilter);
-        hasFilters = true;
-      }
-      if (reviewStatusFilter) {
-        queryParams.set("reviewStatus", reviewStatusFilter);
-        hasFilters = true;
-      }
-      if (reviewByStatusFilter) {
-        queryParams.set("reviewByStatus", reviewByStatusFilter);
-        hasFilters = true;
-      }
-      if (podDateFilter) {
-        queryParams.set("podDate", podDateFilter);
-        hasFilters = true;
-      }
-      if (podDateSignatureFilter) {
-        queryParams.set("podDateSignature", podDateSignatureFilter.trim());
-        hasFilters = true;
-      }
-      if (carrierFilter) {
-        queryParams.set("carrier", carrierFilter.trim());
-        hasFilters = true;
-      }
-
-      if (!hasFilters && currentPage === 1) {
-        console.log("No filters applied, skipping data fetch.");
-        return;
-      }
-
-      console.log("Query Params:", queryParams.toString());
-
-      const response = await fetch(`/api/process-data/get-data/?${queryParams.toString()}`);
-
-      if (response.ok) {
-        const data = await response.json();
-        setMaster(data.jobs);
-        setTotalPages(data.totalPages);
-        setTotalJobs(data.totalJobs);
-      } else {
-        console.error("Failed to fetch jobs");
-      }
-    } catch (error) {
-      console.error("Error fetching jobs:", error);
-    } finally {
-      setLoadingTable(false);
-    }
-  }, [
-    currentPage,
-    bolNumberFilter,
-    finalStatusFilter,
-    reviewStatusFilter,
-    reviewByStatusFilter,
-    podDateFilter,
-    podDateSignatureFilter,
-    carrierFilter,
-  ]);
-
-  useEffect(() => {
-    fetchJobs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage]);
-
-  const handleFilterApply = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    fetchJobs();
-  };
-
-  const resetFiltersAndFetch = () => {
-    Promise.resolve().then(() => {
-      setFinalStatusFilter("");
-      setReviewStatusFilter("");
-      setReviewByStatusFilter("");
-      setCarrierFilter("");
-      setBolNumberFilter("");
-      setPodDateFilter("");
-      setPodDateSignatureFilter("");
-    }).then(() => {
-      setMaster([]);
-      setTotalPages(0);
-      setTotalJobs(0);
-    });
-  };
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
@@ -380,9 +391,16 @@ const MasterPage = () => {
     });
   };
 
+  useEffect(() => {
+    setShowButton(selectedRows.length > 0); // Show buttons if any row is selected
+  }, [selectedRows]);
+
 
   if (loading) return <Spinner />;
   if (!isAuthenticated) return <p>Access Denied. Redirecting...</p>;
+
+  const jobNames = ["Software Engineer", "Product Manager", "Designer", "QA Engineer", "Data Scientist"];
+
 
   return (
     <div className="flex flex-row h-screen bg-white">
@@ -404,39 +422,43 @@ const MasterPage = () => {
                   Edit
                 </span>
               </div> */}
-              <div
-                className="flex gap-2 group cursor-pointer transition-all duration-300"
-                onClick={handleDelete}
-              >
-                <span>
-                  <MdDelete
-                    className="fill-[red] text-2xl transition-transform transform group-hover:scale-110 group-hover:duration-300"
-                  />
-                </span>
-                <span
-                  className="text-[red] transition-all duration-300 group-hover:text-red-600  group-hover:duration-300"
+
+              {showButton && (<>
+                <div
+                  className="flex gap-2 group cursor-pointer transition-all duration-300"
+                  onClick={handleDelete}
                 >
-                  Delete
-                </span>
-              </div>
+                  <span>
+                    <MdDelete
+                      className="fill-[red] text-2xl transition-transform transform group-hover:scale-110 group-hover:duration-300"
+                    />
+                  </span>
+                  <span
+                    className="text-[red] transition-all duration-300 group-hover:text-red-600  group-hover:duration-300"
+                  >
+                    Delete
+                  </span>
+                </div>
 
-
-              <div
-                className="flex gap-2 group cursor-pointer transition-all duration-300"
-                onClick={handleSend}
-              >
-                <span>
-                  <GiShare
-                    className="fill-[#AF9918] text-2xl transition-transform transform group-hover:scale-110 group-hover:duration-300"
-                  />
-                </span>
-                <span
-                  className="text-[#AF9918] transition-all duration-300 group-hover:text-[#D5A100]"
+                <div
+                  className="flex gap-2 group cursor-pointer transition-all duration-300"
+                  onClick={handleSend}
                 >
-                  Send
-                </span>
-              </div>
+                  <span>
+                    <GiShare
+                      className="fill-[#AF9918] text-2xl transition-transform transform group-hover:scale-110 group-hover:duration-300"
+                    />
+                  </span>
+                  <span
+                    className="text-[#AF9918] transition-all duration-300 group-hover:text-[#D5A100]"
+                  >
+                    Send
+                  </span>
+                </div>
+              </>
 
+              )
+              }
 
             </div>
           </>
@@ -649,6 +671,54 @@ const MasterPage = () => {
                 </div>
               </div>
 
+              <div className="flex flex-col">
+                <label htmlFor="finalStatusFilter" className="text-sm font-semibold text-gray-800">
+                  Breakdown Reason
+                </label>
+                <div className="relative">
+                  <select
+                    id="finalStatusFilter"
+                    className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none"
+                    value={reasonStatusFilter}
+                    onChange={(e) => setReasonStatusFilter(e.target.value)}
+                  >
+                    <option value="">Select</option>
+                    <option value="none">none</option>
+                    <option value="damaged">damaged</option>
+                    <option value="shortage">shortage</option>
+                    <option value="overage">overage</option>
+                    <option value="refused">refused</option>
+
+                  </select>
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500"
+                  >
+                    <FaChevronDown size={16} className="text-[#005B97]" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col">
+                <label htmlFor="search" className="text-sm font-semibold text-gray-800">
+                Job Name
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Job name"
+                    value={jobNameFilter}
+                    onChange={(e) => setJobNameFilter(e.target.value)}
+                    className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97]"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                  >
+                  </button>
+                </div>
+              </div>
+
               <div className="flex justify-end items-center gap-4 col-span-3">
                 <button
                   className="text-[#005B97] underline cursor-pointer"
@@ -690,6 +760,7 @@ const MasterPage = () => {
                       <tr className="text-gray-800">
                         <th className="py-2 px-4 border-b text-start min-w-36"><span className="mr-3"><input type="checkbox" checked={isAllSelected}
                           onChange={handleSelectAll} /></span>BL Number</th>
+                        <th className="py-2 px-4 border-b text-center min-w-32">Job Name</th>
                         <th className="py-2 px-4 border-b text-center min-w-32">Carrier</th>
                         <th className="py-2 px-4 border-b text-center min-w-32">POD Date</th>
                         <th className="py-2 px-4 border-b text-center min-w-40">POD Signature</th>
@@ -721,6 +792,9 @@ const MasterPage = () => {
                                 {job.blNumber}
                               </span>
                             </Link>
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {jobNames[Math.floor(Math.random() * jobNames.length)]}
                           </td>
                           <td className="py-2 px-4 border-b text-center">{job.carrier}</td>
                           <td className="py-2 px-4 border-b text-center">{job.podDate}</td>

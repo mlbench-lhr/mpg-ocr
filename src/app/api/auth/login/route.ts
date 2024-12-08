@@ -7,7 +7,7 @@ const SECRET_KEY = process.env.NEXT_PUBLIC_JWT_SECRET as string;
 
 export async function POST(req: Request) {
     const { email, password, role } = await req.json();
-    console.log(role);
+    // console.log(role);
 
     if (!email || !password) {
         return NextResponse.json(
@@ -20,7 +20,9 @@ export async function POST(req: Request) {
         const client = await clientPromise;
         const db = client.db("my-next-app");
 
-        const query = role ? { email, role } : { email };
+        const normalizedEmail = email.toLowerCase();
+
+        const query = role ? { email: normalizedEmail, role } : { email: normalizedEmail };
         const user = await db.collection("users").findOne(query);
 
         if (!user) {
