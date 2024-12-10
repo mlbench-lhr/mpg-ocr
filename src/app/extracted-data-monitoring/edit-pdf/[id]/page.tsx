@@ -194,12 +194,15 @@ const JobDetail = () => {
                         </div>
                         <form className="space-y-10 flex-1 overflow-y-auto">
                             {Object.keys(formData).map((key) => (
-                                <div key={key} className="flex items-center gap-3 bg-white px-2 border-l-8 border-[#005B97] rounded-lg py-[7px]">
+                                <div
+                                    key={key}
+                                    className="flex items-center gap-3 bg-white px-2 border-l-8 border-[#005B97] rounded-lg py-[7px]"
+                                >
                                     <label className="font-medium text-gray-500 capitalize w-32">
                                         {key.replace(/([A-Z])/g, " $1")} :
                                     </label>
                                     <input
-                                        type="text"
+                                        type={key === "podDate" ? "date" : "text"}
                                         name={key}
                                         value={formData[key as keyof typeof formData]}
                                         onChange={handleChange}
@@ -209,6 +212,7 @@ const JobDetail = () => {
                                 </div>
                             ))}
                         </form>
+
 
                         {isEditMode && (
                             <>

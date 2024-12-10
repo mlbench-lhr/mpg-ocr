@@ -121,7 +121,7 @@ export default function Page() {
                                     <td className="py-2 px-4 border-b text-start">232058679452165</td>
                                     <td className="py-2 px-4 border-b text-center">
                                         <div
-                                            className={`inline-flex items-center justify-center gap-0 px-3 py-2 rounded-full text-sm font-medium  bg-blue-100 text-[#005B97]`}
+                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-blue-100 text-[#005B97]`}
                                         >
                                             <div className="flex items-center">
                                                 <span>
@@ -146,7 +146,7 @@ export default function Page() {
                                     <td className="py-2 px-4 border-b text-start">232058679452165</td>
                                     <td className="py-2 px-4 border-b text-center">
                                         <div
-                                            className={`inline-flex items-center justify-center gap-0 px-3 py-2 rounded-full text-sm font-medium  bg-yellow-100 text-[#AF9918]`}
+                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-yellow-100 text-[#AF9918]`}
                                         >
                                             <div className="flex items-center">
                                                 <span>
@@ -171,7 +171,7 @@ export default function Page() {
                                     <td className="py-2 px-4 border-b text-start">232058679452165</td>
                                     <td className="py-2 px-4 border-b text-center">
                                         <div
-                                            className={`inline-flex items-center justify-center gap-0 px-3 py-2 rounded-full text-sm font-medium  bg-green-100 text-green-800`}
+                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-green-100 text-green-800`}
                                         >
                                             <div className="flex items-center">
                                                 <span>
@@ -196,7 +196,7 @@ export default function Page() {
                                     <td className="py-2 px-4 border-b text-start">232058679452165</td>
                                     <td className="py-2 px-4 border-b text-center">
                                         <div
-                                            className={`inline-flex items-center justify-center gap-0 px-3 py-2 rounded-full text-sm font-medium  bg-blue-100 text-[#005B97]`}
+                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-blue-100 text-[#005B97]`}
                                         >
                                             <div className="flex items-center">
                                                 <span>
@@ -221,7 +221,7 @@ export default function Page() {
                                     <td className="py-2 px-4 border-b text-start">232058679452165</td>
                                     <td className="py-2 px-4 border-b text-center">
                                         <div
-                                            className={`inline-flex items-center justify-center gap-0 px-3 py-2 rounded-full text-sm font-medium  bg-yellow-100 text-[#AF9918]`}
+                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-yellow-100 text-[#AF9918]`}
                                         >
                                             <div className="flex items-center">
                                                 <span>
@@ -246,7 +246,7 @@ export default function Page() {
                                     <td className="py-2 px-4 border-b text-start">232058679452165</td>
                                     <td className="py-2 px-4 border-b text-center">
                                         <div
-                                            className={`inline-flex items-center justify-center gap-0 px-3 py-2 rounded-full text-sm font-medium  bg-blue-100 text-[#005B97]`}
+                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-blue-100 text-[#005B97]`}
                                         >
                                             <div className="flex items-center">
                                                 <span>
@@ -271,7 +271,7 @@ export default function Page() {
                                     <td className="py-2 px-4 border-b text-start">232058679452165</td>
                                     <td className="py-2 px-4 border-b text-center">
                                         <div
-                                            className={`inline-flex items-center justify-center gap-0 px-3 py-2 rounded-full text-sm font-medium  bg-blue-100 text-[#005B97]`}
+                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-blue-100 text-[#005B97]`}
                                         >
                                             <div className="flex items-center">
                                                 <span>
@@ -296,7 +296,7 @@ export default function Page() {
                                     <td className="py-2 px-4 border-b text-start">232058679452165</td>
                                     <td className="py-2 px-4 border-b text-center">
                                         <div
-                                            className={`inline-flex items-center justify-center gap-0 px-3 py-2 rounded-full text-sm font-medium  bg-yellow-100 text-[#AF9918]`}
+                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-yellow-100 text-[#AF9918]`}
                                         >
                                             <div className="flex items-center">
                                                 <span>
@@ -321,7 +321,7 @@ export default function Page() {
                                     <td className="py-2 px-4 border-b text-start">232058679452165</td>
                                     <td className="py-2 px-4 border-b text-center">
                                         <div
-                                            className={`inline-flex items-center justify-center gap-0 px-3 py-2 rounded-full text-sm font-medium  bg-blue-100 text-[#005B97]`}
+                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-blue-100 text-[#005B97]`}
                                         >
                                             <div className="flex items-center">
                                                 <span>
@@ -346,7 +346,7 @@ export default function Page() {
                                     <td className="py-2 px-4 border-b text-start">232058679452165</td>
                                     <td className="py-2 px-4 border-b text-center">
                                         <div
-                                            className={`inline-flex items-center justify-center gap-0 px-3 py-2 rounded-full text-sm font-medium  bg-yellow-100 text-[#AF9918]`}
+                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-yellow-100 text-[#AF9918]`}
                                         >
                                             <div className="flex items-center">
                                                 <span>

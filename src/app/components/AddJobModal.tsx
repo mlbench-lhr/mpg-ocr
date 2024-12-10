@@ -1,5 +1,8 @@
-import { useState } from "react";
+"use client";
+
+import { useState, useEffect } from "react";
 import { Job } from "../../types"; // Import the shared Job type
+import { FaChevronDown, FaClock } from "react-icons/fa";
 
 
 // interface Job {
@@ -16,6 +19,12 @@ interface AddJobModalProps {
   onSubmit: (data: Job) => void; // Updated to Job type
 }
 
+// Helper function to convert HH:mm time to minutes
+const timeToMinutes = (time: string): number => {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+};
+
 const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [fromTime, setFromTime] = useState("");
@@ -23,6 +32,47 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
   const [everyTime, setEveryTime] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [availableDurations, setAvailableDurations] = useState<number[]>([]);
+  const [error, setError] = useState<string>("");
+
+
+  // Update available durations whenever fromTime or toTime changes
+  useEffect(() => {
+    if (fromTime && toTime) {
+      const startMinutes = timeToMinutes(fromTime);
+      const endMinutes = timeToMinutes(toTime);
+
+      // Check if toTime is at least 1 hour after fromTime
+      if (endMinutes - startMinutes < 60) {
+        setError("The 'To' time must be at least 1 hour after the 'From' time.");
+        setAvailableDurations([]); // Clear available durations
+      } else {
+        setError(""); // Clear error
+
+        const totalMinutes = endMinutes - startMinutes;
+
+        // Limit the maximum duration to 120 minutes
+        const maxDuration = Math.min(totalMinutes, 120);
+
+        // Generate duration options in increments of 20 minutes up to the total duration or 120 minutes
+        const durations = [];
+        for (let i = 20; i <= maxDuration; i += 20) {
+          durations.push(i);
+        }
+
+        setAvailableDurations(durations);
+
+        // Reset `everyTime` if it exceeds the new range
+        if (everyTime && +everyTime > maxDuration) {
+          setEveryTime("");
+        }
+      }
+    } else {
+      setError(""); // Clear error when time fields are empty
+      setAvailableDurations([]);
+    }
+  }, [fromTime, toTime, everyTime]);
 
   // Handle day selection (checkbox change)
   const handleDayChange = (day: string) => {
@@ -47,7 +97,7 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
       return;
     }
 
-    setErrorMessage(""); 
+    setErrorMessage("");
     setIsSubmitting(true);
 
     const jobData: Job = { selectedDays, fromTime, toTime, everyTime, _id: "", active: false }; // Add default _id
@@ -117,45 +167,91 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
             </div>
           </div>
 
-          {/* Time Fields */}
-          <div className="mb-4">
-            <label className="block font-semibold text-gray-800">From</label>
-            <input
-              type="time"
-              value={fromTime}
-              onChange={(e) => setFromTime(e.target.value)}
-              className="px-4 py-2 text-gray-800 border border-gray-300 rounded-md w-full"
-              required
-            />
-          </div>
 
-          <div className="mb-4">
-            <label className="block font-semibold text-gray-800">To</label>
-            <input
-              type="time"
-              value={toTime}
-              onChange={(e) => setToTime(e.target.value)}
-              className="px-4 py-2 border text-gray-800 border-gray-300 rounded-md w-full"
-              required
-            />
+          <div className="flex flex-col mb-5">
+            <label htmlFor="fromTime" className="text-sm font-semibold text-gray-800">
+              AT/From
+            </label>
+            <div className="relative">
+              <input
+                id="fromTime"
+                type="time"
+                value={fromTime}
+                onChange={(e) => setFromTime(e.target.value)}
+                className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] custom-time-input"
+                required
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500"
+                onClick={() => {
+                  const podDateInput = document.getElementById("fromTime") as HTMLInputElement;
+                  if (podDateInput) {
+                    podDateInput.showPicker();
+                  }
+                }}
+              >
+                <FaClock size={16} className="text-[#005B97]" />
+              </button>
+            </div>
           </div>
-
-          <div className="mb-4">
-            <label className="block font-semibold text-gray-800">Every</label>
-            <select
-              value={everyTime}
-              onChange={(e) => setEveryTime(e.target.value)}
-              className="px-4 py-2 border text-gray-800 border-gray-300 rounded-md w-full"
-              required
-            >
-              <option value="">Select Time</option>
-              <option value="20">20 Mins</option>
-              <option value="40">40 Mins</option>
-              <option value="60">60 Mins</option>
-              <option value="80">80 Mins</option>
-              <option value="100">100 Mins</option>
-              <option value="120">120 Mins</option>
-            </select>
+          {/* To Time Field */}
+          <div className="flex flex-col mb-5">
+            <label htmlFor="toTime" className="text-sm font-semibold text-gray-800">
+              To
+            </label>
+            <div className="relative">
+              <input
+                id="toTime"
+                type="time"
+                value={toTime}
+                onChange={(e) => setToTime(e.target.value)}
+                className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] custom-time-input"
+                required
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500"
+                onClick={() => {
+                  const podDateInput = document.getElementById("toTime") as HTMLInputElement;
+                  if (podDateInput) {
+                    podDateInput.showPicker();
+                  }
+                }}
+              >
+                <FaClock size={16} className="text-[#005B97]" />
+              </button>
+            </div>
+          </div>
+          {/* Error message */}
+          {error && <div className="text-red-600 text-sm mb-4">{error}</div>}
+          {/* Every Time Field */}
+          <div className="flex flex-col mb-5">
+            <label htmlFor="everyTime" className="text-sm font-semibold text-gray-800">
+              Every
+            </label>
+            <div className="relative">
+              <select
+                id="everyTime"
+                className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none"
+                value={everyTime}
+                onChange={(e) => setEveryTime(e.target.value)}
+                required
+              >
+                <option value="">Select Time</option>
+                {availableDurations.map((duration) => (
+                  <option key={duration} value={duration}>
+                    {duration} Mins
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500"
+              >
+                <FaChevronDown size={16} className="text-[#005B97]" />
+              </button>
+            </div>
           </div>
 
           {/* Submit and Cancel Buttons */}

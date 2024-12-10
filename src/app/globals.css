@@ -35,3 +35,12 @@ body {
   -moz-appearance: textfield; /* Hide default calendar icon for Firefox */
   appearance: none; /* Hide default calendar icon for Chrome/Safari */
 }
+
+.custom-time-input[type="time"]::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
+.custom-time-input[type="time"] {
+  -moz-appearance: textfield; /* Hide default calendar icon for Firefox */
+  appearance: none; /* Hide default calendar icon for Chrome/Safari */
+}
