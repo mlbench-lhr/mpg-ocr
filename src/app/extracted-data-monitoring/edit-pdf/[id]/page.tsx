@@ -10,6 +10,7 @@ import Link from 'next/link';
 interface Job {
     _id: string;
     blNumber: string;
+    jobName: string;
     carrier: string;
     podDate: string;
     podSignature: string;
@@ -71,19 +72,19 @@ const JobDetail = () => {
                     } else {
                         setJob(data);
                         setFormData({
-                            noOfPages: data.noOfPages || "",
+                            noOfPages: data.noOfPages ?? "",
                             blNumber: data.blNumber || "",
                             carrier: data.carrier || "",
                             podDate: data.podDate || "",
                             podSignature: data.podSignature || "",
-                            totalQty: data.totalQty?.toString() || "",
+                            totalQty: data.totalQty?.toString() ?? "",
                             receiverSignature: data.receiverSignature || "",
-                            delivered: data.delivered || "",
-                            damaged: data.damaged || "",
-                            short: data.short || "",
-                            over: data.over || "",
-                            refused: data.refused || "",
-                            sealIntact: data.sealIntact || "",
+                            delivered: data.delivered ?? "",
+                            damaged: data.damaged ?? "",
+                            short: data.short ?? "",
+                            over: data.over ?? "",
+                            refused: data.refused ?? "",
+                            sealIntact: data.sealIntact ?? "",
                         });
                     }
                     setLoading(false);
@@ -100,10 +101,69 @@ const JobDetail = () => {
         router.back();
     };
 
+    // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     const { name, value } = e.target;
+    //     setFormData({ ...formData, [name]: value });
+    // };
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+
+        // Define fields that should be validated as numeric
+        const numericFields = [
+            "totalQty",
+            "delivered",
+            "damaged",
+            "short",
+            "over",
+            "refused",
+            "noOfPages",
+        ];
+
+        // Define fields that should be validated as non-numeric
+        const nonNumericFields = [
+            "blNumber",
+            "carrier",
+            "podSignature",
+            "receiverSignature",
+            "sealIntact",
+        ];
+
+        // Check for numeric fields
+        if (numericFields.includes(name)) {
+            // Prevent spaces at the beginning and only numbers allowed
+            const isValidNumeric = /^(0|[1-9][0-9]*)$/.test(value) || value === "";
+
+            // If the input is valid, update the form data
+            if (isValidNumeric) {
+                setFormData((prev) => ({
+                    ...prev,
+                    [name]: value,
+                }));
+            }
+        } else if (nonNumericFields.includes(name)) {
+            // Prevent spaces at the beginning and allow only alphanumeric characters or underscores
+            const isValidNonNumeric = /^[a-zA-Z0-9_]*$/.test(value) && !/^\d/.test(value) && (value.match(/0/g)?.length || 0) <= 1;
+
+            // If the input is valid, update the form data
+            if (isValidNonNumeric) {
+                setFormData((prev) => ({
+                    ...prev,
+                    [name]: value,
+                }));
+            }
+        } else {
+            // For other fields, no validation required
+            setFormData((prev) => ({
+                ...prev,
+                [name]: value,
+            }));
+        }
     };
+
+
+
+
 
     const handleSave = async () => {
         setSaving(true);
@@ -212,6 +272,9 @@ const JobDetail = () => {
                                 </div>
                             ))}
                         </form>
+
+
+
 
 
                         {isEditMode && (

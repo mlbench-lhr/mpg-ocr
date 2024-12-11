@@ -19,6 +19,7 @@ import Swal from 'sweetalert2';
 interface Job {
   _id: string;
   blNumber: string;
+  jobName: string;
   carrier: string;
   podDate: string;
   podSignature: string;
@@ -52,8 +53,6 @@ const MasterPage = () => {
   const [showButton, setShowButton] = useState(false);
 
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
-
-
 
   const [finalStatusFilter, setFinalStatusFilter] = useState("");
   const [reviewStatusFilter, setReviewStatusFilter] = useState("");
@@ -178,7 +177,7 @@ const MasterPage = () => {
       const queryParams = new URLSearchParams();
       queryParams.set("page", currentPage.toString());
       if (bolNumberFilter) queryParams.set("bolNumber", bolNumberFilter.trim());
-      if (finalStatusFilter) queryParams.set("finalStatus", finalStatusFilter);
+      if (finalStatusFilter) queryParams.set("recognitionStatus", finalStatusFilter);
       if (reviewStatusFilter) queryParams.set("reviewStatus", reviewStatusFilter);
       if (reasonStatusFilter) queryParams.set("breakdownReason", reasonStatusFilter);
       if (reviewByStatusFilter) queryParams.set("reviewByStatus", reviewByStatusFilter);
@@ -343,7 +342,6 @@ const MasterPage = () => {
     setCurrentPage(newPage);
   }
 
-
   const handleDelete = () => {
     Swal.fire({
       title: 'Delete Files',
@@ -366,7 +364,6 @@ const MasterPage = () => {
       }
     });
   };
-
 
   const handleSend = () => {
     Swal.fire({
@@ -392,14 +389,12 @@ const MasterPage = () => {
   };
 
   useEffect(() => {
-    setShowButton(selectedRows.length > 0); // Show buttons if any row is selected
+    setShowButton(selectedRows.length > 0);
   }, [selectedRows]);
 
 
   if (loading) return <Spinner />;
   if (!isAuthenticated) return <p>Access Denied. Redirecting...</p>;
-
-  const jobNames = ["Software Engineer", "Product Manager", "Designer", "QA Engineer", "Data Scientist"];
 
 
   return (
@@ -596,7 +591,7 @@ const MasterPage = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col">
+              {/* <div className="flex flex-col">
                 <label htmlFor="search" className="text-sm font-semibold text-gray-800">
                   POD Date
                 </label>
@@ -622,7 +617,38 @@ const MasterPage = () => {
                     <IoCalendar size={20} className="text-[#005B97]" />
                   </button>
                 </div>
+              </div> */}
+
+              <div className="flex flex-col">
+                <label htmlFor="search" className="text-sm font-semibold text-gray-800">
+                  POD Date
+                </label>
+                <div className="relative">
+                  <input
+                    id="dateInput"
+                    type="date"
+                    placeholder="YYYY-MM-DD" // Indicates the format to users
+                    value={podDateFilter}
+                    onChange={(e) => setPodDateFilter(e.target.value)}
+                    className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] custom-date-input"
+                    max="9999-12-31"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                    onClick={() => {
+                      const dateInput = document.getElementById('dateInput') as HTMLInputElement;
+                      if (dateInput) {
+                        dateInput.showPicker();
+                      }
+                    }}
+                  >
+                    <IoCalendar size={20} className="text-[#005B97]" />
+                  </button>
+                </div>
               </div>
+
+
 
               <div className="flex flex-col">
                 <label htmlFor="search" className="text-sm font-semibold text-gray-800">
@@ -701,7 +727,7 @@ const MasterPage = () => {
 
               <div className="flex flex-col">
                 <label htmlFor="search" className="text-sm font-semibold text-gray-800">
-                Job Name
+                  Job Name
                 </label>
                 <div className="relative">
                   <input
@@ -794,12 +820,12 @@ const MasterPage = () => {
                             </Link>
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {jobNames[Math.floor(Math.random() * jobNames.length)]}
+                            {job.jobName}
                           </td>
                           <td className="py-2 px-4 border-b text-center">{job.carrier}</td>
                           <td className="py-2 px-4 border-b text-center">{job.podDate}</td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.podSignature === "" || job.podSignature === null ? (
+                            {job.podSignature === "" || job.podSignature === null || job.podSignature === undefined ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>
@@ -816,42 +842,42 @@ const MasterPage = () => {
 
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.delivered === null ? (
+                            {job.delivered === null || job.delivered === undefined ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>
                             ) : job.delivered}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.damaged === null ? (
+                            {job.damaged === null || job.damaged === undefined ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>
                             ) : job.damaged}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.short === null ? (
+                            {job.short === null || job.short === undefined  ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>
                             ) : job.short}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.over === null ? (
+                            {job.over === null || job.over === undefined  ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>
                             ) : job.over}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.refused === null ? (
+                            {job.refused === null || job.refused === undefined  ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>
                             ) : job.refused}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.sealIntact === null ? (
+                            {job.sealIntact === null  || job.sealIntact === undefined  ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>

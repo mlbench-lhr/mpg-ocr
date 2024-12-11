@@ -40,6 +40,39 @@ export async function POST(req: Request) {
 }
 
 // GET: Fetch Jobs
+// export async function GET(req: Request) {
+//   try {
+//     const jobsCollection = await getJobsCollection();
+//     const url = new URL(req.url);
+//     const page = parseInt(url.searchParams.get("page") || "1", 10);
+//     const limit = parseInt(url.searchParams.get("limit") || "10", 10);
+//     const skip = (page - 1) * limit;
+//     const searchQuery = url.searchParams.get("search") || "";
+
+//     let filter = {};
+
+//     // Build filter based on query
+//     if (searchQuery) {
+//       const isActive = searchQuery.toLowerCase() === "active" ? true : searchQuery.toLowerCase() === "inactive" ? false : null;
+//       filter = isActive !== null ? { active: isActive } : { selectedDays: { $regex: searchQuery, $options: "i" } };
+//     }
+
+//     const [jobs, totalJobs] = await Promise.all([
+//       jobsCollection.find(filter).skip(skip).limit(limit).toArray(),
+//       jobsCollection.countDocuments(filter),
+//     ]);
+
+//     return NextResponse.json(
+//       { jobs, totalJobs, page, totalPages: Math.ceil(totalJobs / limit) },
+//       { status: 200 }
+//     );
+//   } catch (error) {
+//     console.error("Error fetching jobs:", error);
+//     return NextResponse.json({ error: "Failed to fetch jobs." }, { status: 500 });
+//   }
+// }
+
+// GET: Fetch Jobs
 export async function GET(req: Request) {
   try {
     const jobsCollection = await getJobsCollection();
@@ -47,21 +80,36 @@ export async function GET(req: Request) {
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const limit = parseInt(url.searchParams.get("limit") || "10", 10);
     const skip = (page - 1) * limit;
-    const searchQuery = url.searchParams.get("search") || "";
+    const searchQuery = url.searchParams.get("search")?.trim().toLowerCase() || "";
 
     let filter = {};
 
-    // Build filter based on query
+    // Define keywords for active and inactive
+    const activeKeywords = ["ac", "active", "act", "acti", "activ"];
+    const inactiveKeywords = ["in", "inactive", "inact", "ina", "inac", "inacti", "inactiv"];
+
     if (searchQuery) {
-      const isActive = searchQuery.toLowerCase() === "active" ? true : searchQuery.toLowerCase() === "inactive" ? false : null;
-      filter = isActive !== null ? { active: isActive } : { selectedDays: { $regex: searchQuery, $options: "i" } };
+      // Check if the search query matches an exact keyword from the active array
+      if (activeKeywords.some((keyword) => searchQuery === keyword)) {
+        filter = { active: true };
+      }
+      // Check if the search query matches an exact keyword from the inactive array
+      else if (inactiveKeywords.some((keyword) => searchQuery === keyword)) {
+        filter = { active: false };
+      }
+      // Default to regex-based search for other cases
+      // else {
+      //   filter = { selectedDays: { $regex: searchQuery, $options: "i" } };
+      // }
     }
 
+    // Fetch jobs and total job count
     const [jobs, totalJobs] = await Promise.all([
       jobsCollection.find(filter).skip(skip).limit(limit).toArray(),
       jobsCollection.countDocuments(filter),
     ]);
 
+    // Prepare the response
     return NextResponse.json(
       { jobs, totalJobs, page, totalPages: Math.ceil(totalJobs / limit) },
       { status: 200 }
@@ -71,6 +119,8 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Failed to fetch jobs." }, { status: 500 });
   }
 }
+
+
 
 // PATCH: Update Job Status
 export async function PATCH(req: Request) {

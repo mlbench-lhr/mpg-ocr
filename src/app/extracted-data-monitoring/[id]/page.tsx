@@ -13,6 +13,7 @@ import { BiSolidEditAlt } from 'react-icons/bi';
 interface Job {
     _id: string;
     blNumber: string;
+    jobName: string;
     carrier: string;
     podDate: string;
     podSignature: string;

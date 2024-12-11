@@ -7,7 +7,7 @@ export async function POST(req: Request) {
 
         // Validate incoming data
         const requiredFields = [
-            "blNumber", "carrier", "podDate", "podSignature", "totalQty",
+            "blNumber", "jobName", "carrier", "podDate", "podSignature", "totalQty",
             "delivered", "damaged", "short", "over", "refused",
             "sealIntact", "finalStatus", "reviewStatus", "recognitionStatus", "breakdownReason", "reviewedBy", "cargoDescription"
         ];

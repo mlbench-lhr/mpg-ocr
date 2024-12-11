@@ -5,6 +5,7 @@ import clientPromise from "@/lib/mongodb";
 interface Job {
     _id: ObjectId;
     blNumber: string;
+    jobName: string;
     carrier: string;
     podDate: string;
     podSignature: string;
@@ -25,7 +26,6 @@ interface Job {
     receiverSignature: string;
 }
 
-// Handle GET requests
 export async function GET(req: Request) {
     try {
         const client = await clientPromise;
@@ -41,8 +41,7 @@ export async function GET(req: Request) {
         const skip = (page - 1) * limit;
 
         // Filters
-        const searchQuery = url.searchParams.get("search") || "";
-        const finalStatus = url.searchParams.get("finalStatus") || "";
+        const recognitionStatus = url.searchParams.get("recognitionStatus") || "";
         const reviewStatus = url.searchParams.get("reviewStatus") || "";
         const reviewByStatus = url.searchParams.get("reviewByStatus") || "";
         const breakdownReason = url.searchParams.get("breakdownReason") || "";
@@ -50,26 +49,41 @@ export async function GET(req: Request) {
         const podDateSignature = url.searchParams.get("podDateSignature") || "";
         const carrier = url.searchParams.get("carrier") || "";
         const bolNumber = url.searchParams.get("bolNumber") || "";
+        const jobName = url.searchParams.get("jobName") || "";
+        const searchQuery = url.searchParams.get("search") || "";
 
         const filter: Filter<Job> = {};
 
-        // Dynamic filters
+        // Add case-insensitive filters for specific fields
+        if (podDateSignature) {
+            filter.podSignature = { $regex: podDateSignature.trim(), $options: "i" };
+        }
+        if (carrier) {
+            filter.carrier = { $regex: carrier.trim(), $options: "i" };
+        }
+        if (bolNumber) {
+            filter.blNumber = { $regex: bolNumber.trim(), $options: "i" };
+        }
+        if (jobName) {
+            filter.jobName = { $regex: jobName.trim(), $options: "i" };
+        }
+
+        // Add case-insensitive search across multiple fields
         if (searchQuery) {
             const searchRegex = { $regex: searchQuery, $options: "i" };
             filter.$or = [
                 { blNumber: searchRegex },
                 { carrier: searchRegex },
                 { podSignature: searchRegex },
+                { jobName: searchRegex },
             ];
         }
-        if (finalStatus) filter.recognitionStatus = finalStatus;
+
+        if (recognitionStatus) filter.recognitionStatus = recognitionStatus;
         if (reviewStatus) filter.reviewStatus = reviewStatus;
         if (reviewByStatus) filter.reviewedBy = reviewByStatus;
         if (breakdownReason) filter.breakdownReason = breakdownReason;
         if (podDate) filter.podDate = podDate;
-        if (podDateSignature) filter.podSignature = podDateSignature;
-        if (carrier) filter.carrier = carrier;
-        if (bolNumber) filter.blNumber = bolNumber;
 
         // Fetch data from MongoDB
         const jobs = await dataCollection.find(filter).skip(skip).limit(limit).toArray();

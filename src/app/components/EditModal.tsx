@@ -7,6 +7,7 @@ import { IoCalendar } from "react-icons/io5";
 interface Job {
     _id: string;
     blNumber: string;
+    jobName: string;
     createdAt: string;
     podDate: string;
     cargoDescription: string;

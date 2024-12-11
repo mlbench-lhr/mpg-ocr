@@ -5,6 +5,7 @@ import clientPromise from "@/lib/mongodb";
 interface Job {
   _id: ObjectId;
   blNumber: string;
+  jobName:string;
   carrier: string;
   podDate: string;
   podSignature: string;
