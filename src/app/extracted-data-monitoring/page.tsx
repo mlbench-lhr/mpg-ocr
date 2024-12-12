@@ -43,6 +43,7 @@ interface Job {
 const MasterPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState("");
   const [isFilterDropDownOpen, setIsFilterDropDownOpen] = useState(true);
   const [loadingTable, setLoadingTable] = useState(false);
   const [master, setMaster] = useState<Job[]>([]);
@@ -101,6 +102,7 @@ const MasterPage = () => {
       return;
     }
 
+
     const decodeJwt = (token: string) => {
       const base64Url = token.split(".")[1];
       const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
@@ -117,15 +119,25 @@ const MasterPage = () => {
     const decodedToken = decodeJwt(token);
     const currentTime = Date.now() / 1000;
 
-    if (decodedToken.exp < currentTime) {
-      localStorage.removeItem("token");
-      router.push("/login");
-      return;
+    setUserRole(decodedToken.role);
+
+    if (userRole === "admin") {
+      if (decodedToken.exp < currentTime) {
+        localStorage.removeItem("token");
+        router.push("/admin-login");
+        return;
+      }
+    } else {
+      if (decodedToken.exp < currentTime) {
+        localStorage.removeItem("token");
+        router.push("/login");
+        return;
+      }
     }
 
     setIsAuthenticated(true);
     setLoading(false);
-  }, [router]);
+  }, [router, userRole]);
 
   const handleRowSelection = (id: string) => {
     setSelectedRows((prevSelectedRows) =>
@@ -171,10 +183,17 @@ const MasterPage = () => {
     }
   };
 
+
+  // useEffect(() => {
+  //   const jobName = localStorage.getItem('jobName') || ''; 
+  //   setJobNameFilter(jobName);
+  // }, []);
+
   const fetchJobs = useCallback(async () => {
     try {
       setLoadingTable(true);
       const queryParams = new URLSearchParams();
+      console.log(queryParams);
       queryParams.set("page", currentPage.toString());
       if (bolNumberFilter) queryParams.set("bolNumber", bolNumberFilter.trim());
       if (finalStatusFilter) queryParams.set("recognitionStatus", finalStatusFilter);
@@ -223,6 +242,7 @@ const MasterPage = () => {
 
   const handleFilterApply = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    // localStorage.setItem("jobName", jobNameFilter);
     fetchJobs();
   };
 
@@ -856,28 +876,28 @@ const MasterPage = () => {
                             ) : job.damaged}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.short === null || job.short === undefined  ? (
+                            {job.short === null || job.short === undefined ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>
                             ) : job.short}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.over === null || job.over === undefined  ? (
+                            {job.over === null || job.over === undefined ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>
                             ) : job.over}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.refused === null || job.refused === undefined  ? (
+                            {job.refused === null || job.refused === undefined ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>
                             ) : job.refused}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.sealIntact === null  || job.sealIntact === undefined  ? (
+                            {job.sealIntact === null || job.sealIntact === undefined ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>

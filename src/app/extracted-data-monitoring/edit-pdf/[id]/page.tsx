@@ -56,10 +56,37 @@ const JobDetail = () => {
     const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
     const [saving, setSaving] = useState(false); // Added saving state
     const router = useRouter();
+    const [userRole, setUserRole] = useState("");
 
     const handleSidebarToggle = (expanded: boolean) => {
         setIsSidebarExpanded(expanded);
     };
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            router.push("/login");
+            return;
+        }
+
+        const decodeJwt = (token: string) => {
+            const base64Url = token.split(".")[1];
+            const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+            const jsonPayload = decodeURIComponent(
+                atob(base64)
+                    .split("")
+                    .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                    .join("")
+            );
+
+            return JSON.parse(jsonPayload);
+        };
+
+        const decodedToken = decodeJwt(token);
+        setUserRole(decodedToken.role);
+        setLoading(false);
+    }, [router]);
 
 
     useEffect(() => {
@@ -132,7 +159,8 @@ const JobDetail = () => {
         // Check for numeric fields
         if (numericFields.includes(name)) {
             // Prevent spaces at the beginning and only numbers allowed
-            const isValidNumeric = /^(0|[1-9][0-9]*)$/.test(value) || value === "";
+            // const isValidNumeric = /^(0|[1-9][0-9]*)$/.test(value) || value === "";
+            const isValidNumeric = /^(0|[1-9][0-9]{0,4})$/.test(value) || value === "";
 
             // If the input is valid, update the form data
             if (isValidNumeric) {
@@ -243,13 +271,16 @@ const JobDetail = () => {
                                 <h3 className="text-xl font-medium text-gray-800">Extracted Data</h3>
                             </span>
                             <span>
-                                <button
-                                    className={`text-[#005B97] underline ${isEditMode ? "text-blue-300" : ""}`}
-                                    onClick={handleEditClick}
-                                    disabled={isEditMode}
-                                >
-                                    Edit Data
-                                </button>
+                                {(userRole === "admin" || userRole === "standarduser") && (
+                                    <button
+                                        className={`text-[#005B97] underline ${isEditMode ? "text-blue-300" : ""}`}
+                                        onClick={handleEditClick}
+                                        disabled={isEditMode}
+                                    >
+                                        Edit Data
+                                    </button>
+                                )}
+
                             </span>
                         </div>
                         <form className="space-y-10 flex-1 overflow-y-auto">

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import Spinner from "../components/Spinner";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Swal from 'sweetalert2';
 
@@ -22,9 +23,52 @@ export default function Page() {
     const [totalUsers, setTotalUsers] = useState(0);
     const [searchQuery, setSearchQuery] = useState("");
     const [loadingTable, setLoadingTable] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
     const [users, setUsers] = useState<User[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const router = useRouter();
+
+
+    useEffect(() => {
+
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            router.push("/admin-login");
+            return;
+        }
+
+        const decodeJwt = (token: string) => {
+            const base64Url = token.split(".")[1];
+            const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+            const jsonPayload = decodeURIComponent(
+                atob(base64)
+                    .split("")
+                    .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                    .join("")
+            );
+            return JSON.parse(jsonPayload);
+        };
+
+        const decodedToken = decodeJwt(token);
+        const currentTime = Date.now() / 1000;
+
+        if (decodedToken.exp < currentTime) {
+            localStorage.removeItem("token");
+            router.push("/admin-login");
+            return;
+        }
+
+        if (decodedToken.role !== "admin") {
+            router.push("/extracted-data-monitoring");
+            return;
+        }
+
+        setIsAuthenticated(true);
+        setLoadingTable(false);
+    }, [router]);
 
     // Handle sidebar toggle
     const handleSidebarToggle = (expanded: boolean) => {
@@ -138,6 +182,8 @@ export default function Page() {
     useEffect(() => {
         fetchUsers();
     }, [currentPage, fetchUsers, searchQuery]);
+
+    if (!isAuthenticated) return <p>Access Denied. Redirecting...</p>;
 
     return (
         <div className="flex flex-row h-screen bg-white">

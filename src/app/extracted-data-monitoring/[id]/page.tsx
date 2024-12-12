@@ -41,8 +41,36 @@ const JobDetail = () => {
     const [job, setJob] = useState<Job | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [userRole, setUserRole] = useState("");
     const router = useRouter();
     const { id } = useParams();
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            router.push("/login");
+            return;
+        }
+
+        const decodeJwt = (token: string) => {
+            const base64Url = token.split(".")[1];
+            const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+            const jsonPayload = decodeURIComponent(
+                atob(base64)
+                    .split("")
+                    .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                    .join("")
+            );
+
+            return JSON.parse(jsonPayload);
+        };
+
+        const decodedToken = decodeJwt(token);
+        setUserRole(decodedToken.role);
+        setLoading(false);
+    }, [router]);
+
 
     useEffect(() => {
         if (id) {
@@ -109,15 +137,17 @@ const JobDetail = () => {
                         </span>
                     </div>
                     <div>
-                        <button
-                            className="text-[#005B97] rounded-lg py-2 px-10 md:mt-0 w-60 md:w-auto flex items-center gap-3 cursor-pointer"
-                            onClick={handleOpenModal} // Open modal on button click
-                        >
-                            <span>
-                                <BiSolidEditAlt className="fill-[#005B97] text-2xl" />
-                            </span>
-                            <span>Edit Data</span>
-                        </button>
+                        {(userRole === "admin" || userRole === "standarduser") && (
+                            <button
+                                className="text-[#005B97] rounded-lg py-2 px-10 md:mt-0 w-60 md:w-auto flex items-center gap-3 cursor-pointer"
+                                onClick={handleOpenModal}
+                            >
+                                <span>
+                                    <BiSolidEditAlt className="fill-[#005B97] text-2xl" />
+                                </span>
+                                <span>Edit Data</span>
+                            </button>
+                        )}
                     </div>
                 </div>
                 <div className='mx-5'>

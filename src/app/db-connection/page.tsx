@@ -75,9 +75,9 @@ export default function DBConnectionPage() {
             !ipAddress.trim() ||
             !/^[\d.]+$/.test(ipAddress) ||
             !/^(\d{1,3}\.){3}\d{1,3}$/.test(ipAddress)
-          ) {
+        ) {
             return "Invalid IP Address. Ensure it contains only numbers, dots, and is properly formatted (e.g., 192.168.1.1).";
-          }
+        }
         const portNumberParsed = parseInt(portNumber, 10);
         if (!portNumber.trim() || isNaN(portNumberParsed) || portNumberParsed <= 0 || portNumberParsed > 65535)
             return "Port Number must be a valid number between 1 and 65535.";
@@ -263,11 +263,15 @@ export default function DBConnectionPage() {
                                 type="text"
                                 placeholder="Enter DB IP Address"
                                 value={ipAddress}
-                                onChange={(e) => setIpAddress(e.target.value)}
+                                onChange={(e) => {
+                                    const newValue = e.target.value.replace(/[^0-9.]/g, '');
+                                    setIpAddress(newValue);
+                                }}
                                 className="w-full px-4 py-2 mt-1 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97]"
                                 required
                             />
                         </div>
+
 
                         {/* Port Number */}
                         <div className="mb-4">

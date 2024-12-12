@@ -53,7 +53,7 @@ const JobPage = () => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      router.push("/login");
+      router.push("/admin-login");
       return;
     }
 
@@ -66,7 +66,6 @@ const JobPage = () => {
           .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
           .join("")
       );
-
       return JSON.parse(jsonPayload);
     };
 
@@ -75,7 +74,12 @@ const JobPage = () => {
 
     if (decodedToken.exp < currentTime) {
       localStorage.removeItem("token");
-      router.push("/login");
+      router.push("/admin-login");
+      return;
+    }
+
+    if (decodedToken.role !== "admin") {
+      router.push("/extracted-data-monitoring");
       return;
     }
 
@@ -314,6 +318,75 @@ const JobPage = () => {
   // };
 
 
+  // const handleDeleteJob = async (_id: string) => {
+  //   // Confirm deletion using SweetAlert
+  //   const result = await Swal.fire({
+  //     title: "Delete Job",
+  //     text: "Are you sure you want to delete this job?",
+  //     icon: "warning",
+  //     showCancelButton: true,
+  //     confirmButtonColor: "#005B97",
+  //     cancelButtonColor: "#F0F1F3",
+  //     cancelButtonText: "Cancel",
+  //     confirmButtonText: "Delete",
+  //   });
+
+  //   if (result.isConfirmed) {
+  //     try {
+  //       // Perform the delete operation
+  //       const response = await fetch(`/api/jobs/delete-job/${_id}`, {
+  //         method: "DELETE",
+  //       });
+
+  //       if (response.ok) {
+  //         // Update the jobs state locally
+  //         setJobs((prevJobs) => {
+  //           const updatedJobs = prevJobs.filter((job) => job._id !== _id);
+
+  //           // Adjust pagination if the last job on the current page is deleted
+  //           if (updatedJobs.length === 0 && currentPage > 1) {
+  //             setCurrentPage((prevPage) => prevPage - 1);
+  //           }
+
+  //           setTotalJobs(() => {
+  //             return totalJobs - 1;
+  //           });
+
+  //           return updatedJobs;
+  //         });
+
+  //         // Show success alert
+  //         Swal.fire({
+  //           icon: "success",
+  //           title: "Job Deleted",
+  //           text: "The job has been deleted successfully.",
+  //           timer: 2000,
+  //           showConfirmButton: false,
+  //         });
+  //       } else {
+  //         const errorData = await response.json();
+  //         console.error("Failed to delete job:", errorData.error || "Unknown error");
+
+  //         // Show error alert
+  //         Swal.fire({
+  //           icon: "error",
+  //           title: "Delete Failed",
+  //           text: errorData.error || "Something went wrong while deleting the job.",
+  //         });
+  //       }
+  //     } catch (error) {
+  //       console.error("Error deleting job:", error);
+
+  //       // Show error alert for unexpected errors
+  //       Swal.fire({
+  //         icon: "error",
+  //         title: "Unexpected Error",
+  //         text: "An error occurred while deleting the job. Please try again.",
+  //       });
+  //     }
+  //   }
+  // };
+
   const handleDeleteJob = async (_id: string) => {
     // Confirm deletion using SweetAlert
     const result = await Swal.fire({
@@ -326,31 +399,18 @@ const JobPage = () => {
       cancelButtonText: "Cancel",
       confirmButtonText: "Delete",
     });
-
+  
     if (result.isConfirmed) {
       try {
         // Perform the delete operation
         const response = await fetch(`/api/jobs/delete-job/${_id}`, {
           method: "DELETE",
         });
-
+  
         if (response.ok) {
-          // Update the jobs state locally
-          setJobs((prevJobs) => {
-            const updatedJobs = prevJobs.filter((job) => job._id !== _id);
-
-            // Adjust pagination if the last job on the current page is deleted
-            if (updatedJobs.length === 0 && currentPage > 1) {
-              setCurrentPage((prevPage) => prevPage - 1);
-            }
-
-            setTotalJobs(() => {
-              return totalJobs - 1;
-            });
-
-            return updatedJobs;
-          });
-
+          // Re-fetch the job list to ensure pagination is updated
+          await fetchJobs();
+  
           // Show success alert
           Swal.fire({
             icon: "success",
@@ -362,7 +422,7 @@ const JobPage = () => {
         } else {
           const errorData = await response.json();
           console.error("Failed to delete job:", errorData.error || "Unknown error");
-
+  
           // Show error alert
           Swal.fire({
             icon: "error",
@@ -372,7 +432,7 @@ const JobPage = () => {
         }
       } catch (error) {
         console.error("Error deleting job:", error);
-
+  
         // Show error alert for unexpected errors
         Swal.fire({
           icon: "error",
@@ -382,6 +442,7 @@ const JobPage = () => {
       }
     }
   };
+  
 
 
   const fetchJobs = useCallback(async () => {

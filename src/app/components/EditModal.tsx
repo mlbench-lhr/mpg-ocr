@@ -72,7 +72,7 @@ const EditModal: React.FC<EditModalProps> = ({ job, onClose, onUpdate }) => {
             // Simulate API or async operation (remove if unnecessary)
             await new Promise((resolve) => setTimeout(resolve, 1000));
 
-            onUpdate(updatedJob); // Call parent update function
+            onUpdate(updatedJob); 
             onClose(); // Close the modal
         } catch (error) {
             console.error("Error updating job:", error);
