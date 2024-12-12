@@ -36,19 +36,27 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
   const [availableDurations, setAvailableDurations] = useState<number[]>([]);
   const [error, setError] = useState<string>("");
 
-
-  // Update available durations whenever fromTime or toTime changes
   useEffect(() => {
     if (fromTime && toTime) {
+      const startDate = new Date(fromTime);
+      const endDate = new Date(toTime);
+
+      // Check if 'fromTime' and 'toTime' are on the same day
+      if (startDate.toDateString() !== endDate.toDateString()) {
+        setError("The 'To' time must be on the same day as the 'From' time.");
+        setAvailableDurations([]);
+        return; // Exit the function if the dates don't match
+      }
+
       const startMinutes = timeToMinutes(fromTime);
       const endMinutes = timeToMinutes(toTime);
 
       // Check if toTime is at least 1 hour after fromTime
       if (endMinutes - startMinutes < 60) {
         setError("The 'To' time must be at least 1 hour after the 'From' time.");
-        setAvailableDurations([]); // Clear available durations
+        setAvailableDurations([]);
       } else {
-        setError(""); // Clear error
+        setError("");
 
         const totalMinutes = endMinutes - startMinutes;
 
@@ -73,6 +81,7 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
       setAvailableDurations([]);
     }
   }, [fromTime, toTime, everyTime]);
+
 
   // Handle day selection (checkbox change)
   const handleDayChange = (day: string) => {
