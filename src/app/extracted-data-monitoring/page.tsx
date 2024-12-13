@@ -13,7 +13,7 @@ import { MdDelete } from "react-icons/md";
 import { GiShare } from "react-icons/gi";
 import { FiSearch } from "react-icons/fi";
 import { FaChevronDown } from "react-icons/fa";
-import { IoCopyOutline, IoCalendar } from "react-icons/io5";
+import { IoCalendar } from "react-icons/io5";
 import Swal from 'sweetalert2';
 
 interface Job {
@@ -64,7 +64,7 @@ const MasterPage = () => {
   const [podDateFilter, setPodDateFilter] = useState("");
   const [podDateSignatureFilter, setPodDateSignatureFilter] = useState("");
   const [jobNameFilter, setJobNameFilter] = useState("");
-  const [carrierFilter, setCarrierFilter] = useState("");
+  // const [carrierFilter, setCarrierFilter] = useState("");
   const [bolNumberFilter, setBolNumberFilter] = useState("");
 
   const [dropdownStates, setDropdownStates] = useState<string | null>(null);
@@ -209,7 +209,7 @@ const MasterPage = () => {
       if (podDateFilter) queryParams.set("podDate", podDateFilter);
       if (podDateSignatureFilter) queryParams.set("podDateSignature", podDateSignatureFilter.trim());
       if (jobNameFilter) queryParams.set("jobName", jobNameFilter.trim());
-      if (carrierFilter) queryParams.set("carrier", carrierFilter.trim());
+      // if (carrierFilter) queryParams.set("carrier", carrierFilter.trim());
 
 
 
@@ -241,7 +241,7 @@ const MasterPage = () => {
     podDateFilter,
     podDateSignatureFilter,
     jobNameFilter,
-    carrierFilter,
+    // carrierFilter,
   ]);
 
   useEffect(() => {
@@ -261,7 +261,7 @@ const MasterPage = () => {
       setReviewStatusFilter("");
       setReasonStatusFilter("");
       setReviewByStatusFilter("");
-      setCarrierFilter("");
+      // setCarrierFilter("");
       setBolNumberFilter("");
       setPodDateFilter("");
       setPodDateSignatureFilter("");
@@ -601,7 +601,7 @@ const MasterPage = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col">
+              {/* <div className="flex flex-col">
                 <label htmlFor="search" className="text-sm font-semibold text-gray-800">
                   Carrier
                 </label>
@@ -620,7 +620,7 @@ const MasterPage = () => {
                     <IoCopyOutline size={20} className="text-[#005B97]" />
                   </button>
                 </div>
-              </div>
+              </div> */}
 
               {/* <div className="flex flex-col">
                 <label htmlFor="search" className="text-sm font-semibold text-gray-800">
@@ -810,16 +810,16 @@ const MasterPage = () => {
                 <span className=" text-gray-800 text-xl shadow-xl p-4 rounded-lg">No data found</span>
               </div>
             ) : (
-              <div className="w-[100vw] sm:w-[78vw] md:w-[90.5vw] 2xl:w-[93.5vw] max-w-full ">
+              <div className="w-[100vw] sm:w-[78vw] md:w-[90.5vw] 2xl:w-[93.5vw] max-w-full">
                 <div className="overflow-x-auto">
                   <table className="table-auto  border-collapse">
 
                     <thead>
                       <tr className="text-gray-800">
-                        <th className="py-2 px-4 border-b text-start min-w-36"><span className="mr-3"><input type="checkbox" checked={isAllSelected}
+                        <th className="py-2 px-4 border-b text-start min-w-44"><span className="mr-3"><input type="checkbox" checked={isAllSelected}
                           onChange={handleSelectAll} /></span>BL Number</th>
                         <th className="py-2 px-4 border-b text-center min-w-32">Job Name</th>
-                        <th className="py-2 px-4 border-b text-center min-w-32">Carrier</th>
+                        {/* <th className="py-2 px-4 border-b text-center min-w-32">Carrier</th> */}
                         <th className="py-2 px-4 border-b text-center min-w-32">POD Date</th>
                         <th className="py-2 px-4 border-b text-center min-w-40">POD Signature</th>
                         <th className="py-2 px-4 border-b text-center min-w-28">Total Qty</th>
@@ -854,7 +854,7 @@ const MasterPage = () => {
                           <td className="py-2 px-4 border-b text-center">
                             {job.jobName}
                           </td>
-                          <td className="py-2 px-4 border-b text-center">{job.carrier}</td>
+                          {/* <td className="py-2 px-4 border-b text-center">{job.carrier}</td> */}
                           <td className="py-2 px-4 border-b text-center">{job.podDate}</td>
                           <td className="py-2 px-4 border-b text-center">
                             {job.podSignature === "" || job.podSignature === null || job.podSignature === undefined ? (

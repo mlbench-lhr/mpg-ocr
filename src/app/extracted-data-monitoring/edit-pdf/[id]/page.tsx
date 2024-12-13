@@ -38,11 +38,11 @@ const JobDetail = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [formData, setFormData] = useState({
-        noOfPages: "",
+        // noOfPages: "",
         blNumber: "",
-        carrier: "",
+        // carrier: "",
         podDate: "",
-        podSignature: "",
+        // podSignature: "",
         totalQty: "",
         receiverSignature: "",
         delivered: "",
@@ -99,11 +99,11 @@ const JobDetail = () => {
                     } else {
                         setJob(data);
                         setFormData({
-                            noOfPages: data.noOfPages ?? "",
+                            // noOfPages: data.noOfPages ?? "",
                             blNumber: data.blNumber || "",
-                            carrier: data.carrier || "",
+                            // carrier: data.carrier || "",
                             podDate: data.podDate || "",
-                            podSignature: data.podSignature || "",
+                            // podSignature: data.podSignature || "",
                             totalQty: data.totalQty?.toString() ?? "",
                             receiverSignature: data.receiverSignature || "",
                             delivered: data.delivered ?? "",
@@ -229,7 +229,7 @@ const JobDetail = () => {
 
     if (loading) return <div><Spinner /></div>;
     if (error) return <div>{error}</div>;
-    if (!job) return <div>Job not found</div>;
+    if (!job) return <div><Spinner /></div>;
 
     return (
         <div className="flex flex-row h-screen bg-white">
@@ -258,14 +258,14 @@ const JobDetail = () => {
                 </div>
 
                 <div className="mx-5 flex bg-white pt-3 h-5/6">
-                    <div className="flex-auto border-gray-900 xl:h-[calc(140vh-6rem)] 2xl:h-screen">
+                    <div className="flex-auto border-gray-900 xl:h-[calc(150vh-6rem)] 2xl:h-screen">
                         <iframe
                             src='/file/sample.pdf'
                             className='w-11/12 h-full'
                         />
                     </div>
 
-                    <div className="flex-1 bg-gray-100 rounded-xl p-6 flex flex-col  xl:h-[calc(220vh-6rem)] 2xl:h-[calc(170vh-6rem)]">
+                    <div className="flex-1 bg-gray-100 rounded-xl p-6 flex flex-col  xl:h-[calc(180vh-6rem)] 2xl:h-[calc(140vh-6rem)]">
                         <div className='flex justify-between items-center mb-4'>
                             <span>
                                 <h3 className="text-xl font-medium text-gray-800">Extracted Data</h3>
