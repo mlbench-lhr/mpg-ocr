@@ -679,8 +679,6 @@ const MasterPage = () => {
                 </div>
               </div>
 
-
-
               <div className="flex flex-col">
                 <label htmlFor="search" className="text-sm font-semibold text-gray-800">
                   POD Signature
@@ -799,7 +797,7 @@ const MasterPage = () => {
 
           </div>
 
-          <div className="py-3">
+          <div className="py-3 mx-auto ">
 
             {loadingTable ? (
               <div className="flex justify-center items-end">
@@ -810,9 +808,9 @@ const MasterPage = () => {
                 <span className=" text-gray-800 text-xl shadow-xl p-4 rounded-lg">No data found</span>
               </div>
             ) : (
-              <div className="w-[100vw] sm:w-[78vw] md:w-[90.5vw] 2xl:w-[93.5vw] max-w-full ">
-                <div className="overflow-x-auto">
-                  <table className="table-auto  border-collapse">
+              <div className="w-[100vw] sm:w-[78vw] md:w-[90vw] 2xl:w-[93vw] max-w-full me-auto ">
+                <div className="overflow-x-auto w-full">
+                  <table className="table-auto min-w-full w-full border-collapse">
 
                     <thead>
                       <tr className="text-gray-800">

@@ -2,8 +2,10 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FaChevronDown, FaClock } from "react-icons/fa";
+import Datetime from 'react-datetime';
+import moment from "moment";
 
 interface Job {
     _id: string;
@@ -37,6 +39,30 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
 
     const [availableDurations, setAvailableDurations] = useState<number[]>([]);
     const [error, setError] = useState<string>("");
+
+    const [isOpen, setIsOpen] = useState<boolean>(false);
+    const fromRef = useRef<HTMLInputElement | null>(null);
+    const toRef = useRef<HTMLInputElement | null>(null);
+    const handleFromButtonClick = () => {
+        if (isOpen && fromRef.current) {
+            fromRef.current.blur();
+        } else {
+            if (fromRef.current) {
+                fromRef.current.focus();
+            }
+        }
+        setIsOpen((prev) => !prev);
+    };
+    const handleToButtonClick = () => {
+        if (isOpen && toRef.current) {
+            toRef.current.blur();
+        } else {
+            if (toRef.current) {
+                toRef.current.focus();
+            }
+        }
+        setIsOpen((prev) => !prev);
+    };
 
     useEffect(() => {
         // Sync state when job data changes (if it changes)
@@ -180,24 +206,23 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
                             AT/From
                         </label>
                         <div className="relative">
-                            <input
-                                id="fromTime"
-                                type="time"
+                            <Datetime
                                 value={fromTime}
-                                onChange={(e) => setFromTime(e.target.value)}
-                                className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] custom-time-input"
-                                required
+                                onChange={(momentOrString) => {
+                                    if (moment.isMoment(momentOrString)) {
+                                        setFromTime(momentOrString.format("HH:mm"));
+                                    } else {
+                                        setFromTime(momentOrString);
+                                    }
+                                }}
+                                dateFormat={false}
+                                timeFormat="HH:mm"
+                                inputProps={{ className: "w-full border  px-4 py-2 mt-1 pr-10 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97]", readOnly: true, ref: fromRef, }}
                             />
                             <button
                                 type="button"
                                 className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500"
-                                onClick={() => {
-                                    const podDateInput = document.getElementById("fromTime") as HTMLInputElement;
-                                    if (podDateInput) {
-                                        podDateInput.showPicker();
-                                    }
-                                }}
-                            >
+                                onClick={handleFromButtonClick}>
                                 <FaClock size={16} className="text-[#005B97]" />
                             </button>
                         </div>
@@ -208,24 +233,24 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
                             To
                         </label>
                         <div className="relative">
-                            <input
-                                id="toTime"
-                                type="time"
+                            <Datetime
                                 value={toTime}
-                                onChange={(e) => setToTime(e.target.value)}
-                                className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] custom-time-input"
-                                required
+                                onChange={(momentOrString) => {
+                                    if (moment.isMoment(momentOrString)) {
+                                        setToTime(momentOrString.format("HH:mm"));
+                                    } else {
+                                        setToTime(momentOrString); // Already a string
+                                    }
+                                }}
+                                dateFormat={false}
+                                timeFormat="HH:mm"
+                                inputProps={{ className: "w-full border  px-4 py-2 mt-1 pr-10 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97]", readOnly: true, ref: toRef }}
+
                             />
                             <button
                                 type="button"
                                 className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500"
-                                onClick={() => {
-                                    const podDateInput = document.getElementById("toTime") as HTMLInputElement;
-                                    if (podDateInput) {
-                                        podDateInput.showPicker();
-                                    }
-                                }}
-                            >
+                                onClick={handleToButtonClick}>
                                 <FaClock size={16} className="text-[#005B97]" />
                             </button>
                         </div>
