@@ -46,6 +46,60 @@ interface PDFCriteria {
 // }
 
 // API Route for creating a job and fetching PDFs
+// export async function POST(req: Request) {
+//   try {
+//     const jobsCollection = await getJobsCollection();
+//     const body = await req.json();
+//     const { selectedDays, fromTime, toTime, everyTime } = body;
+
+//     // Validate required fields
+//     if (!selectedDays?.length || !fromTime || !toTime || !everyTime) {
+//       return NextResponse.json({ error: "All fields are required." }, { status: 400 });
+//     }
+
+//     // Get the current date
+//     const currentDate = new Date();
+
+//     // Parse the time string (HH:MM) into a Date object using the current date in local timezone
+//     const parseTime = (timeString: string): Date => {
+//       const [hours, minutes] = timeString.split(':').map(Number);
+
+//       // Create a new Date object based on the current date
+//       const newDate = new Date(currentDate);
+//       newDate.setHours(hours, minutes, 0, 0);  // Set the time to the provided hours and minutes
+
+//       // Adjust for the local time zone offset
+//       const timeZoneOffset = currentDate.getTimezoneOffset(); // Get time zone offset in minutes
+//       newDate.setMinutes(newDate.getMinutes() - timeZoneOffset); // Apply the offset to avoid UTC conversion
+
+//       return newDate;
+//     };
+
+//     // Convert fromTime and toTime to Date objects using the current date and correct time zone
+//     const pdfCriteria: PDFCriteria = {
+//       fromTime: parseTime(fromTime),
+//       toTime: parseTime(toTime),
+//     };
+
+//     // Insert the job into MongoDB with dynamic date range
+//     const result = await jobsCollection.insertOne({
+//       selectedDays,
+//       fromTime,
+//       toTime,
+//       everyTime,
+//       pdfCriteria: pdfCriteria,
+//       active: false,
+//       createdAt: new Date(),
+//     });
+
+//     // Return success response
+//     return NextResponse.json({ message: "Job added successfully.", data: result }, { status: 201 });
+//   } catch (error) {
+//     console.error("Error adding job:", error);
+//     return NextResponse.json({ error: "Failed to add job." }, { status: 500 });
+//   }
+// }
+
 export async function POST(req: Request) {
   try {
     const jobsCollection = await getJobsCollection();
@@ -62,11 +116,11 @@ export async function POST(req: Request) {
 
     // Parse the time string (HH:MM) into a Date object using the current date in local timezone
     const parseTime = (timeString: string): Date => {
-      const [hours, minutes] = timeString.split(':').map(Number);
+      const [hours, minutes] = timeString.split(":").map(Number);
 
       // Create a new Date object based on the current date
       const newDate = new Date(currentDate);
-      newDate.setHours(hours, minutes, 0, 0);  // Set the time to the provided hours and minutes
+      newDate.setHours(hours, minutes, 0, 0); // Set the time to the provided hours and minutes
 
       // Adjust for the local time zone offset
       const timeZoneOffset = currentDate.getTimezoneOffset(); // Get time zone offset in minutes
@@ -81,8 +135,25 @@ export async function POST(req: Request) {
       toTime: parseTime(toTime),
     };
 
-    // Insert the job into MongoDB with dynamic date range
+    // Check the highest existing job number
+    const latestJob = await jobsCollection
+      .find({})
+      .sort({ createdAt: -1 })
+      .limit(1)
+      .toArray();
+
+    let nextJobNumber = 1; // Default to 1 if no jobs exist
+    if (latestJob.length > 0 && latestJob[0].jobName?.startsWith("Job #")) {
+      const lastJobNumber = parseInt(latestJob[0].jobName.replace("Job #", ""), 10);
+      nextJobNumber = isNaN(lastJobNumber) ? 1 : lastJobNumber + 1;
+    }
+
+    // Generate the next job name
+    const jobName = `Job #${nextJobNumber}`;
+
+    // Insert the job into MongoDB with dynamic date range and job name
     const result = await jobsCollection.insertOne({
+      jobName,
       selectedDays,
       fromTime,
       toTime,
