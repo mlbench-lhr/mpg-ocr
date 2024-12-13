@@ -258,9 +258,9 @@ const JobDetail = () => {
                 </div>
 
                 <div className="mx-5 flex bg-white pt-3 h-5/6">
-                    <div className="flex-auto border-gray-900 xl:h-[calc(150vh-6rem)] 2xl:h-screen">
+                    <div className="flex-auto border-gray-900 xl:h-[calc(142vh-6rem)] 2xl:h-screen">
                         <iframe
-                            src='/file/sample.pdf'
+                            src='/file/sample.pdf#toolbar=0'
                             className='w-11/12 h-full'
                         />
                     </div>
@@ -303,10 +303,6 @@ const JobDetail = () => {
                                 </div>
                             ))}
                         </form>
-
-
-
-
 
                         {isEditMode && (
                             <>
