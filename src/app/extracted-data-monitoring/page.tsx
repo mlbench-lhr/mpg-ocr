@@ -72,6 +72,12 @@ const MasterPage = () => {
   const [dropdownStatesSecond, setDropdownStatesSecond] = useState<string | null>(null);
   const [dropdownStatesThird, setDropdownStatesThird] = useState<string | null>(null);
 
+  const isLastThreeRow = (jobId: string) => {
+    const rowsCount = master.length;  // Replace with actual number of rows
+    const jobIndex = master.findIndex(job => job._id === jobId);
+    return jobIndex >= rowsCount - 3;
+  }
+
   const router = useRouter();
 
   const handleSidebarToggle = (expanded: boolean) => {
@@ -186,6 +192,9 @@ const MasterPage = () => {
       if (podDateSignatureFilter) queryParams.set("podDateSignature", podDateSignatureFilter.trim());
       if (jobNameFilter) queryParams.set("jobName", jobNameFilter.trim());
       if (carrierFilter) queryParams.set("carrier", carrierFilter.trim());
+
+
+
 
       console.log("Query Params:", queryParams.toString());
 
@@ -474,21 +483,23 @@ const MasterPage = () => {
         />
 
 
-        <div className="flex-1 p-4 bg-white">
+        <div className="flex-1 px-2 bg-white ">
 
           <div
-            className={`bg-gray-200 p-3 mb-0 transition-all duration-500 ease-in-out w-auto ${isFilterDropDownOpen ? "rounded-t-lg" : "rounded-lg"
-              }`}
+            className={`bg-gray-200 p-3 mb-0 transition-all duration-500 ease-in-out w-full sm:w-auto ${isFilterDropDownOpen ? "rounded-t-lg" : "rounded-lg"}`}
           >
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setIsFilterDropDownOpen(!isFilterDropDownOpen)}>
-              <span className="text-gray-800">
+              <span className="text-gray-800 text-sm sm:text-base md:text-lg">
                 Filters
               </span>
               <span>
-                <IoIosArrowForward className={`text-xl p-0 text-[#005B97] transition-all duration-500 ease-in-out ${isFilterDropDownOpen ? 'rotate-90' : ''}`} />
+                <IoIosArrowForward
+                  className={`text-xl p-0 text-[#005B97] transition-all duration-500 ease-in-out ${isFilterDropDownOpen ? 'rotate-90' : ''}`}
+                />
               </span>
             </div>
           </div>
+
           <div
             className={`overflow-hidden transition-all duration-500 ease-in-out w-auto ${isFilterDropDownOpen ? "max-h-[1000px] p-3" : "max-h-0"
               } flex flex-wrap gap-4 mt-0 bg-gray-200 rounded-b-lg`}
@@ -701,7 +712,7 @@ const MasterPage = () => {
 
               <div className="flex flex-col">
                 <label htmlFor="search" className="text-sm font-semibold text-gray-800">
-                Job Name
+                  Job Name
                 </label>
                 <div className="relative">
                   <input
@@ -753,9 +764,10 @@ const MasterPage = () => {
                 <span className=" text-gray-800 text-xl shadow-xl p-4 rounded-lg">No data found</span>
               </div>
             ) : (
-              <div className="w-[115vw] sm:w-[78vw] md:w-[91vw] 2xl:w-[93.5vw]">
-                <div className="overflow-x-auto py-5">
-                  <table className="table-auto">
+              <div className="w-[100vw] sm:w-[78vw] md:w-[90.5vw] 2xl:w-[93.5vw] max-w-full ">
+                <div className="overflow-x-auto">
+                  <table className="table-auto  border-collapse">
+
                     <thead>
                       <tr className="text-gray-800">
                         <th className="py-2 px-4 border-b text-start min-w-36"><span className="mr-3"><input type="checkbox" checked={isAllSelected}
@@ -779,10 +791,10 @@ const MasterPage = () => {
                         <th className="py-2 px-4 border-b text-center min-w-28">Action</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody >
                       {master.map((job) => (
                         <tr key={job._id} className="text-gray-500">
-                          <td className="py-2 px-4 border-b text-start"><span className="mr-3"><input type="checkbox" checked={selectedRows.includes(job._id)}
+                          <td className="py-2 px-4 border-b text-start m-0" ><span className="mr-3"><input type="checkbox" checked={selectedRows.includes(job._id)}
                             onChange={() => handleRowSelection(job._id)} /></span>
                             <Link
                               href={`/extracted-data-monitoring/${job._id}`}
@@ -878,22 +890,27 @@ const MasterPage = () => {
                               <div>{job.finalStatus}</div>
                               <div className="relative">
                                 <RiArrowDropDownLine
-                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${dropdownStates === job._id ? "rotate-180" : ""
-                                    }`}
+                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${dropdownStates === job._id ? "rotate-180" : ""}`}
                                 />
                                 <ul
-                                  className={`absolute mt-2 right-1 z-50 bg-white border rounded-md shadow-lg w-32 transform origin-top transition-all duration-300 ease-in-out ${dropdownStates === job._id
-                                    ? "scale-100 opacity-100"
-                                    : "scale-95 opacity-0 pointer-events-none"
+                                  className={`absolute right-0 z-50 bg-white border rounded-md shadow-lg w-32 transition-all duration-300 ease-in-out ${dropdownStates === job._id
+                                    ? "scale-100 opacity-100 pointer-events-auto"
+                                    : "scale-0 opacity-0 pointer-events-none"
                                     }`}
+                                  style={{
+                                    top: dropdownStates === job._id && !isLastThreeRow(job._id) ? "100%" : "", // Downward for normal rows
+                                    bottom: dropdownStates === job._id && isLastThreeRow(job._id) ? "100%" : "", // Upward for last 3 rows
+                                    visibility: dropdownStates === job._id ? "visible" : "hidden", // Keep visibility while the dropdown is opening
+                                    height: dropdownStates === job._id ? "auto" : "0", // Prevent space taken when hidden
+                                    overflow: dropdownStates === job._id ? "visible" : "hidden", // Hide overflow when dropdown is closed
+                                  }}
                                 >
-                                  {[
-                                    { status: "new", color: "text-blue-600", bgColor: "bg-blue-100" },
-                                    { status: "inProgress", color: "text-yellow-600", bgColor: "bg-yellow-100" },
-                                    { status: "valid", color: "text-green-600", bgColor: "bg-green-100" },
-                                    { status: "partiallyValid", color: "text-[#AF9918]", bgColor: "bg-[#faf1be]" },
-                                    { status: "failure", color: "text-red-600", bgColor: "bg-red-100" },
-                                    { status: "sent", color: "text-green-600", bgColor: "bg-green-100" },
+                                  {[{ status: "new", color: "text-blue-600", bgColor: "bg-blue-100" },
+                                  { status: "inProgress", color: "text-yellow-600", bgColor: "bg-yellow-100" },
+                                  { status: "valid", color: "text-green-600", bgColor: "bg-green-100" },
+                                  { status: "partiallyValid", color: "text-[#AF9918]", bgColor: "bg-[#faf1be]" },
+                                  { status: "failure", color: "text-red-600", bgColor: "bg-red-100" },
+                                  { status: "sent", color: "text-green-600", bgColor: "bg-green-100" },
                                   ].map(({ status, color, bgColor }) => (
                                     <li
                                       key={status}
@@ -908,6 +925,7 @@ const MasterPage = () => {
                               </div>
                             </div>
                           </td>
+
                           <td className="py-2 px-4 border-b text-center">
                             <div
                               className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.reviewStatus === "unConfirmed"
@@ -925,14 +943,20 @@ const MasterPage = () => {
                               <div>{job.reviewStatus}</div>
                               <div className="relative">
                                 <RiArrowDropDownLine
-                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${dropdownStatesFirst === job._id ? "rotate-180" : ""
-                                    }`}
+                                  className={`text-2xl transform transition-transform duration-300 ease-in-out ${dropdownStatesFirst === job._id ? "rotate-180" : ""}`}
                                 />
                                 <ul
-                                  className={`absolute mt-2 right-1 z-50 bg-white border rounded-md shadow-lg w-32 transform origin-top transition-all duration-300 ease-in-out ${dropdownStatesFirst === job._id
-                                    ? "scale-100 opacity-100"
-                                    : "scale-95 opacity-0 pointer-events-none"
+                                  className={`absolute right-0 z-50 bg-white border rounded-md shadow-lg w-32 transition-all duration-300 ease-in-out ${dropdownStatesFirst === job._id
+                                    ? "scale-100 opacity-100 pointer-events-auto"
+                                    : "scale-0 opacity-0 pointer-events-none"
                                     }`}
+                                  style={{
+                                    top: dropdownStatesFirst === job._id && !isLastThreeRow(job._id) ? "100%" : "", // Downward for normal rows
+                                    bottom: dropdownStatesFirst === job._id && isLastThreeRow(job._id) ? "100%" : "", // Upward for last 3 rows
+                                    visibility: dropdownStatesFirst === job._id ? "visible" : "hidden", // Keep visibility while the dropdown is opening
+                                    height: dropdownStatesFirst === job._id ? "auto" : "0", // Prevent space taken when hidden
+                                    overflow: dropdownStatesFirst === job._id ? "visible" : "hidden", // Hide overflow when dropdown is closed
+                                  }}
                                 >
                                   {[
                                     { status: "unConfirmed", color: "text-yellow-600", bgColor: "bg-yellow-100" },
@@ -953,6 +977,7 @@ const MasterPage = () => {
                               </div>
                             </div>
                           </td>
+
                           <td className="py-2 px-4 border-b text-center">
                             <div
                               className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.recognitionStatus === "new"
@@ -974,23 +999,27 @@ const MasterPage = () => {
                               <div>{job.recognitionStatus}</div>
                               <div className="relative">
                                 <RiArrowDropDownLine
-                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${dropdownStatesSecond === job._id ? "rotate-180" : ""
-                                    }`}
+                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${dropdownStatesSecond === job._id ? "rotate-180" : ""}`}
                                 />
                                 <ul
-                                  className={`absolute mt-2 right-1 z-50 bg-white border rounded-md shadow-lg w-32 transform origin-top transition-all duration-300 ease-in-out ${dropdownStatesSecond === job._id
-                                    ? "scale-100 opacity-100"
-                                    : "scale-95 opacity-0 pointer-events-none"
+                                  className={`absolute mt-2 right-0 z-50 bg-white border rounded-md shadow-lg w-32 transition-all duration-300 ease-in-out ${dropdownStatesSecond === job._id
+                                    ? "scale-100 opacity-100 pointer-events-auto"
+                                    : "scale-0 opacity-0 pointer-events-none"
                                     }`}
+                                  style={{
+                                    top: dropdownStatesSecond === job._id && !isLastThreeRow(job._id) ? "100%" : "",
+                                    bottom: dropdownStatesSecond === job._id && isLastThreeRow(job._id) ? "100%" : "",
+                                    visibility: dropdownStatesSecond === job._id ? "visible" : "hidden", // Keep visibility while the dropdown is opening
+                                    height: dropdownStatesSecond === job._id ? "auto" : "0", // Prevent space taken when hidden
+                                    overflow: dropdownStatesSecond === job._id ? "visible" : "hidden", // Hide overflow when dropdown is closed
+                                  }}
                                 >
-
-                                  {[
-                                    { status: "new", color: "text-blue-600", bgColor: "bg-blue-100" },
-                                    { status: "inProgress", color: "text-yellow-600", bgColor: "bg-yellow-100" },
-                                    { status: "valid", color: "text-green-600", bgColor: "bg-green-100" },
-                                    { status: "partiallyValid", color: "text-[#AF9918]", bgColor: "bg-[#faf1be]" },
-                                    { status: "failure", color: "text-red-600", bgColor: "bg-red-100" },
-                                    { status: "sent", color: "text-green-600", bgColor: "bg-green-100" },
+                                  {[{ status: "new", color: "text-blue-600", bgColor: "bg-blue-100" },
+                                  { status: "inProgress", color: "text-yellow-600", bgColor: "bg-yellow-100" },
+                                  { status: "valid", color: "text-green-600", bgColor: "bg-green-100" },
+                                  { status: "partiallyValid", color: "text-[#AF9918]", bgColor: "bg-[#faf1be]" },
+                                  { status: "failure", color: "text-red-600", bgColor: "bg-red-100" },
+                                  { status: "sent", color: "text-green-600", bgColor: "bg-green-100" },
                                   ].map(({ status, color, bgColor }) => (
                                     <li
                                       key={status}
@@ -1005,6 +1034,8 @@ const MasterPage = () => {
                               </div>
                             </div>
                           </td>
+
+
                           <td className="py-2 px-4 border-b text-center">
                             <div
                               className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.breakdownReason === "none"
@@ -1028,12 +1059,18 @@ const MasterPage = () => {
                                     }`}
                                 />
                                 <ul
-                                  className={`absolute mt-2 right-1 z-50 bg-white border rounded-md shadow-lg w-32 transform origin-top transition-all duration-300 ease-in-out ${dropdownStatesThird === job._id
-                                    ? "scale-100 opacity-100"
-                                    : "scale-95 opacity-0 pointer-events-none"
+                                  className={`absolute right-0 z-50 bg-white border rounded-md shadow-lg w-32 transition-opacity duration-300 ease-in-out ${dropdownStatesThird === job._id
+                                    ? "opacity-100 pointer-events-auto"
+                                    : "opacity-0 pointer-events-none visibility-hidden"
                                     }`}
+                                  style={{
+                                    top: dropdownStatesThird === job._id && !isLastThreeRow(job._id) ? "100%" : "", // Downward for normal rows
+                                    bottom: dropdownStatesThird === job._id && isLastThreeRow(job._id) ? "100%" : "", // Upward for last 3 rows
+                                    visibility: dropdownStatesThird === job._id ? "visible" : "hidden", // Keep visibility while the dropdown is opening
+                                    height: dropdownStatesThird === job._id ? "auto" : "0", // Prevent space taken when hidden
+                                    overflow: dropdownStatesThird === job._id ? "visible" : "hidden", // Hide overflow when dropdown is closed
+                                  }}
                                 >
-
                                   {[
                                     { status: "none", color: "text-blue-600", bgColor: "bg-blue-100" },
                                     { status: "damaged", color: "text-yellow-600", bgColor: "bg-yellow-100" },
@@ -1050,13 +1087,16 @@ const MasterPage = () => {
                                       {status}
                                     </li>
                                   ))}
-
                                 </ul>
                               </div>
                             </div>
                           </td>
+
+
+
+
                           <td className="py-2 px-4 border-b text-center">{job.reviewedBy}</td>
-                          <td className="py-2 px-4 border-b text-center">
+                          <td className="py-2 px-6 border-b text-center">
                             <Link
                               href={`/extracted-data-monitoring/edit-pdf/${job._id}`}
                               className="underline text-[#005B97] flex items-center gap-1 transition-all duration-300 hover:text-blue-500 group"
@@ -1071,8 +1111,10 @@ const MasterPage = () => {
                           </td>
                         </tr>
                       ))}
+
                     </tbody>
                   </table>
+
                 </div>
               </div>
 
