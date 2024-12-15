@@ -253,7 +253,7 @@ const JobDetail = () => {
                         </span>
                     </div>
                     <div>
-                        <Link href='/file/sample.pdf' target='_blank'>
+                        <Link href={job.pdfUrl} target='_blank'>
                             <button
                                 className="bg-[#005B97] rounded-lg py-2 px-10 text-white md:mt-0 w-60 md:w-auto"
                             >
