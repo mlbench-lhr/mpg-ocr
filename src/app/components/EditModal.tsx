@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { IoCalendar } from "react-icons/io5";
+import Swal from 'sweetalert2';
+
 
 interface Job {
     _id: string;
@@ -49,10 +51,41 @@ const EditModal: React.FC<EditModalProps> = ({ job, onClose, onUpdate }) => {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+    // const handleFormSubmit = async (e: React.FormEvent) => {
+    //     e.preventDefault();
+
+    //     // Validate the form inputs if needed
+    //     if (!formData.cargoDescription.trim()) {
+    //         setErrorMessage("Cargo description is required.");
+    //         return;
+    //     }
+    //     setErrorMessage("");
+    //     setIsSubmitting(true);
+
+    //     try {
+    //         const updatedJob: Job = {
+    //             ...job,
+    //             createdAt: new Date(formData.createdAt).toISOString(),
+    //             podDate: new Date(formData.podDate).toISOString(),
+    //             cargoDescription: formData.cargoDescription,
+    //         };
+
+    //         // Simulate API or async operation (remove if unnecessary)
+    //         await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    //         onUpdate(updatedJob);
+    //         onClose(); // Close the modal
+    //     } catch (error) {
+    //         console.error("Error updating job:", error);
+    //         setErrorMessage("An unexpected error occurred.");
+    //     } finally {
+    //         setIsSubmitting(false);
+    //     }
+    // };
+
     const handleFormSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Validate the form inputs if needed
         if (!formData.cargoDescription.trim()) {
             setErrorMessage("Cargo description is required.");
             return;
@@ -61,19 +94,46 @@ const EditModal: React.FC<EditModalProps> = ({ job, onClose, onUpdate }) => {
         setErrorMessage("");
         setIsSubmitting(true);
 
+        const formatToYYYYMMDD = (dateString: string) => {
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            return `${year}-${month}-${day}`;
+        };
+
         try {
-            const updatedJob: Job = {
+            const updatedJob = {
                 ...job,
                 createdAt: new Date(formData.createdAt).toISOString(),
-                podDate: new Date(formData.podDate).toISOString(),
+                podDate: formatToYYYYMMDD(formData.podDate),
                 cargoDescription: formData.cargoDescription,
             };
 
-            // Simulate API or async operation (remove if unnecessary)
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            const response = await fetch(`/api/process-data/update-data`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(updatedJob),
+            });
 
-            onUpdate(updatedJob); 
-            onClose(); // Close the modal
+            if (response.ok) {
+                const result = await response.json();
+                console.log("Job updated:", result);
+                onUpdate(result.updatedData); // Update job in parent component
+                onClose(); // Close the modal
+                Swal.fire({
+                    title: "Updated!",
+                    text: "The job has been updated successfully.",
+                    icon: "success",
+                    timer: 2000,
+                    showConfirmButton: false,
+                });
+            } else {
+                const error = await response.json();
+                setErrorMessage(error.error || "Failed to update job.");
+            }
         } catch (error) {
             console.error("Error updating job:", error);
             setErrorMessage("An unexpected error occurred.");
@@ -81,6 +141,7 @@ const EditModal: React.FC<EditModalProps> = ({ job, onClose, onUpdate }) => {
             setIsSubmitting(false);
         }
     };
+
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">

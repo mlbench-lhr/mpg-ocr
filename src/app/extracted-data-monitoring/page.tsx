@@ -29,7 +29,7 @@ interface Job {
   short: number;
   over: number;
   refused: number;
-  sealIntact: number;
+  sealIntact: string;
   noOfPages: number;
   finalStatus: string;
   reviewStatus: string;
@@ -73,7 +73,7 @@ const MasterPage = () => {
   const [dropdownStatesThird, setDropdownStatesThird] = useState<string | null>(null);
 
   const isLastThreeRow = (jobId: string) => {
-    const rowsCount = master.length;  // Replace with actual number of rows
+    const rowsCount = master.length;
     const jobIndex = master.findIndex(job => job._id === jobId);
     return jobIndex >= rowsCount - 3;
   }
@@ -195,11 +195,69 @@ const MasterPage = () => {
   //   setJobNameFilter(jobName);
   // }, []);
 
+  const handleDelete = async () => {
+    Swal.fire({
+      title: 'Delete Files',
+      text: 'Are you sure you want to delete these files?',
+      icon: 'warning',
+      iconColor: '#005B97',
+      showCancelButton: true,
+      confirmButtonColor: '#005B97',
+      cancelButtonColor: '#E0E0E0',
+      confirmButtonText: 'Delete',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await fetch('/api/process-data/delete-rows', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ ids: selectedRows }),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            const isLastPage = master.length === selectedRows.length && currentPage > 1;
+            if (isLastPage) {
+              setCurrentPage((prevPage) => prevPage - 1);
+            }
+
+            await fetchJobs();
+            setTotalJobs(totalJobs - selectedRows.length);
+            setSelectedRows([]);
+            Swal.fire({
+              title: 'Deleted!',
+              text: 'Your files have been deleted.',
+              icon: 'success',
+              timer: 2000,
+              showConfirmButton: false,
+            });
+          } else {
+            Swal.fire({
+              title: 'Error!',
+              text: result.error || 'Failed to delete files.',
+              icon: 'error',
+            });
+          }
+        } catch (error) {
+          console.error('Error deleting files:', error);
+          Swal.fire({
+            title: 'Error!',
+            text: 'Failed to delete files due to a network or server error.',
+            icon: 'error',
+          });
+        }
+      }
+    });
+  };
+
   const fetchJobs = useCallback(async () => {
     try {
       setLoadingTable(true);
       const queryParams = new URLSearchParams();
-      console.log(queryParams);
+      console.log(currentPage);
       queryParams.set("page", currentPage.toString());
       if (bolNumberFilter) queryParams.set("bolNumber", bolNumberFilter.trim());
       if (finalStatusFilter) queryParams.set("recognitionStatus", finalStatusFilter);
@@ -371,29 +429,37 @@ const MasterPage = () => {
     setCurrentPage(newPage);
   }
 
-  const handleDelete = () => {
-    Swal.fire({
-      title: 'Delete Files',
-      text: 'Are you sure you want to delete these files?',
-      icon: 'warning',
-      iconColor: '#005B97',
-      showCancelButton: true,
-      confirmButtonColor: '#005B97',
-      cancelButtonColor: '#E0E0E0',
-      confirmButtonText: 'Delete',
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire({
-          title: 'Deleted!',
-          text: 'Your files have been deleted.',
-          icon: 'success',
-          timer: 2000, // Auto-close after 2 seconds
-          showConfirmButton: false, // Hide the confirm button
-        });
-      }
-    });
-  };
+  // const handleDelete = () => {
+  //   Swal.fire({
+  //     title: 'Delete Files',
+  //     text: 'Are you sure you want to delete these files?',
+  //     icon: 'warning',
+  //     iconColor: '#005B97',
+  //     showCancelButton: true,
+  //     confirmButtonColor: '#005B97',
+  //     cancelButtonColor: '#E0E0E0',
+  //     confirmButtonText: 'Delete',
+  //   }).then((result) => {
+  //     if (result.isConfirmed) {
 
+  //        // Filter out the selected rows from the master array
+  //        const updatedMaster = master.filter((job) => !selectedRows.includes(job._id));
+  //        // Update the master state
+  //        setMaster(updatedMaster);
+  //        // Clear selected rows after deletion
+  //        setSelectedRows([]);
+
+  //       Swal.fire({
+  //         title: 'Deleted!',
+  //         text: 'Your files have been deleted.',
+  //         icon: 'success',
+  //         timer: 2000, // Auto-close after 2 seconds
+  //         showConfirmButton: false, // Hide the confirm button
+  //       });
+  //     }
+  //   });
+  // };
+  
   const handleSend = () => {
     Swal.fire({
       title: 'Send Files',
@@ -406,6 +472,7 @@ const MasterPage = () => {
       confirmButtonText: 'Yes Sure!',
     }).then((result) => {
       if (result.isConfirmed) {
+        setSelectedRows([]);
         Swal.fire({
           title: 'Sent!',
           text: 'Your files have been Sent.',

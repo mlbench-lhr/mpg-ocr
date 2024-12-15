@@ -158,7 +158,7 @@ const JobDetail = () => {
                         <div className='flex items-center gap-5'>
                             <span className='text-xl text-gray-800 font-semibold'>Created On</span>
                             <span className='text-xl text-gray-400 font-medium'>
-                                {job.createdAt ? format(new Date(job.podDate), 'dd/MM/yyyy') : 'N/A'}
+                                {job.createdAt ? format(new Date(job.createdAt), 'dd/MM/yyyy') : 'N/A'}
                             </span>
                         </div>
                         <div className='flex items-center gap-5'>

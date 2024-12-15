@@ -49,6 +49,26 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
     // Update available durations whenever fromTime or toTime changes
     useEffect(() => {
         if (fromTime && toTime) {
+
+            const convertToMinutes = (time: string) => {
+                const [hours, minutes] = time.split(":").map(Number);
+                return hours * 60 + minutes;
+            };
+
+            const startTimeInMinutes = convertToMinutes(fromTime);
+            let endTimeInMinutes = convertToMinutes(toTime);
+
+
+            // If `toTime` is earlier than `fromTime`, it indicates that it's on the next day
+            if (endTimeInMinutes < startTimeInMinutes) {
+                // Add 24 hours (1440 minutes) to `toTime` if it is on the next day
+                endTimeInMinutes += 24 * 60;
+                // console.log("The 'toTime' is on the next day.");
+                setError("Select 'fromTime' and 'toTime' are on the same day.");
+                setAvailableDurations([]);
+                return;
+            }
+
             const startMinutes = timeToMinutes(fromTime);
             const endMinutes = timeToMinutes(toTime);
 
@@ -57,16 +77,21 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
                 setError("The 'To' time must be at least 1 hour after the 'From' time.");
                 setAvailableDurations([]); // Clear available durations
             } else {
-                setError(""); // Clear error
+                setError("");
 
                 const totalMinutes = endMinutes - startMinutes;
 
                 // Limit the maximum duration to 120 minutes
-                const maxDuration = Math.min(totalMinutes, 120);
+                // const maxDuration = Math.min(totalMinutes, 120);
+                const maxDuration = Math.min(totalMinutes, 20);
+
 
                 // Generate duration options in increments of 20 minutes up to the total duration or 120 minutes
                 const durations = [];
-                for (let i = 20; i <= maxDuration; i += 20) {
+                // for (let i = 20; i <= maxDuration; i += 20) {
+                //     durations.push(i);
+                // }
+                for (let i = 5; i <= maxDuration; i += 5) {
                     durations.push(i);
                 }
 

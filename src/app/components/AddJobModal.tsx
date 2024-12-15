@@ -38,14 +38,24 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
 
   useEffect(() => {
     if (fromTime && toTime) {
-      const startDate = new Date(fromTime);
-      const endDate = new Date(toTime);
 
-      // Check if 'fromTime' and 'toTime' are on the same day
-      if (startDate.toDateString() !== endDate.toDateString()) {
-        setError("The 'To' time must be on the same day as the 'From' time.");
+      const convertToMinutes = (time: string) => {
+        const [hours, minutes] = time.split(":").map(Number);
+        return hours * 60 + minutes;
+      };
+
+      const startTimeInMinutes = convertToMinutes(fromTime);
+      let endTimeInMinutes = convertToMinutes(toTime);
+
+
+      // If `toTime` is earlier than `fromTime`, it indicates that it's on the next day
+      if (endTimeInMinutes < startTimeInMinutes) {
+        // Add 24 hours (1440 minutes) to `toTime` if it is on the next day
+        endTimeInMinutes += 24 * 60;
+        // console.log("The 'toTime' is on the next day.");
+        setError("Select 'fromTime' and 'toTime' are on the same day.");
         setAvailableDurations([]);
-        return; // Exit the function if the dates don't match
+        return; 
       }
 
       const startMinutes = timeToMinutes(fromTime);
@@ -61,11 +71,16 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
         const totalMinutes = endMinutes - startMinutes;
 
         // Limit the maximum duration to 120 minutes
-        const maxDuration = Math.min(totalMinutes, 120);
+        // const maxDuration = Math.min(totalMinutes, 120);
+        const maxDuration = Math.min(totalMinutes, 20);
+
 
         // Generate duration options in increments of 20 minutes up to the total duration or 120 minutes
         const durations = [];
-        for (let i = 20; i <= maxDuration; i += 20) {
+        // for (let i = 20; i <= maxDuration; i += 20) {
+        //   durations.push(i);
+        // }
+        for (let i = 5; i <= maxDuration; i += 5) {
           durations.push(i);
         }
 
