@@ -52,6 +52,8 @@ const MasterPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
   const [showButton, setShowButton] = useState(false);
+  const [name, setName] = useState("");
+
 
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
@@ -85,19 +87,27 @@ const MasterPage = () => {
   };
 
   const toggleDropdown = (jobId: string) => {
-    setDropdownStates((prev) => (prev === jobId ? null : jobId));
+    if (userRole !== 'standarduser') {
+      setDropdownStates((prev) => (prev === jobId ? null : jobId));
+    }
   };
 
   const toggleDropdownFirst = (jobId: string) => {
-    setDropdownStatesFirst((prev) => (prev === jobId ? null : jobId));
+    if (userRole !== 'standarduser') {
+      setDropdownStatesFirst((prev) => (prev === jobId ? null : jobId));
+    }
   };
 
   const toggleDropdownSecond = (jobId: string) => {
-    setDropdownStatesSecond((prev) => (prev === jobId ? null : jobId));
+    if (userRole !== 'standarduser') {
+      setDropdownStatesSecond((prev) => (prev === jobId ? null : jobId));
+    }
   };
 
   const toggleDropdownThird = (jobId: string) => {
-    setDropdownStatesThird((prev) => (prev === jobId ? null : jobId));
+    if (userRole !== 'standarduser') {
+      setDropdownStatesThird((prev) => (prev === jobId ? null : jobId));
+    }
   };
 
   useEffect(() => {
@@ -126,6 +136,12 @@ const MasterPage = () => {
     const currentTime = Date.now() / 1000;
 
     setUserRole(decodedToken.role);
+
+    if (userRole === "admin") {
+      setName("Admin");
+    } else {
+      setName(decodedToken.username);
+    }
 
     if (userRole === "admin") {
       if (decodedToken.exp < currentTime) {
@@ -164,18 +180,25 @@ const MasterPage = () => {
   // const isAllSelected = selectedRows.length === master.length;
   const isAllSelected = selectedRows.length === master.length && master.length > 0;
 
-  const updateStatus = async (id: string, field: string, value: string): Promise<void> => {
+  const capitalizeFirstLetter = (str: string): string => {
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  };
+
+  const updateStatus = async (id: string, field: string, value: string, reviewedBy: string): Promise<void> => {
+
+    const formattedReviewedBy = capitalizeFirstLetter(reviewedBy);
+
     try {
       const res = await fetch(`/api/process-data/update-status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, field, value }),
+        body: JSON.stringify({ id, field, value, reviewedBy: formattedReviewedBy }),
       });
 
       if (res.ok) {
         setMaster((prevJobs) =>
           prevJobs.map((job) =>
-            job._id === id ? { ...job, [field]: value } : job
+            job._id === id ? { ...job, [field]: value, reviewedBy: formattedReviewedBy } : job
           )
         );
       } else {
@@ -459,7 +482,7 @@ const MasterPage = () => {
   //     }
   //   });
   // };
-  
+
   const handleSend = () => {
     Swal.fire({
       title: 'Send Files',
@@ -779,8 +802,8 @@ const MasterPage = () => {
                   >
                     <option value="">Select</option>
                     <option value="Admin">Admin</option>
-                    <option value="Standard User">Standard User</option>
-                    <option value="Reviewer">Reviewer</option>
+                    {/* <option value="Standard User">Standard User</option> */}
+                    {/* <option value="Reviewer">Reviewer</option> */}
                     <option value="OCR Engine">OCR Engine</option>
 
                   </select>
@@ -982,7 +1005,7 @@ const MasterPage = () => {
                           </td>
                           <td className="py-2 px-4 border-b text-center">
                             <div
-                              className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.finalStatus === "new"
+                              className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${userRole !== "standarduser" ? 'cursor-pointer' : ''} ${job.finalStatus === "new"
                                 ? "bg-blue-100 text-blue-600"
                                 : job.finalStatus === "inProgress"
                                   ? "bg-yellow-100 text-yellow-600"
@@ -996,6 +1019,7 @@ const MasterPage = () => {
                                           ? "bg-green-100 text-green-600"
                                           : "bg-gray-100 text-gray-600"
                                 }`}
+
                               onClick={() => toggleDropdown(job._id)}
                             >
                               <div>{job.finalStatus}</div>
@@ -1009,11 +1033,11 @@ const MasterPage = () => {
                                     : "scale-0 opacity-0 pointer-events-none"
                                     }`}
                                   style={{
-                                    top: dropdownStates === job._id && !isLastThreeRow(job._id) ? "100%" : "", // Downward for normal rows
-                                    bottom: dropdownStates === job._id && isLastThreeRow(job._id) ? "100%" : "", // Upward for last 3 rows
-                                    visibility: dropdownStates === job._id ? "visible" : "hidden", // Keep visibility while the dropdown is opening
-                                    height: dropdownStates === job._id ? "auto" : "0", // Prevent space taken when hidden
-                                    overflow: dropdownStates === job._id ? "visible" : "hidden", // Hide overflow when dropdown is closed
+                                    top: dropdownStates === job._id && !isLastThreeRow(job._id) ? "100%" : "",
+                                    bottom: dropdownStates === job._id && isLastThreeRow(job._id) ? "100%" : "",
+                                    visibility: dropdownStates === job._id ? "visible" : "hidden",
+                                    height: dropdownStates === job._id ? "auto" : "0",
+                                    overflow: dropdownStates === job._id ? "visible" : "hidden",
                                   }}
                                 >
                                   {[{ status: "new", color: "text-blue-600", bgColor: "bg-blue-100" },
@@ -1027,7 +1051,7 @@ const MasterPage = () => {
                                       key={status}
                                       className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${job.finalStatus === status ? `${color} ${bgColor}` : color
                                         }`}
-                                      onClick={() => updateStatus(job._id, "finalStatus", status)}
+                                      onClick={() => updateStatus(job._id, "finalStatus", status, name)}
                                     >
                                       {status}
                                     </li>
@@ -1039,7 +1063,7 @@ const MasterPage = () => {
 
                           <td className="py-2 px-4 border-b text-center">
                             <div
-                              className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.reviewStatus === "unConfirmed"
+                              className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${userRole !== "standarduser" ? 'cursor-pointer' : ''} ${job.reviewStatus === "unConfirmed"
                                 ? "bg-yellow-100 text-yellow-600"
                                 : job.reviewStatus === "confirmed"
                                   ? "bg-green-100 text-green-600"
@@ -1079,7 +1103,7 @@ const MasterPage = () => {
                                       key={status}
                                       className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${job.reviewStatus === status ? `${color} ${bgColor}` : color
                                         }`}
-                                      onClick={() => updateStatus(job._id, "reviewStatus", status)}
+                                      onClick={() => updateStatus(job._id, "reviewStatus", status, name)}
                                     >
                                       {status}
                                     </li>
@@ -1091,7 +1115,7 @@ const MasterPage = () => {
 
                           <td className="py-2 px-4 border-b text-center">
                             <div
-                              className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.recognitionStatus === "new"
+                              className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${userRole !== "standarduser" ? 'cursor-pointer' : ''} ${job.recognitionStatus === "new"
                                 ? "bg-blue-100 text-blue-600"
                                 : job.recognitionStatus === "inProgress"
                                   ? "bg-yellow-100 text-yellow-600"
@@ -1136,7 +1160,7 @@ const MasterPage = () => {
                                       key={status}
                                       className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${job.recognitionStatus === status ? `${color} ${bgColor}` : color
                                         }`}
-                                      onClick={() => updateStatus(job._id, "recognitionStatus", status)}
+                                      onClick={() => updateStatus(job._id, "recognitionStatus", status, name)}
                                     >
                                       {status}
                                     </li>
@@ -1149,7 +1173,7 @@ const MasterPage = () => {
 
                           <td className="py-2 px-4 border-b text-center">
                             <div
-                              className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${job.breakdownReason === "none"
+                              className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${userRole !== "standarduser" ? 'cursor-pointer' : ''} ${job.breakdownReason === "none"
                                 ? "bg-blue-100 text-blue-600"
                                 : job.breakdownReason === "damaged"
                                   ? "bg-yellow-100 text-yellow-600"
@@ -1193,7 +1217,7 @@ const MasterPage = () => {
                                       key={status}
                                       className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${job.breakdownReason === status ? `${color} ${bgColor}` : color
                                         }`}
-                                      onClick={() => updateStatus(job._id, "breakdownReason", status)}
+                                      onClick={() => updateStatus(job._id, "breakdownReason", status, name)}
                                     >
                                       {status}
                                     </li>

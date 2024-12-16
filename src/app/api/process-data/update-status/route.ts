@@ -4,9 +4,12 @@ import clientPromise from "@/lib/mongodb";
 
 export async function PATCH(req: Request) {
   try {
-    const { id, field, value } = await req.json();
+    const { id, field, value, reviewedBy } = await req.json();
 
-    if (!id || !field || value === undefined) {
+    console.log(reviewedBy);
+
+
+    if (!id || !field || value === undefined || !reviewedBy) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -19,7 +22,12 @@ export async function PATCH(req: Request) {
 
     const result = await dataCollection.updateOne(
       { _id: new ObjectId(id) },
-      { $set: { [field]: value } } 
+      {
+        $set: {
+          [field]: value,
+          "reviewedBy": reviewedBy
+        }
+      }
     );
 
     if (result.matchedCount === 0) {
