@@ -20,6 +20,19 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+div.rdtPicker {
+  @apply bg-gray-100 text-gray-800 rounded-md shadow-md border border-gray-300;
+}
+
+div.rdtPicker div.rdtTime td.active {
+  @apply bg-blue-500 text-gray-800;
+}
+
+
+div.rdtPicker input.form-control{
+  @apply  w-full border px-4 py-2 mt-1 pr-10;
+}
+
 /* CSS to hide the default date picker icon */
 .custom-date-input::-webkit-outer-spin-button,
 .custom-date-input::-webkit-inner-spin-button {
