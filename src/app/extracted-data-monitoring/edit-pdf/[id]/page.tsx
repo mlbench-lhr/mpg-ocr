@@ -22,6 +22,7 @@ interface Job {
     refused: number;
     noOfPages: number;
     sealIntact: string;
+    pdfUrl: string;
     finalStatus: string;
     reviewStatus: string;
     recognitionStatus: string;
@@ -38,11 +39,11 @@ const JobDetail = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [formData, setFormData] = useState({
-        noOfPages: "",
+        // noOfPages: "",
         blNumber: "",
-        carrier: "",
+        // carrier: "",
         podDate: "",
-        podSignature: "",
+        // podSignature: "",
         totalQty: "",
         receiverSignature: "",
         delivered: "",
@@ -57,6 +58,8 @@ const JobDetail = () => {
     const [saving, setSaving] = useState(false); // Added saving state
     const router = useRouter();
     const [userRole, setUserRole] = useState("");
+    const [isLoading, setIsLoading] = useState(true); // State to manage loader visibility
+
 
     const handleSidebarToggle = (expanded: boolean) => {
         setIsSidebarExpanded(expanded);
@@ -99,11 +102,11 @@ const JobDetail = () => {
                     } else {
                         setJob(data);
                         setFormData({
-                            noOfPages: data.noOfPages ?? "",
+                            // noOfPages: data.noOfPages ?? "",
                             blNumber: data.blNumber || "",
-                            carrier: data.carrier || "",
+                            // carrier: data.carrier || "",
                             podDate: data.podDate || "",
-                            podSignature: data.podSignature || "",
+                            // podSignature: data.podSignature || "",
                             totalQty: data.totalQty?.toString() ?? "",
                             receiverSignature: data.receiverSignature || "",
                             delivered: data.delivered ?? "",
@@ -123,6 +126,10 @@ const JobDetail = () => {
                 });
         }
     }, [id]);
+
+    const handleIframeLoad = () => {
+        setIsLoading(false); // Hide loader when iframe loads
+    };
 
     const handleGoBack = () => {
         router.back();
@@ -212,7 +219,6 @@ const JobDetail = () => {
             } else {
                 setIsEditMode(false);
                 setSaving(false);
-                // console.error("Failed to save form data:", result.error);
             }
         } catch (error) {
             console.error("Error saving data:", error);
@@ -229,7 +235,7 @@ const JobDetail = () => {
 
     if (loading) return <div><Spinner /></div>;
     if (error) return <div>{error}</div>;
-    if (!job) return <div>Job not found</div>;
+    if (!job) return <div><Spinner /></div>;
 
     return (
         <div className="flex flex-row h-screen bg-white">
@@ -247,7 +253,7 @@ const JobDetail = () => {
                         </span>
                     </div>
                     <div>
-                        <Link href='/file/sample.pdf' target='_blank'>
+                        <Link href={job.pdfUrl} target='_blank'>
                             <button
                                 className="bg-[#005B97] rounded-lg py-2 px-10 text-white md:mt-0 w-60 md:w-auto"
                             >
@@ -258,14 +264,26 @@ const JobDetail = () => {
                 </div>
 
                 <div className="mx-5 flex bg-white pt-3 h-5/6">
-                    <div className="flex-auto border-gray-900 xl:h-[calc(140vh-6rem)] 2xl:h-screen">
+
+                    <div className="flex-auto xl:h-[calc(142vh-6rem)] 2xl:h-screen bg-white relative">
+
+                        {isLoading && (
+                            <div className="absolute inset-0 flex items-start justify-center mt-10 bg-white z-10">
+                                <div className="loader text-gray-800">Loading...</div>
+                            </div>
+                        )}
+
+
                         <iframe
-                            src='/file/sample.pdf'
-                            className='w-11/12 h-full'
+                            src={`${job.pdfUrl}#toolbar=0`}
+                            className="w-11/12 h-full bg-white"
+                            loading="lazy"
+                            onLoad={handleIframeLoad}
                         />
                     </div>
 
-                    <div className="flex-1 bg-gray-100 rounded-xl p-6 flex flex-col  xl:h-[calc(220vh-6rem)] 2xl:h-[calc(170vh-6rem)]">
+
+                    <div className="flex-1 bg-gray-100 rounded-xl p-6 flex flex-col  xl:h-[calc(180vh-6rem)] 2xl:h-[calc(140vh-6rem)]">
                         <div className='flex justify-between items-center mb-4'>
                             <span>
                                 <h3 className="text-xl font-medium text-gray-800">Extracted Data</h3>
@@ -303,10 +321,6 @@ const JobDetail = () => {
                                 </div>
                             ))}
                         </form>
-
-
-
-
 
                         {isEditMode && (
                             <>

@@ -12,7 +12,7 @@ import { BiSolidEditAlt } from "react-icons/bi";
 import { MdDelete } from "react-icons/md";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import Image from "next/image";
-import { Job } from "../../types"; // Import the shared Job type
+import { Job } from "../../types";
 
 
 
@@ -388,7 +388,6 @@ const JobPage = () => {
   // };
 
   const handleDeleteJob = async (_id: string) => {
-    // Confirm deletion using SweetAlert
     const result = await Swal.fire({
       title: "Delete Job",
       text: "Are you sure you want to delete this job?",
@@ -399,18 +398,21 @@ const JobPage = () => {
       cancelButtonText: "Cancel",
       confirmButtonText: "Delete",
     });
-  
+
     if (result.isConfirmed) {
       try {
         // Perform the delete operation
         const response = await fetch(`/api/jobs/delete-job/${_id}`, {
           method: "DELETE",
         });
-  
+
         if (response.ok) {
-          // Re-fetch the job list to ensure pagination is updated
-          await fetchJobs();
-  
+          const updatedJobs = await fetchJobs();
+          if (updatedJobs.length === 0 && currentPage > 1) {
+            setCurrentPage((prevPage) => prevPage - 1);
+            await fetchJobs();
+          }
+
           // Show success alert
           Swal.fire({
             icon: "success",
@@ -422,8 +424,6 @@ const JobPage = () => {
         } else {
           const errorData = await response.json();
           console.error("Failed to delete job:", errorData.error || "Unknown error");
-  
-          // Show error alert
           Swal.fire({
             icon: "error",
             title: "Delete Failed",
@@ -432,8 +432,6 @@ const JobPage = () => {
         }
       } catch (error) {
         console.error("Error deleting job:", error);
-  
-        // Show error alert for unexpected errors
         Swal.fire({
           icon: "error",
           title: "Unexpected Error",
@@ -442,14 +440,12 @@ const JobPage = () => {
       }
     }
   };
-  
 
 
-  const fetchJobs = useCallback(async () => {
+  const fetchJobs = useCallback(async (): Promise<Job[]> => {
     try {
       setLoadingTable(true);
 
-      //  const response = await fetch(`/api/jobs/add-job/?page=${currentPage}`);
       const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery.trim())}` : '';
       const response = await fetch(`/api/jobs/add-job/?page=${currentPage}${searchParam}`);
 
@@ -458,15 +454,42 @@ const JobPage = () => {
         setJobs(data.jobs);
         setTotalPages(data.totalPages);
         setTotalJobs(data.totalJobs);
+        return data.jobs; // Return the jobs array
       } else {
         console.error("Failed to fetch jobs");
+        return []; // Return an empty array if the response is not OK
       }
     } catch (error) {
       console.error("Error fetching jobs:", error);
+      return []; // Return an empty array in case of an error
     } finally {
       setLoadingTable(false);
     }
   }, [currentPage, searchQuery]);
+
+  // const fetchJobs = useCallback(async () => {
+
+  //   try {
+  //     setLoadingTable(true);
+
+  //     //  const response = await fetch(`/api/jobs/add-job/?page=${currentPage}`);
+  //     const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery.trim())}` : '';
+  //     const response = await fetch(`/api/jobs/add-job/?page=${currentPage}${searchParam}`);
+
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       setJobs(data.jobs);
+  //       setTotalPages(data.totalPages);
+  //       setTotalJobs(data.totalJobs);
+  //     } else {
+  //       console.error("Failed to fetch jobs");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching jobs:", error);
+  //   } finally {
+  //     setLoadingTable(false);
+  //   }
+  // }, [currentPage, searchQuery]);
 
   useEffect(() => {
     fetchJobs();

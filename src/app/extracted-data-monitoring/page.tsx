@@ -13,7 +13,7 @@ import { MdDelete } from "react-icons/md";
 import { GiShare } from "react-icons/gi";
 import { FiSearch } from "react-icons/fi";
 import { FaChevronDown } from "react-icons/fa";
-import { IoCopyOutline, IoCalendar } from "react-icons/io5";
+import { IoCalendar } from "react-icons/io5";
 import Swal from 'sweetalert2';
 
 interface Job {
@@ -29,7 +29,7 @@ interface Job {
   short: number;
   over: number;
   refused: number;
-  sealIntact: number;
+  sealIntact: string;
   noOfPages: number;
   finalStatus: string;
   reviewStatus: string;
@@ -64,7 +64,7 @@ const MasterPage = () => {
   const [podDateFilter, setPodDateFilter] = useState("");
   const [podDateSignatureFilter, setPodDateSignatureFilter] = useState("");
   const [jobNameFilter, setJobNameFilter] = useState("");
-  const [carrierFilter, setCarrierFilter] = useState("");
+  // const [carrierFilter, setCarrierFilter] = useState("");
   const [bolNumberFilter, setBolNumberFilter] = useState("");
 
   const [dropdownStates, setDropdownStates] = useState<string | null>(null);
@@ -73,7 +73,7 @@ const MasterPage = () => {
   const [dropdownStatesThird, setDropdownStatesThird] = useState<string | null>(null);
 
   const isLastThreeRow = (jobId: string) => {
-    const rowsCount = master.length;  // Replace with actual number of rows
+    const rowsCount = master.length;
     const jobIndex = master.findIndex(job => job._id === jobId);
     return jobIndex >= rowsCount - 3;
   }
@@ -195,11 +195,69 @@ const MasterPage = () => {
   //   setJobNameFilter(jobName);
   // }, []);
 
+  const handleDelete = async () => {
+    Swal.fire({
+      title: 'Delete Files',
+      text: 'Are you sure you want to delete these files?',
+      icon: 'warning',
+      iconColor: '#005B97',
+      showCancelButton: true,
+      confirmButtonColor: '#005B97',
+      cancelButtonColor: '#E0E0E0',
+      confirmButtonText: 'Delete',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await fetch('/api/process-data/delete-rows', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ ids: selectedRows }),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            const isLastPage = master.length === selectedRows.length && currentPage > 1;
+            if (isLastPage) {
+              setCurrentPage((prevPage) => prevPage - 1);
+            }
+
+            await fetchJobs();
+            setTotalJobs(totalJobs - selectedRows.length);
+            setSelectedRows([]);
+            Swal.fire({
+              title: 'Deleted!',
+              text: 'Your files have been deleted.',
+              icon: 'success',
+              timer: 2000,
+              showConfirmButton: false,
+            });
+          } else {
+            Swal.fire({
+              title: 'Error!',
+              text: result.error || 'Failed to delete files.',
+              icon: 'error',
+            });
+          }
+        } catch (error) {
+          console.error('Error deleting files:', error);
+          Swal.fire({
+            title: 'Error!',
+            text: 'Failed to delete files due to a network or server error.',
+            icon: 'error',
+          });
+        }
+      }
+    });
+  };
+
   const fetchJobs = useCallback(async () => {
     try {
       setLoadingTable(true);
       const queryParams = new URLSearchParams();
-      console.log(queryParams);
+      console.log(currentPage);
       queryParams.set("page", currentPage.toString());
       if (bolNumberFilter) queryParams.set("bolNumber", bolNumberFilter.trim());
       if (finalStatusFilter) queryParams.set("recognitionStatus", finalStatusFilter);
@@ -209,7 +267,7 @@ const MasterPage = () => {
       if (podDateFilter) queryParams.set("podDate", podDateFilter);
       if (podDateSignatureFilter) queryParams.set("podDateSignature", podDateSignatureFilter.trim());
       if (jobNameFilter) queryParams.set("jobName", jobNameFilter.trim());
-      if (carrierFilter) queryParams.set("carrier", carrierFilter.trim());
+      // if (carrierFilter) queryParams.set("carrier", carrierFilter.trim());
 
 
 
@@ -241,7 +299,7 @@ const MasterPage = () => {
     podDateFilter,
     podDateSignatureFilter,
     jobNameFilter,
-    carrierFilter,
+    // carrierFilter,
   ]);
 
   useEffect(() => {
@@ -261,7 +319,7 @@ const MasterPage = () => {
       setReviewStatusFilter("");
       setReasonStatusFilter("");
       setReviewByStatusFilter("");
-      setCarrierFilter("");
+      // setCarrierFilter("");
       setBolNumberFilter("");
       setPodDateFilter("");
       setPodDateSignatureFilter("");
@@ -371,29 +429,37 @@ const MasterPage = () => {
     setCurrentPage(newPage);
   }
 
-  const handleDelete = () => {
-    Swal.fire({
-      title: 'Delete Files',
-      text: 'Are you sure you want to delete these files?',
-      icon: 'warning',
-      iconColor: '#005B97',
-      showCancelButton: true,
-      confirmButtonColor: '#005B97',
-      cancelButtonColor: '#E0E0E0',
-      confirmButtonText: 'Delete',
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire({
-          title: 'Deleted!',
-          text: 'Your files have been deleted.',
-          icon: 'success',
-          timer: 2000, // Auto-close after 2 seconds
-          showConfirmButton: false, // Hide the confirm button
-        });
-      }
-    });
-  };
+  // const handleDelete = () => {
+  //   Swal.fire({
+  //     title: 'Delete Files',
+  //     text: 'Are you sure you want to delete these files?',
+  //     icon: 'warning',
+  //     iconColor: '#005B97',
+  //     showCancelButton: true,
+  //     confirmButtonColor: '#005B97',
+  //     cancelButtonColor: '#E0E0E0',
+  //     confirmButtonText: 'Delete',
+  //   }).then((result) => {
+  //     if (result.isConfirmed) {
 
+  //        // Filter out the selected rows from the master array
+  //        const updatedMaster = master.filter((job) => !selectedRows.includes(job._id));
+  //        // Update the master state
+  //        setMaster(updatedMaster);
+  //        // Clear selected rows after deletion
+  //        setSelectedRows([]);
+
+  //       Swal.fire({
+  //         title: 'Deleted!',
+  //         text: 'Your files have been deleted.',
+  //         icon: 'success',
+  //         timer: 2000, // Auto-close after 2 seconds
+  //         showConfirmButton: false, // Hide the confirm button
+  //       });
+  //     }
+  //   });
+  // };
+  
   const handleSend = () => {
     Swal.fire({
       title: 'Send Files',
@@ -406,6 +472,7 @@ const MasterPage = () => {
       confirmButtonText: 'Yes Sure!',
     }).then((result) => {
       if (result.isConfirmed) {
+        setSelectedRows([]);
         Swal.fire({
           title: 'Sent!',
           text: 'Your files have been Sent.',
@@ -601,7 +668,7 @@ const MasterPage = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col">
+              {/* <div className="flex flex-col">
                 <label htmlFor="search" className="text-sm font-semibold text-gray-800">
                   Carrier
                 </label>
@@ -620,7 +687,7 @@ const MasterPage = () => {
                     <IoCopyOutline size={20} className="text-[#005B97]" />
                   </button>
                 </div>
-              </div>
+              </div> */}
 
               {/* <div className="flex flex-col">
                 <label htmlFor="search" className="text-sm font-semibold text-gray-800">
@@ -814,10 +881,10 @@ const MasterPage = () => {
 
                     <thead>
                       <tr className="text-gray-800">
-                        <th className="py-2 px-4 border-b text-start min-w-36"><span className="mr-3"><input type="checkbox" checked={isAllSelected}
+                        <th className="py-2 px-4 border-b text-start min-w-44"><span className="mr-3"><input type="checkbox" checked={isAllSelected}
                           onChange={handleSelectAll} /></span>BL Number</th>
                         <th className="py-2 px-4 border-b text-center min-w-32">Job Name</th>
-                        <th className="py-2 px-4 border-b text-center min-w-32">Carrier</th>
+                        {/* <th className="py-2 px-4 border-b text-center min-w-32">Carrier</th> */}
                         <th className="py-2 px-4 border-b text-center min-w-32">POD Date</th>
                         <th className="py-2 px-4 border-b text-center min-w-40">POD Signature</th>
                         <th className="py-2 px-4 border-b text-center min-w-28">Total Qty</th>
@@ -852,7 +919,7 @@ const MasterPage = () => {
                           <td className="py-2 px-4 border-b text-center">
                             {job.jobName}
                           </td>
-                          <td className="py-2 px-4 border-b text-center">{job.carrier}</td>
+                          {/* <td className="py-2 px-4 border-b text-center">{job.carrier}</td> */}
                           <td className="py-2 px-4 border-b text-center">{job.podDate}</td>
                           <td className="py-2 px-4 border-b text-center">
                             {job.podSignature === "" || job.podSignature === null || job.podSignature === undefined ? (

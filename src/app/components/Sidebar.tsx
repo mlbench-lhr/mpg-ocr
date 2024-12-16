@@ -352,7 +352,11 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
                                         {userRole === "admin" ? "Admin" : userName}
                                     </h1>
                                     <p className="text-gray-400">
-                                        {userRole === "admin" ? "" : "User"}
+                                        {userRole === "admin"
+                                            ? ""
+                                            : userRole === "reviewer"
+                                                ? "Reviewer"
+                                                : "User"}
                                     </p>
                                 </div>
                                 {userRole !== 'admin' && (
