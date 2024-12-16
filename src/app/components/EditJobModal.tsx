@@ -233,10 +233,17 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
                         <div className="relative">
                             <Datetime
                                 value={fromTime}
-                                onChange={(momentOrString) => {
+                                onChange={(momentOrString: moment.Moment | string | Date) => {
+                                    // Check if it's a moment object and format it as a string
                                     if (moment.isMoment(momentOrString)) {
                                         setFromTime(momentOrString.format("HH:mm"));
-                                    } else {
+                                    }
+                                    // If it's a Date, convert it to a moment and format as a string
+                                    else if (momentOrString instanceof Date) {
+                                        setFromTime(moment(momentOrString).format("HH:mm"));
+                                    }
+                                    // If it's a string, set it directly
+                                    else {
                                         setFromTime(momentOrString);
                                     }
                                 }}
@@ -260,11 +267,18 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
                         <div className="relative">
                             <Datetime
                                 value={toTime}
-                                onChange={(momentOrString) => {
+                                onChange={(momentOrString: moment.Moment | string | Date) => {
+                                    // Check if it's a moment object and format it as a string
                                     if (moment.isMoment(momentOrString)) {
                                         setToTime(momentOrString.format("HH:mm"));
-                                    } else {
-                                        setToTime(momentOrString); // Already a string
+                                    }
+                                    // If it's a Date, convert it to a moment and format as a string
+                                    else if (momentOrString instanceof Date) {
+                                        setToTime(moment(momentOrString).format("HH:mm"));
+                                    }
+                                    // If it's a string, set it directly
+                                    else {
+                                        setToTime(momentOrString);
                                     }
                                 }}
                                 dateFormat={false}
