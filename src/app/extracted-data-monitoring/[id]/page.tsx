@@ -16,6 +16,7 @@ interface Job {
     jobName: string;
     carrier: string;
     podDate: string;
+    deliveryDate: string;
     podSignature: string;
     totalQty: number;
     delivered: number;
@@ -164,7 +165,7 @@ const JobDetail = () => {
                         <div className='flex items-center gap-5'>
                             <span className='text-xl text-gray-800 font-semibold'>Delivery Date</span>
                             <span className='text-xl text-gray-400 font-medium'>
-                                {job.podDate ? format(new Date(job.podDate), 'dd/MM/yyyy') : 'N/A'}
+                                {job.deliveryDate ? format(new Date(job.deliveryDate), 'dd/MM/yyyy') : 'N/A'}
                             </span>
                         </div>
                     </div>

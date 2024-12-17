@@ -13,6 +13,7 @@ interface Job {
     jobName: string;
     carrier: string;
     podDate: string;
+    deliveryDate: string;
     podSignature: string;
     totalQty: number;
     delivered: number;

@@ -12,6 +12,7 @@ interface Job {
     jobName: string;
     createdAt: string;
     podDate: string;
+    deliveryDate: string;
     cargoDescription: string;
     carrier: string;
     podSignature: string;
@@ -40,7 +41,7 @@ interface EditModalProps {
 const EditModal: React.FC<EditModalProps> = ({ job, onClose, onUpdate }) => {
     const [formData, setFormData] = useState({
         createdAt: format(new Date(job.createdAt), "yyyy-MM-dd"),
-        podDate: format(new Date(job.podDate), "yyyy-MM-dd"),
+        deliveryDate: format(new Date(job.deliveryDate), "yyyy-MM-dd"),
         cargoDescription: job.cargoDescription,
     });
     const [errorMessage, setErrorMessage] = useState("");
@@ -106,7 +107,7 @@ const EditModal: React.FC<EditModalProps> = ({ job, onClose, onUpdate }) => {
             const updatedJob = {
                 ...job,
                 createdAt: new Date(formData.createdAt).toISOString(),
-                podDate: formatToYYYYMMDD(formData.podDate),
+                deliveryDate: formatToYYYYMMDD(formData.deliveryDate),
                 cargoDescription: formData.cargoDescription,
             };
 
@@ -195,10 +196,10 @@ const EditModal: React.FC<EditModalProps> = ({ job, onClose, onUpdate }) => {
                         <label className="block font-semibold text-gray-800 mb-3">Delivery Date</label>
                         <div className="relative">
                             <input
-                                id="podDate"
+                                id="deliveryDate"
                                 type="date"
-                                name="podDate"
-                                value={formData.podDate}
+                                name="deliveryDate"
+                                value={formData.deliveryDate}
                                 onChange={handleInputChange}
                                 className="w-full px-4 py-2 mt-1 pr-10 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-[#005B97] custom-date-input"
                                 required
@@ -207,7 +208,7 @@ const EditModal: React.FC<EditModalProps> = ({ job, onClose, onUpdate }) => {
                                 type="button"
                                 className="absolute inset-y-0 right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
                                 onClick={() => {
-                                    const podDateInput = document.getElementById('podDate') as HTMLInputElement;
+                                    const podDateInput = document.getElementById('deliveryDate') as HTMLInputElement;
                                     if (podDateInput) {
                                         podDateInput.showPicker();
                                     }

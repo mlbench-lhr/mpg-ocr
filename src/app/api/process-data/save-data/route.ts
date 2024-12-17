@@ -78,7 +78,7 @@ export async function POST(req: Request) {
         }
 
         const requiredFields = [
-            "blNumber", "jobId", "pdfUrl", "carrier", "podDate", "podSignature", "totalQty",
+            "blNumber", "jobId", "pdfUrl", "carrier", "podDate", "deliveryDate", "podSignature", "totalQty",
             "delivered", "damaged", "short", "over", "refused",
             "sealIntact", "finalStatus", "reviewStatus", "recognitionStatus", "breakdownReason", "reviewedBy", "cargoDescription"
         ];
