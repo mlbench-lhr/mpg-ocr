@@ -55,16 +55,31 @@ const JobDetail = () => {
         sealIntact: "",
     });
     const [isEditMode, setIsEditMode] = useState(false);
-    const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
-    const [saving, setSaving] = useState(false); // Added saving state
+
+    
+    const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
+
+
+    // useEffect(() => {
+    //   const savedState = sessionStorage.getItem("sidebar");
+    //   console.log(savedState);
+    //   if (savedState) setIsSidebarExpanded(JSON.parse(savedState));
+    // }, []);
+
+    const handleSidebarStateChange = (newState: boolean) => {
+        console.log("Sidebar state updated in parent:", newState);
+        setIsSidebarExpanded(newState); // Update parent's state if needed
+      };
+
+    const [saving, setSaving] = useState(false);
     const router = useRouter();
     const [userRole, setUserRole] = useState("");
-    const [isLoading, setIsLoading] = useState(true); // State to manage loader visibility
+    const [isLoading, setIsLoading] = useState(true);
 
 
-    const handleSidebarToggle = (expanded: boolean) => {
-        setIsSidebarExpanded(expanded);
-    };
+    // const handleSidebarToggle = (expanded: boolean) => {
+    //     setIsSidebarExpanded(expanded);
+    // };
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -179,7 +194,12 @@ const JobDetail = () => {
             }
         } else if (nonNumericFields.includes(name)) {
             // Prevent spaces at the beginning and allow only alphanumeric characters or underscores
-            const isValidNonNumeric = /^[a-zA-Z0-9_]*$/.test(value) && !/^\d/.test(value) && (value.match(/0/g)?.length || 0) <= 1;
+
+            // const isValidNonNumeric = /^[a-zA-Z0-9_]*$/.test(value) && !/^\d/.test(value) && (value.match(/0/g)?.length || 0) <= 1;
+
+            const isValidNonNumeric =
+                value === "" ||
+                (/^[a-zA-Z0-9_]+(\s[a-zA-Z0-9_]+)*$/.test(value) && !/^\s/.test(value) && !/^0+$/.test(value));
 
             // If the input is valid, update the form data
             if (isValidNonNumeric) {
@@ -240,7 +260,10 @@ const JobDetail = () => {
 
     return (
         <div className="flex flex-row h-screen bg-white">
-            <Sidebar onToggleExpand={handleSidebarToggle} />
+           
+      <Sidebar onStateChange={handleSidebarStateChange}/>
+
+
             <div
                 className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isSidebarExpanded ? "ml-64" : "ml-24"}`}
             >

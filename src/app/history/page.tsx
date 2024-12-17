@@ -5,6 +5,7 @@ import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import Spinner from "../components/Spinner";
 import Image from "next/image";
+import Link from "next/link";
 // import { RiArrowDropDownLine } from "react-icons/ri";
 
 
@@ -18,7 +19,6 @@ interface User {
 }
 
 export default function Page() {
-    const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
     // const [totalUsers, setTotalUsers] = useState(0);
     const [searchQuery, setSearchQuery] = useState("");
     const [loadingTable, setLoadingTable] = useState(false);
@@ -26,9 +26,18 @@ export default function Page() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
-    // Handle sidebar toggle
-    const handleSidebarToggle = (expanded: boolean) => {
-        setIsSidebarExpanded(expanded);
+    const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
+
+
+    // useEffect(() => {
+    //   const savedState = sessionStorage.getItem("sidebar");
+    //   console.log(savedState);
+    //   if (savedState) setIsSidebarExpanded(JSON.parse(savedState));
+    // }, []);
+
+    const handleSidebarStateChange = (newState: boolean) => {
+        console.log("Sidebar state updated in parent:", newState);
+        setIsSidebarExpanded(newState); // Update parent's state if needed
     };
 
     // Handle page change
@@ -67,7 +76,8 @@ export default function Page() {
 
     return (
         <div className="flex flex-row h-screen bg-white">
-            <Sidebar onToggleExpand={handleSidebarToggle} />
+            <Sidebar onStateChange={handleSidebarStateChange} />
+
             <div
                 className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isSidebarExpanded ? "ml-64" : "ml-24"
                     }`}
@@ -110,10 +120,7 @@ export default function Page() {
                                     <th className="py-2 px-4 border-b text-start font-medium">BL Number</th>
                                     <th className="py-2 px-4 border-b text-center font-medium">Recognition status</th>
                                     <th className="py-2 px-4 border-b text-center font-medium">Changed On</th>
-                                    <th className="py-2 px-4 border-b text-center font-medium">Field</th>
-                                    <th className="py-2 px-4 border-b text-center font-medium">Old Value</th>
-                                    <th className="py-2 px-4 border-b text-center font-medium">New Value</th>
-                                    <th className="py-2 px-4 border-b text-center font-medium">Changed By</th>
+                                    <th className="py-2 px-4 border-b text-center font-medium">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -136,60 +143,11 @@ export default function Page() {
                                         </div>
                                     </td>
                                     <td className="py-2 px-4 border-b text-center">02/28/2024 00:00:00</td>
-                                    <td className="py-2 px-4 border-b text-center">Carrier</td>
-                                    <td className="py-2 px-4 border-b text-center">xxxxxx</td>
-                                    <td className="py-2 px-4 border-b text-center">UPS</td>
-                                    <td className="py-2 px-4 border-b text-center">OCR Engine</td>
-
-                                </tr>
-                                <tr className="text-gray-500">
-                                    <td className="py-2 px-4 border-b text-start">232058679452165</td>
                                     <td className="py-2 px-4 border-b text-center">
-                                        <div
-                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-yellow-100 text-[#AF9918]`}
-                                        >
-                                            <div className="flex items-center">
-                                                <span>
-                                                    Partially Valid
-                                                </span>
-                                                {/* <span>
-                                                    <RiArrowDropDownLine
-                                                        className={`text-2xl p-0`}
-                                                    />
-                                                </span> */}
-                                            </div>
-                                        </div>
+                                        <Link className="underline text-[#005B97] text-center" href="history/detail">
+                                            View Details
+                                        </Link>
                                     </td>
-                                    <td className="py-2 px-4 border-b text-center">02/28/2024 00:00:00</td>
-                                    <td className="py-2 px-4 border-b text-center">Carrier</td>
-                                    <td className="py-2 px-4 border-b text-center">xxxxxx</td>
-                                    <td className="py-2 px-4 border-b text-center">PPS</td>
-                                    <td className="py-2 px-4 border-b text-center">David</td>
-
-                                </tr>
-                                <tr className="text-gray-500">
-                                    <td className="py-2 px-4 border-b text-start">232058679452165</td>
-                                    <td className="py-2 px-4 border-b text-center">
-                                        <div
-                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-green-100 text-green-800`}
-                                        >
-                                            <div className="flex items-center">
-                                                <span>
-                                                    Valid
-                                                </span>
-                                                {/* <span>
-                                                    <RiArrowDropDownLine
-                                                        className={`text-2xl p-0`}
-                                                    />
-                                                </span> */}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="py-2 px-4 border-b text-center">02/28/2024 00:00:00</td>
-                                    <td className="py-2 px-4 border-b text-center">Carrier</td>
-                                    <td className="py-2 px-4 border-b text-center">xxxxxx</td>
-                                    <td className="py-2 px-4 border-b text-center">UPS</td>
-                                    <td className="py-2 px-4 border-b text-center">OCR Engine</td>
 
                                 </tr>
                                 <tr className="text-gray-500">
@@ -211,35 +169,11 @@ export default function Page() {
                                         </div>
                                     </td>
                                     <td className="py-2 px-4 border-b text-center">02/28/2024 00:00:00</td>
-                                    <td className="py-2 px-4 border-b text-center">Carrier</td>
-                                    <td className="py-2 px-4 border-b text-center">xxxxxx</td>
-                                    <td className="py-2 px-4 border-b text-center">UPS</td>
-                                    <td className="py-2 px-4 border-b text-center">OCR Engine</td>
-
-                                </tr>
-                                <tr className="text-gray-500">
-                                    <td className="py-2 px-4 border-b text-start">232058679452165</td>
                                     <td className="py-2 px-4 border-b text-center">
-                                        <div
-                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-yellow-100 text-[#AF9918]`}
-                                        >
-                                            <div className="flex items-center">
-                                                <span>
-                                                    Partially Valid
-                                                </span>
-                                                {/* <span>
-                                                    <RiArrowDropDownLine
-                                                        className={`text-2xl p-0`}
-                                                    />
-                                                </span> */}
-                                            </div>
-                                        </div>
+                                        <Link className="underline text-[#005B97] text-center" href="history/detail">
+                                            View Details
+                                        </Link>
                                     </td>
-                                    <td className="py-2 px-4 border-b text-center">02/28/2024 00:00:00</td>
-                                    <td className="py-2 px-4 border-b text-center">Carrier</td>
-                                    <td className="py-2 px-4 border-b text-center">xxxxxx</td>
-                                    <td className="py-2 px-4 border-b text-center">PPS</td>
-                                    <td className="py-2 px-4 border-b text-center">David</td>
 
                                 </tr>
                                 <tr className="text-gray-500">
@@ -261,10 +195,11 @@ export default function Page() {
                                         </div>
                                     </td>
                                     <td className="py-2 px-4 border-b text-center">02/28/2024 00:00:00</td>
-                                    <td className="py-2 px-4 border-b text-center">Carrier</td>
-                                    <td className="py-2 px-4 border-b text-center">xxxxxx</td>
-                                    <td className="py-2 px-4 border-b text-center">UPS</td>
-                                    <td className="py-2 px-4 border-b text-center">OCR Engine</td>
+                                    <td className="py-2 px-4 border-b text-center">
+                                        <Link className="underline text-[#005B97] text-center" href="history/detail">
+                                            View Details
+                                        </Link>
+                                    </td>
 
                                 </tr>
                                 <tr className="text-gray-500">
@@ -286,35 +221,11 @@ export default function Page() {
                                         </div>
                                     </td>
                                     <td className="py-2 px-4 border-b text-center">02/28/2024 00:00:00</td>
-                                    <td className="py-2 px-4 border-b text-center">Carrier</td>
-                                    <td className="py-2 px-4 border-b text-center">xxxxxx</td>
-                                    <td className="py-2 px-4 border-b text-center">UPS</td>
-                                    <td className="py-2 px-4 border-b text-center">OCR Engine</td>
-
-                                </tr>
-                                <tr className="text-gray-500">
-                                    <td className="py-2 px-4 border-b text-start">232058679452165</td>
                                     <td className="py-2 px-4 border-b text-center">
-                                        <div
-                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-yellow-100 text-[#AF9918]`}
-                                        >
-                                            <div className="flex items-center">
-                                                <span>
-                                                    Partially Valid
-                                                </span>
-                                                {/* <span>
-                                                    <RiArrowDropDownLine
-                                                        className={`text-2xl p-0`}
-                                                    />
-                                                </span> */}
-                                            </div>
-                                        </div>
+                                        <Link className="underline text-[#005B97] text-center" href="history/detail">
+                                            View Details
+                                        </Link>
                                     </td>
-                                    <td className="py-2 px-4 border-b text-center">02/28/2024 00:00:00</td>
-                                    <td className="py-2 px-4 border-b text-center">Carrier</td>
-                                    <td className="py-2 px-4 border-b text-center">xxxxxx</td>
-                                    <td className="py-2 px-4 border-b text-center">PPS</td>
-                                    <td className="py-2 px-4 border-b text-center">David</td>
 
                                 </tr>
                                 <tr className="text-gray-500">
@@ -336,21 +247,22 @@ export default function Page() {
                                         </div>
                                     </td>
                                     <td className="py-2 px-4 border-b text-center">02/28/2024 00:00:00</td>
-                                    <td className="py-2 px-4 border-b text-center">Carrier</td>
-                                    <td className="py-2 px-4 border-b text-center">xxxxxx</td>
-                                    <td className="py-2 px-4 border-b text-center">UPS</td>
-                                    <td className="py-2 px-4 border-b text-center">OCR Engine</td>
+                                    <td className="py-2 px-4 border-b text-center">
+                                        <Link className="underline text-[#005B97] text-center" href="history/detail">
+                                            View Details
+                                        </Link>
+                                    </td>
 
                                 </tr>
                                 <tr className="text-gray-500">
                                     <td className="py-2 px-4 border-b text-start">232058679452165</td>
                                     <td className="py-2 px-4 border-b text-center">
                                         <div
-                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-yellow-100 text-[#AF9918]`}
+                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-blue-100 text-[#005B97]`}
                                         >
                                             <div className="flex items-center">
                                                 <span>
-                                                    Partially Valid
+                                                    New
                                                 </span>
                                                 {/* <span>
                                                     <RiArrowDropDownLine
@@ -361,12 +273,14 @@ export default function Page() {
                                         </div>
                                     </td>
                                     <td className="py-2 px-4 border-b text-center">02/28/2024 00:00:00</td>
-                                    <td className="py-2 px-4 border-b text-center">Carrier</td>
-                                    <td className="py-2 px-4 border-b text-center">xxxxxx</td>
-                                    <td className="py-2 px-4 border-b text-center">PPS</td>
-                                    <td className="py-2 px-4 border-b text-center">David</td>
+                                    <td className="py-2 px-4 border-b text-center">
+                                        <Link className="underline text-[#005B97] text-center" href="history/detail">
+                                            View Details
+                                        </Link>
+                                    </td>
 
                                 </tr>
+
                             </tbody>
                         </table>
                     )}

@@ -37,7 +37,8 @@ interface Job {
 }
 
 const JobDetail = () => {
-    const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+
+
     const [isModalOpen, setIsModalOpen] = useState(false); // Control modal visibility
     const [job, setJob] = useState<Job | null>(null);
     const [loading, setLoading] = useState(true);
@@ -45,6 +46,20 @@ const JobDetail = () => {
     const [userRole, setUserRole] = useState("");
     const router = useRouter();
     const { id } = useParams();
+
+    const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
+
+
+    // useEffect(() => {
+    //   const savedState = sessionStorage.getItem("sidebar");
+    //   console.log(savedState);
+    //   if (savedState) setIsSidebarExpanded(JSON.parse(savedState));
+    // }, []);
+
+    const handleSidebarStateChange = (newState: boolean) => {
+        console.log("Sidebar state updated in parent:", newState);
+        setIsSidebarExpanded(newState); // Update parent's state if needed
+    };
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -97,9 +112,9 @@ const JobDetail = () => {
         router.back();
     };
 
-    const handleSidebarToggle = (expanded: boolean) => {
-        setIsSidebarExpanded(expanded);
-    };
+    // const handleSidebarToggle = (expanded: boolean) => {
+    //     setIsSidebarExpanded(expanded);
+    // };
 
     const handleOpenModal = () => {
         setIsModalOpen(true); // Open the modal
@@ -122,7 +137,8 @@ const JobDetail = () => {
 
     return (
         <div className="flex flex-row h-screen bg-white">
-            <Sidebar onToggleExpand={handleSidebarToggle} />
+            <Sidebar onStateChange={handleSidebarStateChange} />
+
             <div
                 className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isSidebarExpanded ? "ml-64" : "ml-24"
                     }`}

@@ -51,7 +51,7 @@ const MasterPage = () => {
   const [totalJobs, setTotalJobs] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+
   const [showButton, setShowButton] = useState(false);
   const [name, setName] = useState("");
 
@@ -74,6 +74,22 @@ const MasterPage = () => {
   const [dropdownStatesFirst, setDropdownStatesFirst] = useState<string | null>(null);
   const [dropdownStatesSecond, setDropdownStatesSecond] = useState<string | null>(null);
   const [dropdownStatesThird, setDropdownStatesThird] = useState<string | null>(null);
+  const router = useRouter();
+
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
+
+
+
+    // useEffect(() => {
+    //   const savedState = sessionStorage.getItem("sidebar");
+    //   console.log(savedState);
+    //   if (savedState) setIsSidebarExpanded(JSON.parse(savedState));
+    // }, []);
+
+    const handleSidebarStateChange = (newState: boolean) => {
+      console.log("Sidebar state updated in parent:", newState);
+      setIsSidebarExpanded(newState); // Update parent's state if needed
+    };
 
   const isLastThreeRow = (jobId: string) => {
     const rowsCount = master.length;
@@ -81,11 +97,7 @@ const MasterPage = () => {
     return jobIndex >= rowsCount - 3;
   }
 
-  const router = useRouter();
 
-  const handleSidebarToggle = (expanded: boolean) => {
-    setIsSidebarExpanded(expanded);
-  };
 
   const toggleDropdown = (jobId: string) => {
     if (userRole !== 'standarduser') {
@@ -290,7 +302,7 @@ const MasterPage = () => {
     try {
       setLoadingTable(true);
       const queryParams = new URLSearchParams();
-      console.log(currentPage);
+      // console.log(currentPage);
       queryParams.set("page", currentPage.toString());
       if (bolNumberFilter) queryParams.set("bolNumber", bolNumberFilter.trim());
       if (finalStatusFilter) queryParams.set("recognitionStatus", finalStatusFilter);
@@ -305,7 +317,7 @@ const MasterPage = () => {
 
 
 
-      console.log("Query Params:", queryParams.toString());
+      // console.log("Query Params:", queryParams.toString());
 
       const response = await fetch(`/api/process-data/get-data/?${queryParams.toString()}`);
 
@@ -528,9 +540,12 @@ const MasterPage = () => {
 
   return (
     <div className="flex flex-row h-screen bg-white">
-      <Sidebar onToggleExpand={handleSidebarToggle} />
+      {/* <Sidebar onToggleExpand={handleSidebarToggle} /> */}
+      <Sidebar onStateChange={handleSidebarStateChange}/>
+
+
       <div
-        className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isSidebarExpanded ? "ml-64" : "ml-24"
+        className={`flex-1 flex flex-col transition-all bg-white duration-300 ${!isSidebarExpanded ? "ml-24" : "ml-64"
           }`}
       >
         <Header

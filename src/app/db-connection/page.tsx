@@ -17,6 +17,8 @@ export default function DBConnectionPage() {
     const [serviceName, setServiceName] = useState("");
     const [checkbox, setCheckBox] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
+    const [buttonloading, setButttonLoading] = useState(false);
+
     const [error, setError] = useState<string | null>(null);
     const [percentage, setPercentage] = useState(0);
     const [loadingComplete, setLoadingComplete] = useState(false);
@@ -172,6 +174,7 @@ export default function DBConnectionPage() {
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!checkbox) {
+            setButttonLoading(true);
             router.push("/jobs");
         } else {
             const validationError = validateForm();
@@ -316,9 +319,9 @@ export default function DBConnectionPage() {
                         <button
                             type="submit"
                             className="w-full bg-[#005B97] text-white py-2 px-4 font-bold rounded-md hover:bg-[#005b97f0] transition duration-300"
-                            disabled={isLoading}
+                            disabled={isLoading || buttonloading}
                         >
-                            {isLoading ? "Connecting..." : "Save & Continue"}
+                            {isLoading || buttonloading ? "Loading..." : "Save & Continue"}
                         </button>
                     </form>
                 )}

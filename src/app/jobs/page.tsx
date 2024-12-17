@@ -35,7 +35,6 @@ const JobPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const jobsPerPage = 10;
   const [totalPages, setTotalPages] = useState(1);
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,9 +42,44 @@ const JobPage = () => {
   const [dropdownStates, setDropdownStates] = useState<string | null>(null);
 
 
-  const handleSidebarToggle = (expanded: boolean) => {
-    setIsSidebarExpanded(expanded);
+  // const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
+
+
+  // const handleSidebarToggle = (expanded: boolean) => {
+  //   setIsSidebarExpanded(expanded);
+  // };
+
+  // useEffect(() => {
+  //   if (typeof window !== "undefined") {
+  //     const savedState = sessionStorage.getItem("sidebar");
+  //     if (savedState) {
+  //       setIsSidebarExpanded(JSON.parse(savedState));
+  //       handleSidebarToggle(JSON.parse(savedState));
+  //     }
+  //   }
+  // }, []);
+
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
+
+  // useEffect(() => {
+  //   const savedState = sessionStorage.getItem("sidebar");
+  //   console.log(savedState);
+  //   if (savedState) setIsSidebarExpanded(JSON.parse(savedState));
+  // }, []);
+
+
+  const handleSidebarStateChange = (newState: boolean) => {
+    console.log("Sidebar state updated in parent:", newState);
+    setIsSidebarExpanded(newState); 
   };
+
+  // const handleSidebarToggle = (expanded: boolean) => {
+  //   sessionStorage.setItem("sidebar", JSON.stringify(expanded));
+  //   setIsSidebarExpanded(expanded);
+  // };
+
+
+
 
 
   useEffect(() => {
@@ -501,7 +535,9 @@ const JobPage = () => {
 
   return (
     <div className="flex flex-row h-screen bg-white">
-      <Sidebar onToggleExpand={handleSidebarToggle} />
+      {/* <Sidebar onToggleExpand={handleSidebarToggle} /> */}
+      <Sidebar onStateChange={handleSidebarStateChange}/>
+
       <div
         className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isSidebarExpanded ? "ml-64" : "ml-24"
           }`}

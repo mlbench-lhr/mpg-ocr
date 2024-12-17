@@ -19,7 +19,7 @@ interface User {
 }
 
 export default function Page() {
-    const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+
     const [totalUsers, setTotalUsers] = useState(0);
     const [searchQuery, setSearchQuery] = useState("");
     const [loadingTable, setLoadingTable] = useState(false);
@@ -70,10 +70,20 @@ export default function Page() {
         setLoadingTable(false);
     }, [router]);
 
-    // Handle sidebar toggle
-    const handleSidebarToggle = (expanded: boolean) => {
-        setIsSidebarExpanded(expanded);
-    };
+
+    const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
+
+
+    // useEffect(() => {
+    //   const savedState = sessionStorage.getItem("sidebar");
+    //   console.log(savedState);
+    //   if (savedState) setIsSidebarExpanded(JSON.parse(savedState));
+    // }, []);
+
+    const handleSidebarStateChange = (newState: boolean) => {
+        console.log("Sidebar state updated in parent:", newState);
+        setIsSidebarExpanded(newState); // Update parent's state if needed
+      };
 
     // Handle page change
     const handlePageChange = (newPage: number) => {
@@ -187,9 +197,13 @@ export default function Page() {
 
     return (
         <div className="flex flex-row h-screen bg-white">
-            <Sidebar onToggleExpand={handleSidebarToggle} />
+            {/* <Sidebar onToggleExpand={handleSidebarToggle} /> */}
+            <Sidebar onStateChange={handleSidebarStateChange}/>
+
+        
+
             <div
-                className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isSidebarExpanded ? "ml-64" : "ml-24"
+                className={`flex-1 flex flex-col transition-all bg-white duration-300 ${!isSidebarExpanded ? "ml-24" : "ml-64"
                     }`}
             >
                 <Header

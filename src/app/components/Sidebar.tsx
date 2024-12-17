@@ -12,27 +12,90 @@ import { IoIosArrowForward } from "react-icons/io";
 import { RiTimeZoneFill } from "react-icons/ri";
 import { FaHouseSignal } from "react-icons/fa6";
 import { TbCloudDataConnection } from "react-icons/tb";
-import { useAuth } from "../hooks/useAuth";
+import { useRouter } from "next/navigation";
+
+interface SidebarProps {
+    onStateChange: (newState: boolean) => void; // Callback to notify parent
+}
 
 
 // export default function Sidebar() {
-export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded: boolean) => void }) {
+export default function Sidebar({ onStateChange }: SidebarProps) {
 
-    const [isExpanded, setIsExpanded] = useState(false);
+    // const [isExpanded, setIsExpanded] = useState(false);
+    const [isExpanded, setIsExpanded] = useState<boolean>();
+
+
+    useEffect(() => {
+        const savedState = sessionStorage.getItem("sidebar");
+        if (savedState !== null) {
+            const parsedState = JSON.parse(savedState);
+            setIsExpanded(parsedState);
+            onStateChange(parsedState); // Notify parent of the initial state
+        }
+    }, [onStateChange]);
+
+    // useEffect(() => {
+    //     if (typeof window !== "undefined") {
+    //         const savedState = sessionStorage.getItem('sidebar');
+    //         if (savedState) {
+    //             setIsExpanded(JSON.parse(savedState));
+    //         }
+    //     }
+    // }, []);
+
+
+    // const [isExpanded, setIsExpanded] = useState<boolean>(() => {
+    //     const savedState = localStorage.getItem('sidebar');
+    //     return savedState ? JSON.parse(savedState) : false;
+    // });
+
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const [isAutoConfirmationOpen, setAutoConfirmationOpen] = useState(false);
-    const { userRole } = useAuth("/admin-login");
-
     const [isDropdownOpenZone, setIsDropdownOpenZone] = useState(false);
     const [selectedTimeZone, setSelectedTimeZone] = useState("");
     const [userName, setUserName] = useState("User");
+    const [userRole, setUserRole] = useState("");
+
+    const router = useRouter();
+
 
     useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            router.push("/admin-login");
+            return;
+        }
+
+        const savedRole = localStorage.getItem("role");
+        if (savedRole) {
+            setUserRole(savedRole);
+        } else {
+            // Decode JWT and save role for future use
+            const decodedToken = decodeJwt(token);
+            const role = decodedToken.role;
+            setUserRole(role);
+            localStorage.setItem("role", role);
+        }
+
         if (typeof window !== "undefined") {
             const username = localStorage.getItem("username");
             setUserName(username || "User");
         }
-    }, []);
+    }, [router]);
+
+    // Decode JWT function
+    const decodeJwt = (token: string) => {
+        const base64Url = token.split(".")[1];
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const jsonPayload = decodeURIComponent(
+            atob(base64)
+                .split("")
+                .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                .join("")
+        );
+        return JSON.parse(jsonPayload);
+    };
 
     // Toggle function
     const toggleAutoConfirmation = () => {
@@ -49,7 +112,10 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
             });
 
             if (response.ok) {
+
+                sessionStorage.setItem('sidebar', JSON.stringify(false));
                 localStorage.removeItem("token");
+
                 if (userRole === "admin") {
                     window.location.href = "/admin-login";
                 } else {
@@ -64,9 +130,6 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
             console.error('Error during logout:', error);
         }
     };
-
-
-
 
 
     const timeZones = [
@@ -104,7 +167,7 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
     const handleSelectTimeZone = (zone: string) => {
         setSelectedTimeZone(zone);
         setIsDropdownOpenZone(false);
-        console.log(`Selected Time Zone: ${zone}`);
+        // console.log(`Selected Time Zone: ${zone}`);
     };
 
 
@@ -114,31 +177,57 @@ export default function Sidebar({ onToggleExpand }: { onToggleExpand: (expanded:
 
     const pathname = usePathname();
 
-    useEffect(() => {
-        const handleResize = () => {
-            if (window.innerWidth >= 768) {
-                setIsExpanded(false);
-            } else {
-                setIsExpanded(false);
-            }
-        };
-        handleResize();
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, []);
+    // useEffect(() => {
+    //     const handleResize = () => {
+    //         if (window.innerWidth >= 768) {
+    //             setIsExpanded(false);
+    //         } else {
+    //             setIsExpanded(false);
+    //         }
+    //     };
+    //     handleResize();
+    //     window.addEventListener("resize", handleResize);
+    //     return () => window.removeEventListener("resize", handleResize);
+    // }, []);
 
+    // Handle resize and set sidebar state accordingly
+    // useEffect(() => {
+    //     const handleResize = () => {
+    //         if (window.innerWidth >= 768) {
+    //             const storedSidebarState = sessionStorage.getItem("sidebar");
+    //             setIsExpanded(storedSidebarState ? JSON.parse(storedSidebarState) : true);
+    //         } else {
+    //             setIsExpanded(false); // Collapse sidebar on smaller screens
+    //         }
+    //     };
+
+    //     handleResize();
+    //     window.addEventListener("resize", handleResize);
+    //     return () => window.removeEventListener("resize", handleResize);
+    // }, []);
+
+    // const toggleExpand = () => {
+    //     setDropdownOpen(false);
+    //     setIsExpanded(!isExpanded);
+    //     onToggleExpand(!isExpanded);
+    // };
+
+    // Toggle sidebar state
     const toggleExpand = () => {
         setDropdownOpen(false);
-        setIsExpanded(!isExpanded);
-        onToggleExpand(!isExpanded);
+        const newState = !isExpanded;
+        setIsExpanded(newState);
+        sessionStorage.setItem("sidebar", JSON.stringify(newState));
+        onStateChange(newState); // Notify parent of the updated state
     };
+
     const isActive = (path: string) => pathname === path;
 
     return (
         <>
             {/* Sidebar */}
             <div
-                className={`fixed top-0 left-0 bg-gray-100 text-gray-800 h-screen z-50 transform transition-all duration-300 ${isExpanded ? "w-64" : "w-24"
+                className={`fixed top-0 left-0 bg-gray-100 text-gray-800 h-screen z-50 transform transition-all duration-300 ${!isExpanded ? "w-24" : "w-64"
                     } flex flex-col justify-between`}
             >
                 {/* Header */}
