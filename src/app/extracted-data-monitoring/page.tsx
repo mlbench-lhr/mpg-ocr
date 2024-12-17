@@ -201,6 +201,15 @@ const MasterPage = () => {
             job._id === id ? { ...job, [field]: value, reviewedBy: formattedReviewedBy } : job
           )
         );
+
+        // Show success alert
+        Swal.fire({
+          icon: "success",
+          title: "Status Updated",
+          text: `The status has been updated to ${value}.`,
+          timer: 2000,
+          showConfirmButton: false,
+        });
       } else {
         const errorData = await res.json();
         console.error(
