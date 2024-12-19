@@ -13,42 +13,28 @@ import { RiTimeZoneFill } from "react-icons/ri";
 import { FaHouseSignal } from "react-icons/fa6";
 import { TbCloudDataConnection } from "react-icons/tb";
 import { useRouter } from "next/navigation";
+import { IoIosArrowDroprightCircle } from "react-icons/io";
+
+
 
 interface SidebarProps {
-    onStateChange: (newState: boolean) => void; // Callback to notify parent
+    onStateChange: (newState: boolean) => void;
 }
 
 
 // export default function Sidebar() {
 export default function Sidebar({ onStateChange }: SidebarProps) {
 
-    // const [isExpanded, setIsExpanded] = useState(false);
     const [isExpanded, setIsExpanded] = useState<boolean>();
-
 
     useEffect(() => {
         const savedState = sessionStorage.getItem("sidebar");
         if (savedState !== null) {
             const parsedState = JSON.parse(savedState);
             setIsExpanded(parsedState);
-            onStateChange(parsedState); // Notify parent of the initial state
+            onStateChange(parsedState);
         }
     }, [onStateChange]);
-
-    // useEffect(() => {
-    //     if (typeof window !== "undefined") {
-    //         const savedState = sessionStorage.getItem('sidebar');
-    //         if (savedState) {
-    //             setIsExpanded(JSON.parse(savedState));
-    //         }
-    //     }
-    // }, []);
-
-
-    // const [isExpanded, setIsExpanded] = useState<boolean>(() => {
-    //     const savedState = localStorage.getItem('sidebar');
-    //     return savedState ? JSON.parse(savedState) : false;
-    // });
 
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const [isAutoConfirmationOpen, setAutoConfirmationOpen] = useState(false);
@@ -115,6 +101,8 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
 
                 sessionStorage.setItem('sidebar', JSON.stringify(false));
                 localStorage.removeItem("token");
+                localStorage.removeItem("username");
+                localStorage.removeItem("role");
 
                 if (userRole === "admin") {
                     window.location.href = "/admin-login";
@@ -160,14 +148,10 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
         "UTC+12:00",
     ];
 
-    // const toggleDropdownZone = () => {
-    //     setIsDropdownOpenZone(!isDropdownOpen);
-    // };
 
     const handleSelectTimeZone = (zone: string) => {
         setSelectedTimeZone(zone);
         setIsDropdownOpenZone(false);
-        // console.log(`Selected Time Zone: ${zone}`);
     };
 
 
@@ -177,48 +161,14 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
 
     const pathname = usePathname();
 
-    // useEffect(() => {
-    //     const handleResize = () => {
-    //         if (window.innerWidth >= 768) {
-    //             setIsExpanded(false);
-    //         } else {
-    //             setIsExpanded(false);
-    //         }
-    //     };
-    //     handleResize();
-    //     window.addEventListener("resize", handleResize);
-    //     return () => window.removeEventListener("resize", handleResize);
-    // }, []);
 
-    // Handle resize and set sidebar state accordingly
-    // useEffect(() => {
-    //     const handleResize = () => {
-    //         if (window.innerWidth >= 768) {
-    //             const storedSidebarState = sessionStorage.getItem("sidebar");
-    //             setIsExpanded(storedSidebarState ? JSON.parse(storedSidebarState) : true);
-    //         } else {
-    //             setIsExpanded(false); // Collapse sidebar on smaller screens
-    //         }
-    //     };
 
-    //     handleResize();
-    //     window.addEventListener("resize", handleResize);
-    //     return () => window.removeEventListener("resize", handleResize);
-    // }, []);
-
-    // const toggleExpand = () => {
-    //     setDropdownOpen(false);
-    //     setIsExpanded(!isExpanded);
-    //     onToggleExpand(!isExpanded);
-    // };
-
-    // Toggle sidebar state
     const toggleExpand = () => {
         setDropdownOpen(false);
         const newState = !isExpanded;
         setIsExpanded(newState);
         sessionStorage.setItem("sidebar", JSON.stringify(newState));
-        onStateChange(newState); // Notify parent of the updated state
+        onStateChange(newState);
     };
 
     const isActive = (path: string) => pathname === path;
@@ -464,15 +414,20 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
 
             </div >
 
-            {/* Expand button */}
+
             <button
                 onClick={toggleExpand}
                 className={`fixed top-16 ${isExpanded ? "left-60" : "left-20"
-                    } z-50 bg-gray-400 text-white px-[8px] rounded-full transition-all duration-300`
+                    } z-50 text-white px-[2px] rounded-full transition-all duration-300 flex items-center justify-center`
                 }
             >
-                {isExpanded ? "<" : ">"}
-            </button >
+                <span
+                    className={`transition-transform duration-300 ${isExpanded ? "rotate-180" : "rotate-0"}`}
+                >
+                    <IoIosArrowDroprightCircle fill="#979EAF" size={29} />
+                </span>
+            </button>
+
         </>
     );
 }

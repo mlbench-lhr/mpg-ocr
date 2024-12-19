@@ -57,3 +57,23 @@ div.rdtPicker input.form-control{
   -moz-appearance: textfield; /* Hide default calendar icon for Firefox */
   appearance: none; /* Hide default calendar icon for Chrome/Safari */
 }
+
+.rs-picker-popup.rs-picker-popup-date {
+ z-index: 1050 !important; /* Ensure this is above your modal */
+}
+
+.rs-input-group.rs-input-group-inside {
+  outline: none !important;
+  border-color: none !important;
+}
+.rs-picker-input-group .rs-input-group .rs-input-group-inside {
+  outline: none !important;
+  border-color: none !important;
+}
+.rs-input-group-focus{
+  border-color: none !important;
+  outline: none !important;
+}
+.rs-picker-input-group .rs-input-group .rs-input-group-inside:focus {
+  border-color: none !important;
+}

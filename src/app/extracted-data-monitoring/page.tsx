@@ -354,7 +354,6 @@ const MasterPage = () => {
 
   const handleFilterApply = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // localStorage.setItem("jobName", jobNameFilter);
     fetchJobs();
   };
 

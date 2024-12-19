@@ -15,16 +15,6 @@ import Image from "next/image";
 import { Job } from "../../types";
 
 
-
-// interface Job {
-//   _id: string;
-//   selectedDays: string[];
-//   fromTime: string;
-//   toTime: string;
-//   everyTime: string;
-//   active: boolean;
-// }
-
 const JobPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -42,23 +32,6 @@ const JobPage = () => {
   const [dropdownStates, setDropdownStates] = useState<string | null>(null);
 
 
-  // const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
-
-
-  // const handleSidebarToggle = (expanded: boolean) => {
-  //   setIsSidebarExpanded(expanded);
-  // };
-
-  // useEffect(() => {
-  //   if (typeof window !== "undefined") {
-  //     const savedState = sessionStorage.getItem("sidebar");
-  //     if (savedState) {
-  //       setIsSidebarExpanded(JSON.parse(savedState));
-  //       handleSidebarToggle(JSON.parse(savedState));
-  //     }
-  //   }
-  // }, []);
-
   const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
 
   // useEffect(() => {
@@ -70,15 +43,8 @@ const JobPage = () => {
 
   const handleSidebarStateChange = (newState: boolean) => {
     console.log("Sidebar state updated in parent:", newState);
-    setIsSidebarExpanded(newState); 
+    setIsSidebarExpanded(newState);
   };
-
-  // const handleSidebarToggle = (expanded: boolean) => {
-  //   sessionStorage.setItem("sidebar", JSON.stringify(expanded));
-  //   setIsSidebarExpanded(expanded);
-  // };
-
-
 
 
 
@@ -125,48 +91,6 @@ const JobPage = () => {
     setDropdownStates((prevState) => (prevState === id ? null : id));
   };
 
-  // const toggleStatus = async (_id: string, active: boolean) => {
-  //   try {
-  //     const res = await fetch(`/api/jobs/add-job`, {
-  //       method: "PATCH",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ id: _id, active }),
-  //     });
-
-  //     if (res.ok) {
-  //       await fetchJobs();
-  //     } else {
-  //       const errorData = await res.json();
-  //       console.error("Error updating status:", errorData.error);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error updating status:", error);
-  //   }
-  // };
-
-  // const toggleStatus = async (_id: string, active: boolean) => {
-  //   try {
-  //     const res = await fetch(`/api/jobs/add-job`, {
-  //       method: "PATCH",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ id: _id, active }),
-  //     });
-
-  //     if (res.ok) {
-  //       setJobs((prevJobs) =>
-  //         prevJobs.map((job) =>
-  //           job._id === _id ? { ...job, active } : job
-  //         )
-  //       );
-  //     } else {
-  //       const errorData = await res.json();
-  //       console.error("Error updating status:", errorData.error);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error updating status:", error);
-  //   }
-  // };
-
   const toggleStatus = async (_id: string, active: boolean) => {
     try {
       const res = await fetch(`/api/jobs/add-job`, {
@@ -182,7 +106,6 @@ const JobPage = () => {
           )
         );
 
-        // Show success alert
         Swal.fire({
           icon: "success",
           title: "Status Updated",
@@ -194,7 +117,6 @@ const JobPage = () => {
         const errorData = await res.json();
         console.error("Error updating status:", errorData.error);
 
-        // Show error alert
         Swal.fire({
           icon: "error",
           title: "Update Failed",
@@ -204,7 +126,6 @@ const JobPage = () => {
     } catch (error) {
       console.error("Error updating status:", error);
 
-      // Show error alert for unexpected errors
       Swal.fire({
         icon: "error",
         title: "Unexpected Error",
@@ -212,13 +133,6 @@ const JobPage = () => {
       });
     }
   };
-
-  // Function to add a new job to the local state
-  // const handleAddJob = (newJob: Job) => {
-  //   alert(JSON.stringify(newJob, null, 5)); 
-  //   setJobs((prevJobs) => [...prevJobs, newJob]);
-  // };
-
 
 
   const handlePageChange = (newPage: number) => {
@@ -255,172 +169,6 @@ const JobPage = () => {
     });
   };
 
-  // const handleDeleteJob = async (_id: string) => {
-
-  //   const result = await Swal.fire({
-  //     title: "Delete Job",
-  //     text: "Are you sure you want to delete this Job??",
-  //     icon: "warning",
-  //     showCancelButton: true,
-  //     confirmButtonColor: "#005B97",
-  //     cancelButtonColor: "#F0F1F3",
-  //     cancelButtonText: "Cancel",
-  //     confirmButtonText: "Delete",
-  //   });
-
-  //   if (result.isConfirmed) {
-
-
-  //     try {
-  //       const response = await fetch(`/api/jobs/delete-job/${_id}`, {
-  //         method: "DELETE",
-  //       });
-
-  //       if (response.ok) {
-  //         await fetchJobs();
-  //         console.log("Job deleted successfully");
-  //         if (jobs.length === 1 && currentPage > 1) {
-  //           setCurrentPage(currentPage - 1);
-  //         }
-  //       } else {
-  //         const errorData = await response.json();
-  //         console.error("Failed to delete job:", errorData.error || "Unknown error");
-  //       }
-  //     } catch (error) {
-  //       console.error("Error deleting job:", error);
-  //     }
-
-  //   }
-
-  // };
-
-
-  // const handleDeleteJob = async (_id: string) => {
-  //   // Confirm deletion using SweetAlert
-  //   const result = await Swal.fire({
-  //     title: "Delete Job",
-  //     text: "Are you sure you want to delete this Job?",
-  //     icon: "warning",
-  //     showCancelButton: true,
-  //     confirmButtonColor: "#d33",
-  //     cancelButtonColor: "#3085d6",
-  //     confirmButtonText: "Delete",
-  //     cancelButtonText: "Cancel",
-  //   });
-
-  //   if (result.isConfirmed) {
-  //     try {
-  //       // Perform the delete operation
-  //       const response = await fetch(`/api/jobs/delete-job/${_id}`, {
-  //         method: "DELETE",
-  //       });
-
-  //       if (response.ok) {
-  //         // Update the jobs state locally
-  //         setJobs((prevJobs) => prevJobs.filter((job) => job._id !== _id));
-
-  //         // Show success alert
-  //         Swal.fire({
-  //           icon: "success",
-  //           title: "Job Deleted",
-  //           text: "The job has been deleted successfully.",
-  //           timer: 2000,
-  //           showConfirmButton: false,
-  //         });
-  //       } else {
-  //         const errorData = await response.json();
-  //         console.error("Failed to delete job:", errorData.error || "Unknown error");
-
-  //         // Show error alert
-  //         Swal.fire({
-  //           icon: "error",
-  //           title: "Delete Failed",
-  //           text: errorData.error || "Something went wrong while deleting the job.",
-  //         });
-  //       }
-  //     } catch (error) {
-  //       console.error("Error deleting job:", error);
-
-  //       // Show error alert for unexpected errors
-  //       Swal.fire({
-  //         icon: "error",
-  //         title: "Unexpected Error",
-  //         text: "An error occurred while deleting the job. Please try again.",
-  //       });
-  //     }
-  //   }
-  // };
-
-
-  // const handleDeleteJob = async (_id: string) => {
-  //   // Confirm deletion using SweetAlert
-  //   const result = await Swal.fire({
-  //     title: "Delete Job",
-  //     text: "Are you sure you want to delete this job?",
-  //     icon: "warning",
-  //     showCancelButton: true,
-  //     confirmButtonColor: "#005B97",
-  //     cancelButtonColor: "#F0F1F3",
-  //     cancelButtonText: "Cancel",
-  //     confirmButtonText: "Delete",
-  //   });
-
-  //   if (result.isConfirmed) {
-  //     try {
-  //       // Perform the delete operation
-  //       const response = await fetch(`/api/jobs/delete-job/${_id}`, {
-  //         method: "DELETE",
-  //       });
-
-  //       if (response.ok) {
-  //         // Update the jobs state locally
-  //         setJobs((prevJobs) => {
-  //           const updatedJobs = prevJobs.filter((job) => job._id !== _id);
-
-  //           // Adjust pagination if the last job on the current page is deleted
-  //           if (updatedJobs.length === 0 && currentPage > 1) {
-  //             setCurrentPage((prevPage) => prevPage - 1);
-  //           }
-
-  //           setTotalJobs(() => {
-  //             return totalJobs - 1;
-  //           });
-
-  //           return updatedJobs;
-  //         });
-
-  //         // Show success alert
-  //         Swal.fire({
-  //           icon: "success",
-  //           title: "Job Deleted",
-  //           text: "The job has been deleted successfully.",
-  //           timer: 2000,
-  //           showConfirmButton: false,
-  //         });
-  //       } else {
-  //         const errorData = await response.json();
-  //         console.error("Failed to delete job:", errorData.error || "Unknown error");
-
-  //         // Show error alert
-  //         Swal.fire({
-  //           icon: "error",
-  //           title: "Delete Failed",
-  //           text: errorData.error || "Something went wrong while deleting the job.",
-  //         });
-  //       }
-  //     } catch (error) {
-  //       console.error("Error deleting job:", error);
-
-  //       // Show error alert for unexpected errors
-  //       Swal.fire({
-  //         icon: "error",
-  //         title: "Unexpected Error",
-  //         text: "An error occurred while deleting the job. Please try again.",
-  //       });
-  //     }
-  //   }
-  // };
-
   const handleDeleteJob = async (_id: string) => {
     const result = await Swal.fire({
       title: "Delete Job",
@@ -435,7 +183,6 @@ const JobPage = () => {
 
     if (result.isConfirmed) {
       try {
-        // Perform the delete operation
         const response = await fetch(`/api/jobs/delete-job/${_id}`, {
           method: "DELETE",
         });
@@ -447,7 +194,6 @@ const JobPage = () => {
             await fetchJobs();
           }
 
-          // Show success alert
           Swal.fire({
             icon: "success",
             title: "Job Deleted",
@@ -488,42 +234,19 @@ const JobPage = () => {
         setJobs(data.jobs);
         setTotalPages(data.totalPages);
         setTotalJobs(data.totalJobs);
-        return data.jobs; // Return the jobs array
+        return data.jobs;
       } else {
         console.error("Failed to fetch jobs");
-        return []; // Return an empty array if the response is not OK
+        return [];
       }
     } catch (error) {
       console.error("Error fetching jobs:", error);
-      return []; // Return an empty array in case of an error
+      return []; 
     } finally {
       setLoadingTable(false);
     }
   }, [currentPage, searchQuery]);
 
-  // const fetchJobs = useCallback(async () => {
-
-  //   try {
-  //     setLoadingTable(true);
-
-  //     //  const response = await fetch(`/api/jobs/add-job/?page=${currentPage}`);
-  //     const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery.trim())}` : '';
-  //     const response = await fetch(`/api/jobs/add-job/?page=${currentPage}${searchParam}`);
-
-  //     if (response.ok) {
-  //       const data = await response.json();
-  //       setJobs(data.jobs);
-  //       setTotalPages(data.totalPages);
-  //       setTotalJobs(data.totalJobs);
-  //     } else {
-  //       console.error("Failed to fetch jobs");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching jobs:", error);
-  //   } finally {
-  //     setLoadingTable(false);
-  //   }
-  // }, [currentPage, searchQuery]);
 
   useEffect(() => {
     fetchJobs();
@@ -536,7 +259,7 @@ const JobPage = () => {
   return (
     <div className="flex flex-row h-screen bg-white">
       {/* <Sidebar onToggleExpand={handleSidebarToggle} /> */}
-      <Sidebar onStateChange={handleSidebarStateChange}/>
+      <Sidebar onStateChange={handleSidebarStateChange} />
 
       <div
         className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isSidebarExpanded ? "ml-64" : "ml-24"
@@ -622,30 +345,6 @@ const JobPage = () => {
                       <td className="py-2 px-4 border-b text-center">{job.toTime}</td>
                       <td className="py-2 px-4 border-b text-center">{job.everyTime}</td>
                       <td className="py-2 px-4 border-b text-center">
-                        {/* <div
-                          className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${job.active ? "bg-blue-100 text-blue-600" : "bg-red-100 text-red-600"
-                            } group relative`}
-                        >
-                          <div>{job.active ? "Active" : "Inactive"}</div>
-                          <div>
-                            <RiArrowDropDownLine className="text-2xl p-0" />
-                          </div>
-                          <ul className="absolute mt-2 bg-white border rounded-md shadow-lg w-24 hidden group-hover:block">
-                            <li
-                              onClick={() => toggleStatus(job._id, true)}
-                              className="cursor-pointer px-3 py-1 hover:bg-blue-100 text-blue-600"
-                            >
-                              Active
-                            </li>
-                            <li
-                              onClick={() => toggleStatus(job._id, false)}
-                              className="cursor-pointer px-3 py-1 hover:bg-red-100 text-red-600"
-                            >
-                              Inactive
-                            </li>
-                          </ul>
-                        </div> */}
-
                         <div
                           className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium transition-all duration-500 ease-in-out cursor-pointer ${job.active ? "bg-blue-100 text-blue-600" : "bg-red-100 text-red-600"
                             }`} onClick={() => toggleDropdown(job._id)}
@@ -721,9 +420,6 @@ const JobPage = () => {
       {isModalOpen && (
         <AddJobModal onClose={() => setIsModalOpen(false)} onSubmit={() => fetchJobs()} />
       )}
-      {/* {isModalOpen && (
-        <AddJobModal onClose={() => setIsModalOpen(false)} onSubmit={handleAddJob} />
-      )} */}
       {isEditModalOpen && editingJob && (
         <EditJobModal
           job={editingJob}

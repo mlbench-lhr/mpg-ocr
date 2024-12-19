@@ -40,13 +40,9 @@ const JobDetail = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [formData, setFormData] = useState({
-        // noOfPages: "",
         blNumber: "",
-        // carrier: "",
         podDate: "",
-        // podSignature: "",
         totalQty: "",
-        receiverSignature: "",
         delivered: "",
         damaged: "",
         short: "",
@@ -68,7 +64,7 @@ const JobDetail = () => {
 
     const handleSidebarStateChange = (newState: boolean) => {
         console.log("Sidebar state updated in parent:", newState);
-        setIsSidebarExpanded(newState); // Update parent's state if needed
+        setIsSidebarExpanded(newState); 
       };
 
     const [saving, setSaving] = useState(false);
@@ -77,9 +73,6 @@ const JobDetail = () => {
     const [isLoading, setIsLoading] = useState(true);
 
 
-    // const handleSidebarToggle = (expanded: boolean) => {
-    //     setIsSidebarExpanded(expanded);
-    // };
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -118,13 +111,9 @@ const JobDetail = () => {
                     } else {
                         setJob(data);
                         setFormData({
-                            // noOfPages: data.noOfPages ?? "",
                             blNumber: data.blNumber || "",
-                            // carrier: data.carrier || "",
                             podDate: data.podDate || "",
-                            // podSignature: data.podSignature || "",
                             totalQty: data.totalQty?.toString() ?? "",
-                            receiverSignature: data.receiverSignature || "",
                             delivered: data.delivered ?? "",
                             damaged: data.damaged ?? "",
                             short: data.short ?? "",
@@ -144,22 +133,18 @@ const JobDetail = () => {
     }, [id]);
 
     const handleIframeLoad = () => {
-        setIsLoading(false); // Hide loader when iframe loads
+        setIsLoading(false); 
     };
 
     const handleGoBack = () => {
         router.back();
     };
 
-    // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    //     const { name, value } = e.target;
-    //     setFormData({ ...formData, [name]: value });
-    // };
+  
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
 
-        // Define fields that should be validated as numeric
         const numericFields = [
             "totalQty",
             "delivered",
@@ -170,7 +155,6 @@ const JobDetail = () => {
             "noOfPages",
         ];
 
-        // Define fields that should be validated as non-numeric
         const nonNumericFields = [
             "blNumber",
             "carrier",
@@ -179,10 +163,8 @@ const JobDetail = () => {
             "sealIntact",
         ];
 
-        // Check for numeric fields
         if (numericFields.includes(name)) {
-            // Prevent spaces at the beginning and only numbers allowed
-            // const isValidNumeric = /^(0|[1-9][0-9]*)$/.test(value) || value === "";
+           
             const isValidNumeric = /^(0|[1-9][0-9]{0,4})$/.test(value) || value === "";
 
             // If the input is valid, update the form data
@@ -193,15 +175,13 @@ const JobDetail = () => {
                 }));
             }
         } else if (nonNumericFields.includes(name)) {
-            // Prevent spaces at the beginning and allow only alphanumeric characters or underscores
+           
 
-            // const isValidNonNumeric = /^[a-zA-Z0-9_]*$/.test(value) && !/^\d/.test(value) && (value.match(/0/g)?.length || 0) <= 1;
-
+            
             const isValidNonNumeric =
                 value === "" ||
                 (/^[a-zA-Z0-9_]+(\s[a-zA-Z0-9_]+)*$/.test(value) && !/^\s/.test(value) && !/^0+$/.test(value));
 
-            // If the input is valid, update the form data
             if (isValidNonNumeric) {
                 setFormData((prev) => ({
                     ...prev,
@@ -209,7 +189,7 @@ const JobDetail = () => {
                 }));
             }
         } else {
-            // For other fields, no validation required
+            
             setFormData((prev) => ({
                 ...prev,
                 [name]: value,
@@ -307,7 +287,7 @@ const JobDetail = () => {
                     </div>
 
 
-                    <div className="flex-1 bg-gray-100 rounded-xl p-6 flex flex-col  xl:h-[calc(180vh-6rem)] 2xl:h-[calc(140vh-6rem)]">
+                    <div className="flex-1 bg-gray-100 rounded-xl p-6 flex flex-col  xl:h-[calc(160vh-6rem)] 2xl:h-[calc(120vh-6rem)]">
                         <div className='flex justify-between items-center mb-4'>
                             <span>
                                 <h3 className="text-xl font-medium text-gray-800">Extracted Data</h3>
@@ -340,7 +320,7 @@ const JobDetail = () => {
                                         value={formData[key as keyof typeof formData]}
                                         onChange={handleChange}
                                         disabled={!isEditMode}
-                                        className="p-2 text-gray-800 border-none focus:outline-none w-80"
+                                        className="p-2 text-gray-800 border-none focus:outline-none w-full"
                                     />
                                 </div>
                             ))}

@@ -2,19 +2,24 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { FaChevronDown, FaClock } from "react-icons/fa";
-import Datetime from 'react-datetime';
-import moment from "moment";
+// import Datetime from 'react-datetime';
+import { Job } from "../../types";
+import { DatePicker } from 'rsuite';
+import 'rsuite/DatePicker/styles/index.css';
 
-interface Job {
-    _id: string;
-    selectedDays: string[];
-    fromTime: string;
-    toTime: string;
-    everyTime: string;
-    active: boolean;
-}
+
+// import moment from "moment";
+
+// interface Job {
+//     _id: string;
+//     selectedDays: string[];
+//     fromTime: string;
+//     toTime: string;
+//     everyTime: string;
+//     active: boolean;
+// }
 
 interface EditJobModalProps {
     job: Job;
@@ -23,16 +28,20 @@ interface EditJobModalProps {
 }
 
 // Helper function to convert HH:mm time to minutes
-const timeToMinutes = (time: string): number => {
-    const [hours, minutes] = time.split(":").map(Number);
-    return hours * 60 + minutes;
-};
+// const timeToMinutes = (time: string): number => {
+//     const [hours, minutes] = time.split(":").map(Number);
+//     return hours * 60 + minutes;
+// };
 
 const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) => {
     // Ensure `selectedDays` is initialized to an empty array if not provided
     const [selectedDays, setSelectedDays] = useState<string[]>(job.selectedDays || []);
-    const [fromTime, setFromTime] = useState(job.fromTime);
-    const [toTime, setToTime] = useState(job.toTime);
+    // const [fromTime, setFromTime] = useState(job.fromTime);
+    // const [toTime, setToTime] = useState(job.toTime);
+
+    const [fromTime, setFromTime] = useState<string | null>(job.fromTime);
+    const [toTime, setToTime] = useState<string | null>(job.toTime);
+
     const [everyTime, setEveryTime] = useState(job.everyTime);
     const [errorMessage, setErrorMessage] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,32 +49,60 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
     const [availableDurations, setAvailableDurations] = useState<number[]>([]);
     const [error, setError] = useState<string>("");
 
-    const [isOpen, setIsOpen] = useState<boolean>(false);
-    const fromRef = useRef<HTMLInputElement | null>(null);
-    const toRef = useRef<HTMLInputElement | null>(null);
-    const handleFromButtonClick = () => {
-        if (isOpen && fromRef.current) {
-            fromRef.current.blur();
-        } else {
-            if (fromRef.current) {
-                fromRef.current.focus();
-            }
-        }
-        setIsOpen((prev) => !prev);
+    // const [isOpen, setIsOpen] = useState<boolean>(false);
+    // const fromRef = useRef<HTMLInputElement | null>(null);
+    // const toRef = useRef<HTMLInputElement | null>(null);
+    // const handleFromButtonClick = () => {
+    //     if (isOpen && fromRef.current) {
+    //         fromRef.current.blur();
+    //     } else {
+    //         if (fromRef.current) {
+    //             fromRef.current.focus();
+    //         }
+    //     }
+    //     setIsOpen((prev) => !prev);
+    // };
+    // const handleToButtonClick = () => {
+    //     if (isOpen && toRef.current) {
+    //         toRef.current.blur();
+    //     } else {
+    //         if (toRef.current) {
+    //             toRef.current.focus();
+    //         }
+    //     }
+    //     setIsOpen((prev) => !prev);
+    // };
+
+
+    const formatTime = (date: Date): string => {
+        const hours = date.getHours().toString().padStart(2, "0");
+        const minutes = date.getMinutes().toString().padStart(2, "0");
+        return `${hours}:${minutes}`;
     };
-    const handleToButtonClick = () => {
-        if (isOpen && toRef.current) {
-            toRef.current.blur();
+
+    const handleDateChange = (date: Date | null) => {
+        if (date) {
+            setFromTime(formatTime(date));
         } else {
-            if (toRef.current) {
-                toRef.current.focus();
-            }
+            setFromTime(null);
         }
-        setIsOpen((prev) => !prev);
+    };
+
+    const handleToDateChange = (date: Date | null) => {
+        if (date) {
+            setToTime(formatTime(date));
+        }
+        else {
+            setToTime(null);
+        }
+    };
+
+    const timeToMinutes = (time: string): number => {
+        const [hours, minutes] = time.split(":").map(Number);
+        return hours * 60 + minutes;
     };
 
     useEffect(() => {
-        // Sync state when job data changes (if it changes)
         setSelectedDays(job.selectedDays || []);
         setFromTime(job.fromTime);
         setToTime(job.toTime);
@@ -73,63 +110,97 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
     }, [job]);
 
     // Update available durations whenever fromTime or toTime changes
+    // useEffect(() => {
+    //     if (fromTime && toTime) {
+
+    //         const convertToMinutes = (time: string) => {
+    //             const [hours, minutes] = time.split(":").map(Number);
+    //             return hours * 60 + minutes;
+    //         };
+
+    //         const startTimeInMinutes = convertToMinutes(fromTime);
+    //         let endTimeInMinutes = convertToMinutes(toTime);
+
+
+    //         // If `toTime` is earlier than `fromTime`, it indicates that it's on the next day
+    //         if (endTimeInMinutes < startTimeInMinutes) {
+    //             // Add 24 hours (1440 minutes) to `toTime` if it is on the next day
+    //             endTimeInMinutes += 24 * 60;
+    //             // console.log("The 'toTime' is on the next day.");
+    //             setError("Select 'fromTime' and 'toTime' are on the same day.");
+    //             setAvailableDurations([]);
+    //             return;
+    //         }
+
+    //         const startMinutes = timeToMinutes(fromTime);
+    //         const endMinutes = timeToMinutes(toTime);
+
+    //         // Check if toTime is at least 1 hour after fromTime
+    //         if (endMinutes - startMinutes < 60) {
+    //             setError("The 'To' time must be at least 1 hour after the 'From' time.");
+    //             setAvailableDurations([]); // Clear available durations
+    //         } else {
+    //             setError("");
+
+    //             const totalMinutes = endMinutes - startMinutes;
+
+    //             // Limit the maximum duration to 120 minutes
+    //             // const maxDuration = Math.min(totalMinutes, 120);
+    //             const maxDuration = Math.min(totalMinutes, 20);
+
+
+    //             // Generate duration options in increments of 20 minutes up to the total duration or 120 minutes
+    //             const durations = [];
+    //             // for (let i = 20; i <= maxDuration; i += 20) {
+    //             //     durations.push(i);
+    //             // }
+    //             for (let i = 5; i <= maxDuration; i += 5) {
+    //                 durations.push(i);
+    //             }
+
+    //             setAvailableDurations(durations);
+
+    //             // Reset `everyTime` if it exceeds the new range
+    //             if (everyTime && +everyTime > maxDuration) {
+    //                 setEveryTime("");
+    //             }
+    //         }
+    //     } else {
+    //         setError(""); // Clear error when time fields are empty
+    //         setAvailableDurations([]);
+    //     }
+    // }, [fromTime, toTime, everyTime]);
+
+
     useEffect(() => {
         if (fromTime && toTime) {
+            const startTimeInMinutes = timeToMinutes(fromTime);
+            let endTimeInMinutes = timeToMinutes(toTime);
 
-            const convertToMinutes = (time: string) => {
-                const [hours, minutes] = time.split(":").map(Number);
-                return hours * 60 + minutes;
-            };
-
-            const startTimeInMinutes = convertToMinutes(fromTime);
-            let endTimeInMinutes = convertToMinutes(toTime);
-
-
-            // If `toTime` is earlier than `fromTime`, it indicates that it's on the next day
             if (endTimeInMinutes < startTimeInMinutes) {
-                // Add 24 hours (1440 minutes) to `toTime` if it is on the next day
                 endTimeInMinutes += 24 * 60;
-                // console.log("The 'toTime' is on the next day.");
-                setError("Select 'fromTime' and 'toTime' are on the same day.");
+                setError("Select 'fromTime' and 'toTime' on the same day.");
                 setAvailableDurations([]);
                 return;
             }
 
-            const startMinutes = timeToMinutes(fromTime);
-            const endMinutes = timeToMinutes(toTime);
+            const duration = endTimeInMinutes - startTimeInMinutes;
 
-            // Check if toTime is at least 1 hour after fromTime
-            if (endMinutes - startMinutes < 60) {
+            if (duration < 60) {
                 setError("The 'To' time must be at least 1 hour after the 'From' time.");
-                setAvailableDurations([]); // Clear available durations
+                setAvailableDurations([]);
             } else {
                 setError("");
+                const maxDuration = Math.min(duration, 20);
 
-                const totalMinutes = endMinutes - startMinutes;
-
-                // Limit the maximum duration to 120 minutes
-                // const maxDuration = Math.min(totalMinutes, 120);
-                const maxDuration = Math.min(totalMinutes, 20);
-
-
-                // Generate duration options in increments of 20 minutes up to the total duration or 120 minutes
-                const durations = [];
-                // for (let i = 20; i <= maxDuration; i += 20) {
-                //     durations.push(i);
-                // }
+                const durations: number[] = [];
                 for (let i = 5; i <= maxDuration; i += 5) {
                     durations.push(i);
                 }
-
                 setAvailableDurations(durations);
-
-                // Reset `everyTime` if it exceeds the new range
-                if (everyTime && +everyTime > maxDuration) {
-                    setEveryTime("");
-                }
             }
         } else {
-            setError(""); // Clear error when time fields are empty
+            setError("");
             setAvailableDurations([]);
         }
     }, [fromTime, toTime, everyTime]);
@@ -181,13 +252,13 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
             const responseData = await response.json();
             console.log("Job updated successfully:", responseData);
 
-            onSubmit(updatedJob); // Pass the updated job data to parent
-            onClose(); // Close the modal
+            onSubmit(updatedJob);
+            onClose();
         } catch (error) {
             console.error("Error updating job:", error);
             setErrorMessage("An unexpected error occurred.");
         } finally {
-            setIsSubmitting(false); // Reset loading state
+            setIsSubmitting(false);
         }
     };
 
@@ -226,7 +297,7 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
                         </div>
                     </div>
 
-                    <div className="flex flex-col mb-5">
+                    {/* <div className="flex flex-col mb-5">
                         <label htmlFor="fromTime" className="text-sm font-semibold text-gray-800">
                             AT/From
                         </label>
@@ -258,9 +329,9 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
                                 <FaClock size={16} className="text-[#005B97]" />
                             </button>
                         </div>
-                    </div>
+                    </div> */}
                     {/* To Time Field */}
-                    <div className="flex flex-col mb-5">
+                    {/* <div className="flex flex-col mb-5">
                         <label htmlFor="toTime" className="text-sm font-semibold text-gray-800">
                             To
                         </label>
@@ -293,8 +364,44 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
                                 <FaClock size={16} className="text-[#005B97]" />
                             </button>
                         </div>
-                    </div>
+                    </div> */}
                     {/* Error message */}
+                    {/* {error && <div className="text-red-600 text-sm mb-4">{error}</div>} */}
+
+                    <div className="flex flex-col mb-5">
+                        <label htmlFor="fromTime" className="text-sm font-semibold text-gray-800">
+                            AT/From
+                        </label>
+                        <div>
+                            <div className="w-full">
+                                <DatePicker
+                                    value={fromTime ? new Date(`2024-01-01T${fromTime}`) : null}
+                                    format="HH:mm"
+                                    onChange={handleDateChange}
+                                    className="w-full outline-none text-gray-800 focus:outline-none"
+                                    caretAs={() => <FaClock size={16} className="text-[#005B97]" />}
+                                    placeholder="Select Time"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex flex-col mb-5">
+                        <label htmlFor="toTime" className="text-sm font-semibold text-gray-800">
+                            To
+                        </label>
+                        <div>
+                            <div className="w-full">
+                                <DatePicker
+                                    value={toTime ? new Date(`2024-01-01T${toTime}`) : null}
+                                    format="HH:mm"
+                                    onChange={handleToDateChange}
+                                    className="w-full outline-none text-gray-800 focus:outline-none"
+                                    caretAs={() => <FaClock size={16} className="text-[#005B97]" />}
+                                    placeholder="Select Time"
+                                />
+                            </div>
+                        </div>
+                    </div>
                     {error && <div className="text-red-600 text-sm mb-4">{error}</div>}
                     {/* Every Time Field */}
                     <div className="flex flex-col mb-5">
@@ -304,7 +411,7 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
                         <div className="relative">
                             <select
                                 id="everyTime"
-                                className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none"
+                                className="w-full px-4 py-[6px] mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none"
                                 value={everyTime}
                                 onChange={(e) => setEveryTime(e.target.value)}
                                 required
