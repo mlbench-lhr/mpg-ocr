@@ -165,7 +165,7 @@ export async function PATCH(req: Request) {
     const historyEntries = [];
     for (const [key, newValue] of Object.entries(updatedJobData)) {
       const oldValue = existingJob[key];
-      if (oldValue !== newValue) {
+      if (oldValue != newValue) {
         historyEntries.push({
           jobId: new ObjectId(id),      
           field: key,                   
