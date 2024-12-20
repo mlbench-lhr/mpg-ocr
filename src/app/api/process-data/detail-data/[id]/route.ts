@@ -177,6 +177,11 @@ export async function PATCH(req: Request) {
       }
     }
 
+     // If no changes, return early without updating
+     if (historyEntries.length === 0) {
+      return NextResponse.json({ message: "No changes detected." }, { status: 200 });
+    }
+
     // Add the updatedAt timestamp to the updated data
     updatedJobData.updatedAt = new Date();
 
