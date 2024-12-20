@@ -8,8 +8,8 @@ import Spinner from '@/app/components/Spinner';
 import Link from 'next/link';
 
 interface Job {
-    _id: string;
-    blNumber: string;
+    _id: string;  // this
+    blNumber: string; // this
     jobName: string;
     carrier: string;
     podDate: string;
@@ -26,12 +26,14 @@ interface Job {
     pdfUrl: string;
     finalStatus: string;
     reviewStatus: string;
-    recognitionStatus: string;
+    recognitionStatus: string;  // this
     breakdownReason: string;
     reviewedBy: string;
     cargoDescription: string;
     receiverSignature: string;
     createdAt: string;
+    updatedAt: string;  // this
+
 }
 
 const JobDetail = () => {
@@ -51,9 +53,13 @@ const JobDetail = () => {
         sealIntact: "",
     });
     const [isEditMode, setIsEditMode] = useState(false);
-
-    
     const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
+    const [saving, setSaving] = useState(false);
+    const router = useRouter();
+    const [userRole, setUserRole] = useState("");
+    const [isLoading, setIsLoading] = useState(true);
+    const [name, setName] = useState("");
+
 
 
     // useEffect(() => {
@@ -64,15 +70,8 @@ const JobDetail = () => {
 
     const handleSidebarStateChange = (newState: boolean) => {
         console.log("Sidebar state updated in parent:", newState);
-        setIsSidebarExpanded(newState); 
-      };
-
-    const [saving, setSaving] = useState(false);
-    const router = useRouter();
-    const [userRole, setUserRole] = useState("");
-    const [isLoading, setIsLoading] = useState(true);
-
-
+        setIsSidebarExpanded(newState);
+    };
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -97,9 +96,9 @@ const JobDetail = () => {
 
         const decodedToken = decodeJwt(token);
         setUserRole(decodedToken.role);
+        setName(decodedToken.username);
         setLoading(false);
     }, [router]);
-
 
     useEffect(() => {
         if (id) {
@@ -133,14 +132,12 @@ const JobDetail = () => {
     }, [id]);
 
     const handleIframeLoad = () => {
-        setIsLoading(false); 
+        setIsLoading(false);
     };
 
     const handleGoBack = () => {
         router.back();
     };
-
-  
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -164,7 +161,7 @@ const JobDetail = () => {
         ];
 
         if (numericFields.includes(name)) {
-           
+
             const isValidNumeric = /^(0|[1-9][0-9]{0,4})$/.test(value) || value === "";
 
             // If the input is valid, update the form data
@@ -175,9 +172,9 @@ const JobDetail = () => {
                 }));
             }
         } else if (nonNumericFields.includes(name)) {
-           
 
-            
+
+
             const isValidNonNumeric =
                 value === "" ||
                 (/^[a-zA-Z0-9_]+(\s[a-zA-Z0-9_]+)*$/.test(value) && !/^\s/.test(value) && !/^0+$/.test(value));
@@ -189,7 +186,7 @@ const JobDetail = () => {
                 }));
             }
         } else {
-            
+
             setFormData((prev) => ({
                 ...prev,
                 [name]: value,
@@ -197,17 +194,21 @@ const JobDetail = () => {
         }
     };
 
-
-
-
+    const capitalizeFirstLetter = (str: string): string => {
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    };
 
     const handleSave = async () => {
         setSaving(true);
         try {
+
+            const formattedReviewedBy = capitalizeFirstLetter(name);
+
             const response = await fetch(`/api/process-data/detail-data/${id}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
+                    "x-user-name": formattedReviewedBy,
                 },
                 body: JSON.stringify(formData),
             });
@@ -228,8 +229,6 @@ const JobDetail = () => {
         }
     };
 
-
-
     const handleEditClick = () => {
         setIsEditMode(true);
     };
@@ -240,10 +239,7 @@ const JobDetail = () => {
 
     return (
         <div className="flex flex-row h-screen bg-white">
-           
-      <Sidebar onStateChange={handleSidebarStateChange}/>
-
-
+            <Sidebar onStateChange={handleSidebarStateChange} />
             <div
                 className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isSidebarExpanded ? "ml-64" : "ml-24"}`}
             >

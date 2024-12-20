@@ -6,28 +6,42 @@ import Header from "../components/Header";
 import Spinner from "../components/Spinner";
 import Image from "next/image";
 import Link from "next/link";
-// import { RiArrowDropDownLine } from "react-icons/ri";
 
-
-interface User {
+interface History {
     _id: string;
-    name: string;
-    email: string;
-    status: number;
-    role: string;
-    createdAt: string; // Keeping it string as we handle formatting in the render
+    blNumber: string;
+    jobName: string;
+    carrier: string;
+    podDate: string;
+    deliveryDate: string;
+    podSignature: string;
+    totalQty: number;
+    delivered: number;
+    damaged: number;
+    short: number;
+    over: number;
+    refused: number;
+    noOfPages: number;
+    sealIntact: string;
+    finalStatus: string;
+    reviewStatus: string;
+    recognitionStatus: string;
+    breakdownReason: string;
+    reviewedBy: string;
+    cargoDescription: string;
+    receiverSignature: string;
+    createdAt: string;
+    updatedAt?: string; // Optional since not all documents might have it
 }
 
 export default function Page() {
-    // const [totalUsers, setTotalUsers] = useState(0);
+    const [totalUsers, setTotalUsers] = useState(0);
     const [searchQuery, setSearchQuery] = useState("");
     const [loadingTable, setLoadingTable] = useState(false);
-    const [users, setUsers] = useState<User[]>([]);
+    const [users, setUsers] = useState<History[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-
     const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
-
 
     // useEffect(() => {
     //   const savedState = sessionStorage.getItem("sidebar");
@@ -46,19 +60,48 @@ export default function Page() {
     };
 
     // Fetch users
+    // const fetchUsers = useCallback(async () => {
+    //     try {
+    //         setLoadingTable(true);
+
+    //         const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : "";
+    //         const response = await fetch(`/api/history/get-data/?page=${currentPage}${searchParam}`);
+
+    //         if (response.ok) {
+    //             const data = await response.json();
+    //             console.log(data.jobs);
+    //             setUsers(data.jobs);
+    //             setTotalPages(data.totalPages);
+    //             setTotalUsers(data.totalJobs);
+    //         } else {
+    //             console.error("Failed to fetch users");
+    //         }
+    //     } catch (error) {
+    //         console.error("Error fetching users:", error);
+    //     } finally {
+    //         setLoadingTable(false);
+    //     }
+    // }, [currentPage, searchQuery]);
+
+    // Fetch users
     const fetchUsers = useCallback(async () => {
         try {
             setLoadingTable(true);
 
-            // Build query string based on currentPage and searchQuery
+            // Construct search query string if searchQuery exists
             const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : "";
-            const response = await fetch(`/api/role-requests/get-requests/?page=${currentPage}${searchParam}`);
+
+            // Fetch data from the API using currentPage and search query
+            const response = await fetch(`/api/history/get-data/?page=${currentPage}${searchParam}`);
 
             if (response.ok) {
                 const data = await response.json();
-                setUsers(data.users);
+                console.log(data.jobs); // Logging the fetched data
+
+                // Set the fetched data into the state
+                setUsers(data.jobs);
                 setTotalPages(data.totalPages);
-                // setTotalUsers(data.totalUsers);
+                setTotalUsers(data.totalJobs);
             } else {
                 console.error("Failed to fetch users");
             }
@@ -68,6 +111,7 @@ export default function Page() {
             setLoadingTable(false);
         }
     }, [currentPage, searchQuery]);
+
 
     // Trigger data fetch on mount and on dependency changes
     useEffect(() => {
@@ -84,7 +128,7 @@ export default function Page() {
             >
                 <Header
                     leftContent="History"
-                    totalContent={10}
+                    totalContent={totalUsers}
                     rightContent={
                         <input
                             type="text"
@@ -124,163 +168,67 @@ export default function Page() {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr className="text-gray-500">
-                                    <td className="py-2 px-4 border-b text-start">232058679452165</td>
-                                    <td className="py-2 px-4 border-b text-center">
-                                        <div
-                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-blue-100 text-[#005B97]`}
-                                        >
-                                            <div className="flex items-center">
-                                                <span>
-                                                    New
-                                                </span>
-                                                {/* <span>
-                                                    <RiArrowDropDownLine
-                                                        className={`text-2xl p-0`}
-                                                    />
-                                                </span> */}
+                                {users.map((history: History) => (
+                                    <tr key={history._id} className="text-gray-500">
+                                        <td className="py-2 px-4 border-b text-start">{history.blNumber}</td>
+                                        <td className="py-2 px-4 border-b text-center">
+                                            <div
+                                                className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium ${history.recognitionStatus === "new"
+                                                    ? "bg-blue-100 text-blue-600"
+                                                    : history.recognitionStatus === "inProgress"
+                                                        ? "bg-yellow-100 text-yellow-600"
+                                                        : history.recognitionStatus === "valid"
+                                                            ? "bg-green-100 text-green-600"
+                                                            : history.recognitionStatus === "partiallyValid"
+                                                                ? "bg-[#faf1be] text-[#AF9918]"
+                                                                : history.recognitionStatus === "failure"
+                                                                    ? "bg-red-100 text-red-600"
+                                                                    : history.recognitionStatus === "sent"
+                                                                        ? "bg-green-100 text-green-600"
+                                                                        : "bg-blue-100 text-[#005B97]"
+                                                    }`}
+                                            >
+                                                <div className="flex items-center">
+                                                    <span>
+                                                        {history.recognitionStatus}
+                                                    </span>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td className="py-2 px-4 border-b text-center">02/28/2024 00:00:00</td>
-                                    <td className="py-2 px-4 border-b text-center">
-                                        <Link className="underline text-[#005B97] text-center" href="history/detail">
-                                            View Details
-                                        </Link>
-                                    </td>
 
-                                </tr>
-                                <tr className="text-gray-500">
-                                    <td className="py-2 px-4 border-b text-start">232058679452165</td>
-                                    <td className="py-2 px-4 border-b text-center">
-                                        <div
-                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-blue-100 text-[#005B97]`}
-                                        >
-                                            <div className="flex items-center">
-                                                <span>
-                                                    New
-                                                </span>
-                                                {/* <span>
-                                                    <RiArrowDropDownLine
-                                                        className={`text-2xl p-0`}
-                                                    />
-                                                </span> */}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="py-2 px-4 border-b text-center">02/28/2024 00:00:00</td>
-                                    <td className="py-2 px-4 border-b text-center">
-                                        <Link className="underline text-[#005B97] text-center" href="history/detail">
-                                            View Details
-                                        </Link>
-                                    </td>
+                                        </td>
+                                        {/* <td className="py-2 px-4 border-b text-center">
+                                            {history.updatedAt}
+                                        </td> */}
+                                        <td className="py-2 px-4 border-b text-center">
+                                            {history.updatedAt ? (() => {
+                                                const date = new Date(history.updatedAt);
+                                                const month = String(date.getMonth() + 1).padStart(2, '0');
+                                                const day = String(date.getDate()).padStart(2, '0');
+                                                const year = date.getFullYear();
+                                                const hours = String(date.getHours()).padStart(2, '0');
+                                                const minutes = String(date.getMinutes()).padStart(2, '0');
+                                                const seconds = String(date.getSeconds()).padStart(2, '0');
 
-                                </tr>
-                                <tr className="text-gray-500">
-                                    <td className="py-2 px-4 border-b text-start">232058679452165</td>
-                                    <td className="py-2 px-4 border-b text-center">
-                                        <div
-                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-blue-100 text-[#005B97]`}
-                                        >
-                                            <div className="flex items-center">
-                                                <span>
-                                                    New
-                                                </span>
-                                                {/* <span>
-                                                    <RiArrowDropDownLine
-                                                        className={`text-2xl p-0`}
-                                                    />
-                                                </span> */}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="py-2 px-4 border-b text-center">02/28/2024 00:00:00</td>
-                                    <td className="py-2 px-4 border-b text-center">
-                                        <Link className="underline text-[#005B97] text-center" href="history/detail">
-                                            View Details
-                                        </Link>
-                                    </td>
+                                                return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
+                                            })() : 'N/A'}
+                                        </td>
+                                        {/* <td className="py-2 px-4 border-b text-center">
+                                            <Link className="underline text-[#005B97] text-center" href={`/history/${history._id}`}>
+                                                View Details
+                                            </Link>
+                                        </td> */}
+                                        <td className="py-2 px-4 border-b text-center">
+                                            <Link
+                                                className="underline text-[#005B97] text-center"
+                                                href={`/history/${history._id}?blNumber=${encodeURIComponent(history.blNumber)}`}
+                                            >
+                                                View Details
+                                            </Link>
+                                        </td>
 
-                                </tr>
-                                <tr className="text-gray-500">
-                                    <td className="py-2 px-4 border-b text-start">232058679452165</td>
-                                    <td className="py-2 px-4 border-b text-center">
-                                        <div
-                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-blue-100 text-[#005B97]`}
-                                        >
-                                            <div className="flex items-center">
-                                                <span>
-                                                    New
-                                                </span>
-                                                {/* <span>
-                                                    <RiArrowDropDownLine
-                                                        className={`text-2xl p-0`}
-                                                    />
-                                                </span> */}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="py-2 px-4 border-b text-center">02/28/2024 00:00:00</td>
-                                    <td className="py-2 px-4 border-b text-center">
-                                        <Link className="underline text-[#005B97] text-center" href="history/detail">
-                                            View Details
-                                        </Link>
-                                    </td>
 
-                                </tr>
-                                <tr className="text-gray-500">
-                                    <td className="py-2 px-4 border-b text-start">232058679452165</td>
-                                    <td className="py-2 px-4 border-b text-center">
-                                        <div
-                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-blue-100 text-[#005B97]`}
-                                        >
-                                            <div className="flex items-center">
-                                                <span>
-                                                    New
-                                                </span>
-                                                {/* <span>
-                                                    <RiArrowDropDownLine
-                                                        className={`text-2xl p-0`}
-                                                    />
-                                                </span> */}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="py-2 px-4 border-b text-center">02/28/2024 00:00:00</td>
-                                    <td className="py-2 px-4 border-b text-center">
-                                        <Link className="underline text-[#005B97] text-center" href="history/detail">
-                                            View Details
-                                        </Link>
-                                    </td>
-
-                                </tr>
-                                <tr className="text-gray-500">
-                                    <td className="py-2 px-4 border-b text-start">232058679452165</td>
-                                    <td className="py-2 px-4 border-b text-center">
-                                        <div
-                                            className={`inline-flex items-center justify-center gap-0 px-4 py-2 rounded-full text-sm font-medium  bg-blue-100 text-[#005B97]`}
-                                        >
-                                            <div className="flex items-center">
-                                                <span>
-                                                    New
-                                                </span>
-                                                {/* <span>
-                                                    <RiArrowDropDownLine
-                                                        className={`text-2xl p-0`}
-                                                    />
-                                                </span> */}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="py-2 px-4 border-b text-center">02/28/2024 00:00:00</td>
-                                    <td className="py-2 px-4 border-b text-center">
-                                        <Link className="underline text-[#005B97] text-center" href="history/detail">
-                                            View Details
-                                        </Link>
-                                    </td>
-
-                                </tr>
-
+                                    </tr>
+                                ))}
                             </tbody>
                         </table>
                     )}

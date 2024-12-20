@@ -126,6 +126,7 @@ export async function POST(req: Request) {
                     document: {
                         ...data,
                         createdAt: new Date(),
+                        // updatedAt: new Date(),
                     },
                 },
             });
