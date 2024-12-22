@@ -9,7 +9,7 @@ import { FaClipboardList, FaUserPlus } from "react-icons/fa";
 import { BsClipboard2CheckFill } from "react-icons/bs";
 import { IoSettingsSharp, IoLogOut } from "react-icons/io5";
 import { IoIosArrowForward } from "react-icons/io";
-import { RiTimeZoneFill } from "react-icons/ri";
+import { RiArrowDropDownLine, RiTimeZoneFill } from "react-icons/ri";
 import { FaHouseSignal } from "react-icons/fa6";
 import { TbCloudDataConnection } from "react-icons/tb";
 import { useRouter } from "next/navigation";
@@ -39,7 +39,7 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const [isAutoConfirmationOpen, setAutoConfirmationOpen] = useState(false);
     const [isDropdownOpenZone, setIsDropdownOpenZone] = useState(false);
-    const [selectedTimeZone, setSelectedTimeZone] = useState("");
+    const [selectedTimeZone, setSelectedTimeZone] = useState("UTC+00:00");
     const [userName, setUserName] = useState("User");
     const [userRole, setUserRole] = useState("");
 
@@ -303,30 +303,33 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                     }  w-80 bg-white rounded-lg shadow-xl`}>
                                     <h1 className="mt-1 p-2 text-xl font-medium">Settings</h1>
                                     <ul className="text-gray-600 mt-2">
-                                        <li className="p-2 hover:bg-gray-200 cursor-pointer">
-                                            <p onClick={handleLogout} className="flex justify-between items-center">
-                                                <span className="text-gray-800 font-medium">Logout</span>
-                                                <IoLogOut className="text-[#005B97] text-2xl" />
-                                            </p>
-                                        </li>
-                                        <li className="p-2 hover:bg-gray-200 cursor-pointer relative">
-                                            <div
-                                                onClick={() => setIsDropdownOpenZone(!isDropdownOpenZone)} // Toggle dropdown
-                                                className="flex justify-between items-center cursor-pointer"
-                                            >
-                                                <span>Time Zone</span>
-                                                <span>
-                                                    {selectedTimeZone ? selectedTimeZone :
-                                                        <RiTimeZoneFill className="text-[#005B97] text-2xl" />
-                                                    }
-                                                </span>
-                                            </div>
 
-                                            {/* Dropdown Options */}
-                                            {isDropdownOpenZone && (
-                                                <ul
-                                                    className="absolute mt-2 left-0 w-40 bg-white border rounded-lg shadow-lg z-10 overflow-y-auto max-h-48"
+                                        <li className="p-2 relative border-b">
+                                            <div className="flex justify-between items-center">
+                                                <span>Time Zone</span>
+                                                <div
+                                                    className="cursor-pointer bg-gray-100 py-1 px-3 rounded-lg flex items-center justify-between gap-2"
+                                                    onClick={() => setIsDropdownOpenZone(!isDropdownOpenZone)}
                                                 >
+                                                    <span className="flex items-center justify-start">
+                                                        {selectedTimeZone ? (
+                                                            selectedTimeZone
+                                                        ) : (
+                                                            <RiTimeZoneFill className="text-[#005B97] text-2xl" />
+                                                        )}
+                                                    </span>
+                                                    <RiArrowDropDownLine
+                                                        size={30}
+                                                        className={`p-0 transform transition-transform text-[#005B97] duration-300 ${isDropdownOpenZone ? "rotate-180" : ""
+                                                            }`}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div
+                                                className={`absolute mt-2 left-40 w-40 bg-white border rounded-lg shadow-lg z-10 overflow-y-auto max-h-48 transform transition-all duration-300 ease-in-out ${isDropdownOpenZone ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+                                                    }`}
+                                            >
+                                                <ul>
                                                     {timeZones.map((zone) => (
                                                         <li
                                                             key={zone}
@@ -337,23 +340,21 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                                         </li>
                                                     ))}
                                                 </ul>
-                                            )}
-
+                                            </div>
                                         </li>
-
-                                        <li className="p-2 hover:bg-gray-200 cursor-pointer">
+                                        <li className="p-2 hover:bg-gray-200 cursor-pointer border-b">
                                             <Link href="/db-connection" className="flex justify-between items-center">
                                                 <span>DB Connection</span>
                                                 <FaHouseSignal className="text-[#005B97] text-2xl" />
                                             </Link>
                                         </li>
-                                        <li className="p-2 hover:bg-gray-200 cursor-pointer">
+                                        <li className="p-2 hover:bg-gray-200 cursor-pointer border-b">
                                             <Link href="/jobs" className="flex justify-between items-center">
                                                 <span>Batch Frequency</span>
                                                 <TbCloudDataConnection className="text-[#005B97] text-2xl" />
                                             </Link>
                                         </li>
-                                        <li className="p-2">
+                                        <li className="p-2 border-b">
                                             <div className="flex justify-between items-center">
                                                 <span>Auto Confirmation</span>
                                                 <label className="inline-flex items-center cursor-pointer">
@@ -367,6 +368,12 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                                     <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#005B97]"></div>
                                                 </label>
                                             </div>
+                                        </li>
+                                        <li className="p-2 hover:bg-gray-200 cursor-pointer">
+                                            <p onClick={handleLogout} className="flex justify-between items-center">
+                                                <span className="text-gray-800 font-medium">Logout</span>
+                                                <IoLogOut className="text-[#005B97] text-2xl" />
+                                            </p>
                                         </li>
                                     </ul>
                                 </div>
