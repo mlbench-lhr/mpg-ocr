@@ -22,7 +22,6 @@ interface SidebarProps {
 }
 
 
-// export default function Sidebar() {
 export default function Sidebar({ onStateChange }: SidebarProps) {
 
     const [isExpanded, setIsExpanded] = useState<boolean>();
@@ -57,7 +56,6 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
         if (savedRole) {
             setUserRole(savedRole);
         } else {
-            // Decode JWT and save role for future use
             const decodedToken = decodeJwt(token);
             const role = decodedToken.role;
             setUserRole(role);
@@ -70,7 +68,6 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
         }
     }, [router]);
 
-    // Decode JWT function
     const decodeJwt = (token: string) => {
         const base64Url = token.split(".")[1];
         const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
@@ -83,7 +80,6 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
         return JSON.parse(jsonPayload);
     };
 
-    // Toggle function
     const toggleAutoConfirmation = () => {
         setAutoConfirmationOpen((prevState) => !prevState);
     };
@@ -175,12 +171,10 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
 
     return (
         <>
-            {/* Sidebar */}
             <div
                 className={`fixed top-0 left-0 bg-gray-100 text-gray-800 h-screen z-50 transform transition-all duration-300 ${!isExpanded ? "w-24" : "w-64"
                     } flex flex-col justify-between`}
             >
-                {/* Header */}
                 <div className="flex items-center justify-between p-4 bg-gray-100">
                     {isExpanded ? (
                         <Image
@@ -195,7 +189,6 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                     )}
                 </div>
 
-                {/* Navigation */}
                 <nav className="mt-8 flex-grow p-4 bg-gray-100">
                     <ul className="space-y-4">
                         {userRole === "admin" && (
@@ -253,7 +246,6 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                     </ul>
                 </nav>
 
-                {/* Footer */}
                 <div className="p-4 bg-gray-100 mt-auto">
 
                     {userRole === 'admin' &&
@@ -281,7 +273,6 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                         </ul>
                     }
 
-                    {/* Dropdown List */}
                     {isDropdownOpen && (
                         <>
                             {userRole !== 'admin' && (

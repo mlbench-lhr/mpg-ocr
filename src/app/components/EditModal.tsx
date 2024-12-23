@@ -52,38 +52,6 @@ const EditModal: React.FC<EditModalProps> = ({ job, onClose, onUpdate }) => {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    // const handleFormSubmit = async (e: React.FormEvent) => {
-    //     e.preventDefault();
-
-    //     // Validate the form inputs if needed
-    //     if (!formData.cargoDescription.trim()) {
-    //         setErrorMessage("Cargo description is required.");
-    //         return;
-    //     }
-    //     setErrorMessage("");
-    //     setIsSubmitting(true);
-
-    //     try {
-    //         const updatedJob: Job = {
-    //             ...job,
-    //             createdAt: new Date(formData.createdAt).toISOString(),
-    //             podDate: new Date(formData.podDate).toISOString(),
-    //             cargoDescription: formData.cargoDescription,
-    //         };
-
-    //         // Simulate API or async operation (remove if unnecessary)
-    //         await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    //         onUpdate(updatedJob);
-    //         onClose(); // Close the modal
-    //     } catch (error) {
-    //         console.error("Error updating job:", error);
-    //         setErrorMessage("An unexpected error occurred.");
-    //     } finally {
-    //         setIsSubmitting(false);
-    //     }
-    // };
-
     const handleFormSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -122,8 +90,8 @@ const EditModal: React.FC<EditModalProps> = ({ job, onClose, onUpdate }) => {
             if (response.ok) {
                 const result = await response.json();
                 console.log("Job updated:", result);
-                onUpdate(result.updatedData); // Update job in parent component
-                onClose(); // Close the modal
+                onUpdate(result.updatedData);
+                onClose();
                 Swal.fire({
                     title: "Updated!",
                     text: "The job has been updated successfully.",
@@ -156,14 +124,12 @@ const EditModal: React.FC<EditModalProps> = ({ job, onClose, onUpdate }) => {
                 <h2 className="text-2xl text-center text-gray-800 font-bold mb-4">Edit Shipment</h2>
 
                 <form onSubmit={handleFormSubmit}>
-                    {/* Error Message */}
                     {errorMessage && (
                         <div className="mb-4 text-red-600 font-medium text-center">
                             {errorMessage}
                         </div>
                     )}
 
-                    {/* Created At */}
                     <div className="mb-4">
                         <label className="block font-semibold text-gray-800 mb-3">Created On</label>
                         <div className="relative">
@@ -191,7 +157,6 @@ const EditModal: React.FC<EditModalProps> = ({ job, onClose, onUpdate }) => {
                         </div>
                     </div>
 
-                    {/* POD Date */}
                     <div className="mb-4">
                         <label className="block font-semibold text-gray-800 mb-3">Delivery Date</label>
                         <div className="relative">
@@ -219,7 +184,6 @@ const EditModal: React.FC<EditModalProps> = ({ job, onClose, onUpdate }) => {
                         </div>
                     </div>
 
-                    {/* Cargo Description */}
                     <div className="mb-4">
                         <label className="block font-semibold text-gray-800 mb-3">Cargo Description</label>
                         <textarea
@@ -232,7 +196,6 @@ const EditModal: React.FC<EditModalProps> = ({ job, onClose, onUpdate }) => {
                         ></textarea>
                     </div>
 
-                    {/* Submit Button */}
                     <div className="flex gap-3 mt-10">
                         <button
                             type="submit"

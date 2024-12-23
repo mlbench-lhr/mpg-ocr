@@ -31,7 +31,7 @@ interface History {
     cargoDescription: string;
     receiverSignature: string;
     createdAt: string;
-    updatedAt?: string; // Optional since not all documents might have it
+    updatedAt?: string;
 }
 
 export default function Page() {
@@ -43,62 +43,26 @@ export default function Page() {
     const [totalPages, setTotalPages] = useState(1);
     const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
 
-    // useEffect(() => {
-    //   const savedState = sessionStorage.getItem("sidebar");
-    //   console.log(savedState);
-    //   if (savedState) setIsSidebarExpanded(JSON.parse(savedState));
-    // }, []);
-
     const handleSidebarStateChange = (newState: boolean) => {
         console.log("Sidebar state updated in parent:", newState);
-        setIsSidebarExpanded(newState); // Update parent's state if needed
+        setIsSidebarExpanded(newState);
     };
 
-    // Handle page change
     const handlePageChange = (newPage: number) => {
         setCurrentPage(newPage);
     };
 
-    // Fetch users
-    // const fetchUsers = useCallback(async () => {
-    //     try {
-    //         setLoadingTable(true);
-
-    //         const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : "";
-    //         const response = await fetch(`/api/history/get-data/?page=${currentPage}${searchParam}`);
-
-    //         if (response.ok) {
-    //             const data = await response.json();
-    //             console.log(data.jobs);
-    //             setUsers(data.jobs);
-    //             setTotalPages(data.totalPages);
-    //             setTotalUsers(data.totalJobs);
-    //         } else {
-    //             console.error("Failed to fetch users");
-    //         }
-    //     } catch (error) {
-    //         console.error("Error fetching users:", error);
-    //     } finally {
-    //         setLoadingTable(false);
-    //     }
-    // }, [currentPage, searchQuery]);
-
-    // Fetch users
     const fetchUsers = useCallback(async () => {
         try {
             setLoadingTable(true);
 
-            // Construct search query string if searchQuery exists
             const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : "";
 
-            // Fetch data from the API using currentPage and search query
             const response = await fetch(`/api/history/get-data/?page=${currentPage}${searchParam}`);
 
             if (response.ok) {
                 const data = await response.json();
-                console.log(data.jobs); // Logging the fetched data
-
-                // Set the fetched data into the state
+                console.log(data.jobs);
                 setUsers(data.jobs);
                 setTotalPages(data.totalPages);
                 setTotalUsers(data.totalJobs);
@@ -113,7 +77,6 @@ export default function Page() {
     }, [currentPage, searchQuery]);
 
 
-    // Trigger data fetch on mount and on dependency changes
     useEffect(() => {
         fetchUsers();
     }, [currentPage, fetchUsers, searchQuery]);
@@ -196,9 +159,6 @@ export default function Page() {
                                             </div>
 
                                         </td>
-                                        {/* <td className="py-2 px-4 border-b text-center">
-                                            {history.updatedAt}
-                                        </td> */}
                                         <td className="py-2 px-4 border-b text-center">
                                             {history.updatedAt ? (() => {
                                                 const date = new Date(history.updatedAt);
@@ -212,11 +172,6 @@ export default function Page() {
                                                 return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
                                             })() : 'N/A'}
                                         </td>
-                                        {/* <td className="py-2 px-4 border-b text-center">
-                                            <Link className="underline text-[#005B97] text-center" href={`/history/${history._id}`}>
-                                                View Details
-                                            </Link>
-                                        </td> */}
                                         <td className="py-2 px-4 border-b text-center">
                                             <Link
                                                 className="underline text-[#005B97] text-center"

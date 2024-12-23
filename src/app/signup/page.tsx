@@ -14,7 +14,6 @@ export default function SignupPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    // const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [role, setRole] = useState("");
     const [isOpen, setIsOpen] = useState(false);
@@ -29,7 +28,6 @@ export default function SignupPage() {
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-        // setSuccessMessage(null);
         setIsLoading(true);
 
         if (password !== confirmPassword) {
@@ -50,7 +48,6 @@ export default function SignupPage() {
                 throw new Error(data.message);
             }
 
-            // setSuccessMessage("Signup successful! You can now log in.");
             setName('');
             setEmail('');
             setPassword('');
@@ -58,11 +55,6 @@ export default function SignupPage() {
             setShowPassword(false);
             setRole(role);
             setShowConfirmPassword(false);
-
-            // setTimeout(() => {
-            //     setSuccessMessage(null);
-            // }, 20000);
-
             setShowModal(true);
 
         } catch (err: unknown) {
@@ -97,14 +89,6 @@ export default function SignupPage() {
                 {isLoading && (
                     <p className="text-blue-500 text-center mb-4">Processing your request...</p>
                 )}
-                {/* {successMessage && (
-                    <div
-                        className="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-green-100 dark:text-green-600"
-                        role="alert"
-                    >
-                        <span className="font-medium">{successMessage}</span>
-                    </div>
-                )} */}
                 <form onSubmit={handleSignup}>
                     <div className="mb-4">
                         <label className="block text-black font-semibold">Name</label>
@@ -129,23 +113,6 @@ export default function SignupPage() {
                         />
                     </div>
 
-                    {/* <div className="mb-4 relative">
-                        <label className="block text-black font-semibold">Role</label>
-                        <select
-                            value={role}
-                            onChange={(e) => setRole(e.target.value)}
-                            className="w-full px-4 py-2 mt-1 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] pr-10 appearance-none"
-                            required
-                        >
-                            <option value="admin">Admin</option>
-                            <option value="reviewer">Reviewer</option>
-                            <option value="Standard User">Standard User</option>
-                        </select>
-                        <span className="absolute inset-y-0 right-3 top-3/4 transform -translate-y-1/2 text-[#005B97]">
-                            <FaChevronDown size={20} />
-                        </span>
-                    </div> */}
-
                     <div className="mb-4 relative">
                         <label className="block text-black font-semibold">Role</label>
                         <div
@@ -160,12 +127,6 @@ export default function SignupPage() {
 
                         {isOpen && (
                             <div className="absolute left-0 right-0 mt-1 bg-white shadow-lg rounded-md z-10">
-                                {/* <div
-                                    onClick={() => handleSelect("Admin")}
-                                    className="px-4 py-2 cursor-pointer  text-gray-800  hover:bg-[#005B97] hover:text-white"
-                                >
-                                    Admin
-                                </div> */}
                                 <div
                                     onClick={() => handleSelect("Reviewer")}
                                     className="px-4 py-2 cursor-pointer  text-gray-800  hover:bg-[#005B97] hover:text-white"
@@ -240,7 +201,6 @@ export default function SignupPage() {
                 </p>
             </div>
 
-            {/* Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
                     <div className="bg-white rounded-lg p-6 max-w-sm mx-4">

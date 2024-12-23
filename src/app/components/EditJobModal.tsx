@@ -4,22 +4,11 @@
 
 import { useState, useEffect } from "react";
 import { FaChevronDown, FaClock } from "react-icons/fa";
-// import Datetime from 'react-datetime';
 import { Job } from "../../types";
 import { DatePicker } from 'rsuite';
 import 'rsuite/DatePicker/styles/index.css';
 
 
-// import moment from "moment";
-
-// interface Job {
-//     _id: string;
-//     selectedDays: string[];
-//     fromTime: string;
-//     toTime: string;
-//     everyTime: string;
-//     active: boolean;
-// }
 
 interface EditJobModalProps {
     job: Job;
@@ -27,51 +16,15 @@ interface EditJobModalProps {
     onSubmit: (job: Job) => void;
 }
 
-// Helper function to convert HH:mm time to minutes
-// const timeToMinutes = (time: string): number => {
-//     const [hours, minutes] = time.split(":").map(Number);
-//     return hours * 60 + minutes;
-// };
-
 const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) => {
-    // Ensure `selectedDays` is initialized to an empty array if not provided
     const [selectedDays, setSelectedDays] = useState<string[]>(job.selectedDays || []);
-    // const [fromTime, setFromTime] = useState(job.fromTime);
-    // const [toTime, setToTime] = useState(job.toTime);
-
     const [fromTime, setFromTime] = useState<string | null>(job.fromTime);
     const [toTime, setToTime] = useState<string | null>(job.toTime);
-
     const [everyTime, setEveryTime] = useState(job.everyTime);
     const [errorMessage, setErrorMessage] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
-
     const [availableDurations, setAvailableDurations] = useState<number[]>([]);
     const [error, setError] = useState<string>("");
-
-    // const [isOpen, setIsOpen] = useState<boolean>(false);
-    // const fromRef = useRef<HTMLInputElement | null>(null);
-    // const toRef = useRef<HTMLInputElement | null>(null);
-    // const handleFromButtonClick = () => {
-    //     if (isOpen && fromRef.current) {
-    //         fromRef.current.blur();
-    //     } else {
-    //         if (fromRef.current) {
-    //             fromRef.current.focus();
-    //         }
-    //     }
-    //     setIsOpen((prev) => !prev);
-    // };
-    // const handleToButtonClick = () => {
-    //     if (isOpen && toRef.current) {
-    //         toRef.current.blur();
-    //     } else {
-    //         if (toRef.current) {
-    //             toRef.current.focus();
-    //         }
-    //     }
-    //     setIsOpen((prev) => !prev);
-    // };
 
 
     const formatTime = (date: Date): string => {
@@ -109,68 +62,6 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
         setEveryTime(job.everyTime);
     }, [job]);
 
-    // Update available durations whenever fromTime or toTime changes
-    // useEffect(() => {
-    //     if (fromTime && toTime) {
-
-    //         const convertToMinutes = (time: string) => {
-    //             const [hours, minutes] = time.split(":").map(Number);
-    //             return hours * 60 + minutes;
-    //         };
-
-    //         const startTimeInMinutes = convertToMinutes(fromTime);
-    //         let endTimeInMinutes = convertToMinutes(toTime);
-
-
-    //         // If `toTime` is earlier than `fromTime`, it indicates that it's on the next day
-    //         if (endTimeInMinutes < startTimeInMinutes) {
-    //             // Add 24 hours (1440 minutes) to `toTime` if it is on the next day
-    //             endTimeInMinutes += 24 * 60;
-    //             // console.log("The 'toTime' is on the next day.");
-    //             setError("Select 'fromTime' and 'toTime' are on the same day.");
-    //             setAvailableDurations([]);
-    //             return;
-    //         }
-
-    //         const startMinutes = timeToMinutes(fromTime);
-    //         const endMinutes = timeToMinutes(toTime);
-
-    //         // Check if toTime is at least 1 hour after fromTime
-    //         if (endMinutes - startMinutes < 60) {
-    //             setError("The 'To' time must be at least 1 hour after the 'From' time.");
-    //             setAvailableDurations([]); // Clear available durations
-    //         } else {
-    //             setError("");
-
-    //             const totalMinutes = endMinutes - startMinutes;
-
-    //             // Limit the maximum duration to 120 minutes
-    //             // const maxDuration = Math.min(totalMinutes, 120);
-    //             const maxDuration = Math.min(totalMinutes, 20);
-
-
-    //             // Generate duration options in increments of 20 minutes up to the total duration or 120 minutes
-    //             const durations = [];
-    //             // for (let i = 20; i <= maxDuration; i += 20) {
-    //             //     durations.push(i);
-    //             // }
-    //             for (let i = 5; i <= maxDuration; i += 5) {
-    //                 durations.push(i);
-    //             }
-
-    //             setAvailableDurations(durations);
-
-    //             // Reset `everyTime` if it exceeds the new range
-    //             if (everyTime && +everyTime > maxDuration) {
-    //                 setEveryTime("");
-    //             }
-    //         }
-    //     } else {
-    //         setError(""); // Clear error when time fields are empty
-    //         setAvailableDurations([]);
-    //     }
-    // }, [fromTime, toTime, everyTime]);
-
 
     useEffect(() => {
         if (fromTime && toTime) {
@@ -206,7 +97,6 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
     }, [fromTime, toTime, everyTime]);
 
 
-    // Handle day selection (checkbox change)
     const handleDayChange = (day: string) => {
         setSelectedDays((prevSelectedDays) =>
             prevSelectedDays.includes(day)
@@ -296,78 +186,6 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
                             ))}
                         </div>
                     </div>
-
-                    {/* <div className="flex flex-col mb-5">
-                        <label htmlFor="fromTime" className="text-sm font-semibold text-gray-800">
-                            AT/From
-                        </label>
-                        <div className="relative">
-                            <Datetime
-                                value={fromTime}
-                                onChange={(momentOrString: moment.Moment | string | Date) => {
-                                    // Check if it's a moment object and format it as a string
-                                    if (moment.isMoment(momentOrString)) {
-                                        setFromTime(momentOrString.format("HH:mm"));
-                                    }
-                                    // If it's a Date, convert it to a moment and format as a string
-                                    else if (momentOrString instanceof Date) {
-                                        setFromTime(moment(momentOrString).format("HH:mm"));
-                                    }
-                                    // If it's a string, set it directly
-                                    else {
-                                        setFromTime(momentOrString);
-                                    }
-                                }}
-                                dateFormat={false}
-                                timeFormat="HH:mm"
-                                inputProps={{ className: "w-full border  px-4 py-2 mt-1 pr-10 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97]", readOnly: true, ref: fromRef, }}
-                            />
-                            <button
-                                type="button"
-                                className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500"
-                                onClick={handleFromButtonClick}>
-                                <FaClock size={16} className="text-[#005B97]" />
-                            </button>
-                        </div>
-                    </div> */}
-                    {/* To Time Field */}
-                    {/* <div className="flex flex-col mb-5">
-                        <label htmlFor="toTime" className="text-sm font-semibold text-gray-800">
-                            To
-                        </label>
-                        <div className="relative">
-                            <Datetime
-                                value={toTime}
-                                onChange={(momentOrString: moment.Moment | string | Date) => {
-                                    // Check if it's a moment object and format it as a string
-                                    if (moment.isMoment(momentOrString)) {
-                                        setToTime(momentOrString.format("HH:mm"));
-                                    }
-                                    // If it's a Date, convert it to a moment and format as a string
-                                    else if (momentOrString instanceof Date) {
-                                        setToTime(moment(momentOrString).format("HH:mm"));
-                                    }
-                                    // If it's a string, set it directly
-                                    else {
-                                        setToTime(momentOrString);
-                                    }
-                                }}
-                                dateFormat={false}
-                                timeFormat="HH:mm"
-                                inputProps={{ className: "w-full border  px-4 py-2 mt-1 pr-10 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97]", readOnly: true, ref: toRef }}
-
-                            />
-                            <button
-                                type="button"
-                                className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500"
-                                onClick={handleToButtonClick}>
-                                <FaClock size={16} className="text-[#005B97]" />
-                            </button>
-                        </div>
-                    </div> */}
-                    {/* Error message */}
-                    {/* {error && <div className="text-red-600 text-sm mb-4">{error}</div>} */}
-
                     <div className="flex flex-col mb-5">
                         <label htmlFor="fromTime" className="text-sm font-semibold text-gray-800">
                             AT/From
@@ -403,7 +221,6 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
                         </div>
                     </div>
                     {error && <div className="text-red-600 text-sm mb-4">{error}</div>}
-                    {/* Every Time Field */}
                     <div className="flex flex-col mb-5">
                         <label htmlFor="everyTime" className="text-sm font-semibold text-gray-800">
                             Every

@@ -5,7 +5,6 @@ import { Job } from "../../types";
 import { FaChevronDown, FaClock } from "react-icons/fa";
 import { DatePicker } from 'rsuite';
 import 'rsuite/DatePicker/styles/index.css';
-// import 'react-datetime/css/react-datetime.css';
 
 interface AddJobModalProps {
   onClose: () => void;
@@ -217,7 +216,6 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
           </div>
           {error && <div className="text-red-600 text-sm mb-4">{error}</div>}
 
-          {/* Every Time Field */}
           <div className="flex flex-col mb-5">
             <label htmlFor="everyTime" className="text-sm font-semibold text-gray-800">
               Every
@@ -246,7 +244,6 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
             </div>
           </div>
 
-          {/* Submit and Cancel Buttons */}
           <div className="flex">
             <button
               type="submit"

@@ -13,9 +13,9 @@ interface User {
     _id: string;
     name: string;
     email: string;
-    status: number; // Replaced IntegerType with number
+    status: number;
     role: string;
-    createdAt: string; // Keeping it string as we handle formatting in the render
+    createdAt: string;
 }
 
 export default function Page() {
@@ -72,30 +72,21 @@ export default function Page() {
 
 
     const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
-
-
-    // useEffect(() => {
-    //   const savedState = sessionStorage.getItem("sidebar");
-    //   console.log(savedState);
-    //   if (savedState) setIsSidebarExpanded(JSON.parse(savedState));
-    // }, []);
+   
 
     const handleSidebarStateChange = (newState: boolean) => {
         console.log("Sidebar state updated in parent:", newState);
-        setIsSidebarExpanded(newState); // Update parent's state if needed
+        setIsSidebarExpanded(newState);
       };
 
-    // Handle page change
     const handlePageChange = (newPage: number) => {
         setCurrentPage(newPage);
     };
 
-    // Fetch users
     const fetchUsers = useCallback(async () => {
         try {
             setLoadingTable(true);
 
-            // Build query string based on currentPage and searchQuery
             const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : "";
             const response = await fetch(`/api/role-requests/get-requests/?page=${currentPage}${searchParam}`);
 
@@ -114,36 +105,8 @@ export default function Page() {
         }
     }, [currentPage, searchQuery]);
 
-    // Handle accept/reject action
-    // const updateStatus = async (userId: string, newStatus: number) => {
-    //     try {
-    //         const response = await fetch(`/api/role-requests/update-status`, {
-    //             method: "POST",
-    //             headers: {
-    //                 "Content-Type": "application/json",
-    //             },
-    //             body: JSON.stringify({ userId, status: newStatus }),
-    //         });
-
-    //         if (response.ok) {
-    //             // Update the UI to reflect the status change
-    //             setUsers((prevUsers) =>
-    //                 prevUsers.map((user) =>
-    //                     user._id === userId ? { ...user, status: newStatus } : user
-    //                 )
-    //             );
-    //         } else {
-    //             console.error("Failed to update status");
-    //         }
-    //     } catch (error) {
-    //         console.error("Error updating status:", error);
-    //     }
-    // };
-
-
     const updateStatus = async (userId: string, newStatus: number) => {
         try {
-            // Show confirmation modal using SweetAlert2
             const result = await Swal.fire({
                 title: 'Are you sure?',
                 text: `You are about to change the status to ${newStatus === 1 ? 'Accepted' : 'Rejected'}.`,
@@ -156,7 +119,6 @@ export default function Page() {
             });
 
             if (result.isConfirmed) {
-                // If user confirms, proceed with status update
                 const response = await fetch(`/api/role-requests/update-status`, {
                     method: 'POST',
                     headers: {
@@ -166,7 +128,6 @@ export default function Page() {
                 });
 
                 if (response.ok) {
-                    // Update the UI to reflect the status change
                     setUsers((prevUsers) =>
                         prevUsers.map((user) =>
                             user._id === userId ? { ...user, status: newStatus } : user
@@ -188,7 +149,6 @@ export default function Page() {
     };
 
 
-    // Trigger data fetch on mount and on dependency changes
     useEffect(() => {
         fetchUsers();
     }, [currentPage, fetchUsers, searchQuery]);
@@ -197,11 +157,7 @@ export default function Page() {
 
     return (
         <div className="flex flex-row h-screen bg-white">
-            {/* <Sidebar onToggleExpand={handleSidebarToggle} /> */}
             <Sidebar onStateChange={handleSidebarStateChange}/>
-
-        
-
             <div
                 className={`flex-1 flex flex-col transition-all bg-white duration-300 ${!isSidebarExpanded ? "ml-24" : "ml-64"
                     }`}

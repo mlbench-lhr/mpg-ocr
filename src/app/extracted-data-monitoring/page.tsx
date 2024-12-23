@@ -51,45 +51,36 @@ const MasterPage = () => {
   const [totalJobs, setTotalJobs] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
   const [showButton, setShowButton] = useState(false);
   const [name, setName] = useState("");
-
-
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
-
   const [finalStatusFilter, setFinalStatusFilter] = useState("");
   const [reviewStatusFilter, setReviewStatusFilter] = useState("");
-
   const [reasonStatusFilter, setReasonStatusFilter] = useState("");
-
   const [reviewByStatusFilter, setReviewByStatusFilter] = useState("");
   const [podDateFilter, setPodDateFilter] = useState("");
   const [podDateSignatureFilter, setPodDateSignatureFilter] = useState("");
   const [jobNameFilter, setJobNameFilter] = useState("");
   // const [carrierFilter, setCarrierFilter] = useState("");
   const [bolNumberFilter, setBolNumberFilter] = useState("");
-
   const [dropdownStates, setDropdownStates] = useState<string | null>(null);
   const [dropdownStatesFirst, setDropdownStatesFirst] = useState<string | null>(null);
   const [dropdownStatesSecond, setDropdownStatesSecond] = useState<string | null>(null);
   const [dropdownStatesThird, setDropdownStatesThird] = useState<string | null>(null);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
   const router = useRouter();
 
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
 
+  // useEffect(() => {
+  //   const savedState = sessionStorage.getItem("sidebar");
+  //   console.log(savedState);
+  //   if (savedState) setIsSidebarExpanded(JSON.parse(savedState));
+  // }, []);
 
-
-    // useEffect(() => {
-    //   const savedState = sessionStorage.getItem("sidebar");
-    //   console.log(savedState);
-    //   if (savedState) setIsSidebarExpanded(JSON.parse(savedState));
-    // }, []);
-
-    const handleSidebarStateChange = (newState: boolean) => {
-      console.log("Sidebar state updated in parent:", newState);
-      setIsSidebarExpanded(newState); // Update parent's state if needed
-    };
+  const handleSidebarStateChange = (newState: boolean) => {
+    console.log("Sidebar state updated in parent:", newState);
+    setIsSidebarExpanded(newState);
+  };
 
   const isLastThreeRow = (jobId: string) => {
     const rowsCount = master.length;
@@ -190,7 +181,6 @@ const MasterPage = () => {
     }
   };
 
-  // const isAllSelected = selectedRows.length === master.length;
   const isAllSelected = selectedRows.length === master.length && master.length > 0;
 
   const capitalizeFirstLetter = (str: string): string => {
@@ -215,7 +205,6 @@ const MasterPage = () => {
           )
         );
 
-        // Show success alert
         Swal.fire({
           icon: "success",
           title: "Status Updated",
@@ -233,12 +222,6 @@ const MasterPage = () => {
       console.error("Error updating status:", error);
     }
   };
-
-
-  // useEffect(() => {
-  //   const jobName = localStorage.getItem('jobName') || ''; 
-  //   setJobNameFilter(jobName);
-  // }, []);
 
   const handleDelete = async () => {
     Swal.fire({
@@ -302,7 +285,6 @@ const MasterPage = () => {
     try {
       setLoadingTable(true);
       const queryParams = new URLSearchParams();
-      // console.log(currentPage);
       queryParams.set("page", currentPage.toString());
       if (bolNumberFilter) queryParams.set("bolNumber", bolNumberFilter.trim());
       if (finalStatusFilter) queryParams.set("recognitionStatus", finalStatusFilter);
@@ -314,11 +296,7 @@ const MasterPage = () => {
       if (jobNameFilter) queryParams.set("jobName", jobNameFilter.trim());
       // if (carrierFilter) queryParams.set("carrier", carrierFilter.trim());
 
-
-
-
       // console.log("Query Params:", queryParams.toString());
-
       const response = await fetch(`/api/process-data/get-data/?${queryParams.toString()}`);
 
       if (response.ok) {
@@ -373,136 +351,9 @@ const MasterPage = () => {
     });
   };
 
-  // const fetchJobs = useCallback(async () => {
-  //   try {
-  //     setLoadingTable(true);
-
-  //     const queryParams = new URLSearchParams();
-  //     queryParams.set("page", currentPage.toString());
-
-  //     let hasFilters = false;
-  //     if (bolNumberFilter) {
-  //       queryParams.set("bolNumber", bolNumberFilter.trim());
-  //       hasFilters = true;
-  //     }
-  //     if (finalStatusFilter) {
-  //       queryParams.set("finalStatus", finalStatusFilter);
-  //       hasFilters = true;
-  //     }
-  //     if (reviewStatusFilter) {
-  //       queryParams.set("reviewStatus", reviewStatusFilter);
-  //       hasFilters = true;
-  //     }
-  //     if (reviewByStatusFilter) {
-  //       queryParams.set("reviewByStatus", reviewByStatusFilter);
-  //       hasFilters = true;
-  //     }
-  //     if (podDateFilter) {
-  //       queryParams.set("podDate", podDateFilter);
-  //       hasFilters = true;
-  //     }
-  //     if (podDateSignatureFilter) {
-  //       queryParams.set("podDateSignature", podDateSignatureFilter.trim());
-  //       hasFilters = true;
-  //     }
-  //     if (carrierFilter) {
-  //       queryParams.set("carrier", carrierFilter.trim());
-  //       hasFilters = true;
-  //     }
-
-  //     if (!hasFilters && currentPage === 1) {
-  //       console.log("No filters applied, skipping data fetch.");
-  //       return;
-  //     }
-
-  //     console.log("Query Params:", queryParams.toString());
-
-  //     const response = await fetch(`/api/process-data/get-data/?${queryParams.toString()}`);
-
-  //     if (response.ok) {
-  //       const data = await response.json();
-  //       setMaster(data.jobs);
-  //       setTotalPages(data.totalPages);
-  //       setTotalJobs(data.totalJobs);
-  //     } else {
-  //       console.error("Failed to fetch jobs");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching jobs:", error);
-  //   } finally {
-  //     setLoadingTable(false);
-  //   }
-  // }, [
-  //   currentPage,
-  //   bolNumberFilter,
-  //   finalStatusFilter,
-  //   reviewStatusFilter,
-  //   reviewByStatusFilter,
-  //   podDateFilter,
-  //   podDateSignatureFilter,
-  //   carrierFilter,
-  // ]);
-
-  // useEffect(() => {
-  //   fetchJobs();
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [currentPage]);
-
-  // const handleFilterApply = (e: React.FormEvent<HTMLFormElement>) => {
-  //   e.preventDefault();
-  //   fetchJobs();
-  // };
-
-  // const resetFiltersAndFetch = () => {
-  //   Promise.resolve().then(() => {
-  //     setFinalStatusFilter("");
-  //     setReviewStatusFilter("");
-  //     setReviewByStatusFilter("");
-  //     setCarrierFilter("");
-  //     setBolNumberFilter("");
-  //     setPodDateFilter("");
-  //     setPodDateSignatureFilter("");
-  //   }).then(() => {
-  //     setMaster([]);
-  //     setTotalPages(0);
-  //     setTotalJobs(0);
-  //   });
-  // };
-
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
   }
-
-  // const handleDelete = () => {
-  //   Swal.fire({
-  //     title: 'Delete Files',
-  //     text: 'Are you sure you want to delete these files?',
-  //     icon: 'warning',
-  //     iconColor: '#005B97',
-  //     showCancelButton: true,
-  //     confirmButtonColor: '#005B97',
-  //     cancelButtonColor: '#E0E0E0',
-  //     confirmButtonText: 'Delete',
-  //   }).then((result) => {
-  //     if (result.isConfirmed) {
-
-  //        // Filter out the selected rows from the master array
-  //        const updatedMaster = master.filter((job) => !selectedRows.includes(job._id));
-  //        // Update the master state
-  //        setMaster(updatedMaster);
-  //        // Clear selected rows after deletion
-  //        setSelectedRows([]);
-
-  //       Swal.fire({
-  //         title: 'Deleted!',
-  //         text: 'Your files have been deleted.',
-  //         icon: 'success',
-  //         timer: 2000, // Auto-close after 2 seconds
-  //         showConfirmButton: false, // Hide the confirm button
-  //       });
-  //     }
-  //   });
-  // };
 
   const handleSend = () => {
     Swal.fire({
@@ -521,8 +372,8 @@ const MasterPage = () => {
           title: 'Sent!',
           text: 'Your files have been Sent.',
           icon: 'success',
-          timer: 2000, // Auto-close after 2 seconds
-          showConfirmButton: false, // Hide the confirm button
+          timer: 2000,
+          showConfirmButton: false,
         });
       }
     });
@@ -539,10 +390,7 @@ const MasterPage = () => {
 
   return (
     <div className="flex flex-row h-screen bg-white">
-      {/* <Sidebar onToggleExpand={handleSidebarToggle} /> */}
-      <Sidebar onStateChange={handleSidebarStateChange}/>
-
-
+      <Sidebar onStateChange={handleSidebarStateChange} />
       <div
         className={`flex-1 flex flex-col transition-all bg-white duration-300 ${!isSidebarExpanded ? "ml-24" : "ml-64"
           }`}
@@ -552,15 +400,6 @@ const MasterPage = () => {
           totalContent={totalJobs}
           rightContent={<>
             <div className="flex gap-4 mr-3">
-              {/* <div className="flex gap-2">
-                <span>
-                  <BiSolidEditAlt className="fill-[#005B97] text-2xl" />
-                </span>
-                <span className="text-[#005B97]">
-                  Edit
-                </span>
-              </div> */}
-
               {showButton && (<>
                 <div
                   className="flex gap-2 group cursor-pointer transition-all duration-300"
@@ -613,7 +452,6 @@ const MasterPage = () => {
 
 
         <div className="flex-1 px-2 bg-white ">
-
           <div
             className={`bg-gray-200 p-3 mb-0 transition-all duration-500 ease-in-out w-full sm:w-auto ${isFilterDropDownOpen ? "rounded-t-lg" : "rounded-lg"}`}
           >
@@ -772,7 +610,7 @@ const MasterPage = () => {
                   <input
                     id="dateInput"
                     type="date"
-                    placeholder="YYYY-MM-DD" // Indicates the format to users
+                    placeholder="YYYY-MM-DD"
                     value={podDateFilter}
                     onChange={(e) => setPodDateFilter(e.target.value)}
                     className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] custom-date-input"
@@ -826,10 +664,7 @@ const MasterPage = () => {
                   >
                     <option value="">Select</option>
                     <option value="Admin">Admin</option>
-                    {/* <option value="Standard User">Standard User</option> */}
-                    {/* <option value="Reviewer">Reviewer</option> */}
                     <option value="OCR Engine">OCR Engine</option>
-
                   </select>
                   <button
                     type="button"
@@ -931,7 +766,6 @@ const MasterPage = () => {
                         <th className="py-2 px-4 border-b text-start min-w-44"><span className="mr-3"><input type="checkbox" checked={isAllSelected}
                           onChange={handleSelectAll} /></span>BL Number</th>
                         <th className="py-2 px-4 border-b text-center min-w-32">Job Name</th>
-                        {/* <th className="py-2 px-4 border-b text-center min-w-32">Carrier</th> */}
                         <th className="py-2 px-4 border-b text-center min-w-32">POD Date</th>
                         <th className="py-2 px-4 border-b text-center min-w-40">POD Signature</th>
                         <th className="py-2 px-4 border-b text-center min-w-28">Total Qty</th>
@@ -966,7 +800,6 @@ const MasterPage = () => {
                           <td className="py-2 px-4 border-b text-center">
                             {job.jobName}
                           </td>
-                          {/* <td className="py-2 px-4 border-b text-center">{job.carrier}</td> */}
                           <td className="py-2 px-4 border-b text-center">{job.podDate}</td>
                           <td className="py-2 px-4 border-b text-center">
                             {job.podSignature === "" || job.podSignature === null || job.podSignature === undefined ? (
@@ -1110,11 +943,11 @@ const MasterPage = () => {
                                     : "scale-0 opacity-0 pointer-events-none"
                                     }`}
                                   style={{
-                                    top: dropdownStatesFirst === job._id && !isLastThreeRow(job._id) ? "100%" : "", // Downward for normal rows
-                                    bottom: dropdownStatesFirst === job._id && isLastThreeRow(job._id) ? "100%" : "", // Upward for last 3 rows
-                                    visibility: dropdownStatesFirst === job._id ? "visible" : "hidden", // Keep visibility while the dropdown is opening
-                                    height: dropdownStatesFirst === job._id ? "auto" : "0", // Prevent space taken when hidden
-                                    overflow: dropdownStatesFirst === job._id ? "visible" : "hidden", // Hide overflow when dropdown is closed
+                                    top: dropdownStatesFirst === job._id && !isLastThreeRow(job._id) ? "100%" : "",
+                                    bottom: dropdownStatesFirst === job._id && isLastThreeRow(job._id) ? "100%" : "",
+                                    visibility: dropdownStatesFirst === job._id ? "visible" : "hidden",
+                                    height: dropdownStatesFirst === job._id ? "auto" : "0",
+                                    overflow: dropdownStatesFirst === job._id ? "visible" : "hidden",
                                   }}
                                 >
                                   {[
@@ -1168,9 +1001,9 @@ const MasterPage = () => {
                                   style={{
                                     top: dropdownStatesSecond === job._id && !isLastThreeRow(job._id) ? "100%" : "",
                                     bottom: dropdownStatesSecond === job._id && isLastThreeRow(job._id) ? "100%" : "",
-                                    visibility: dropdownStatesSecond === job._id ? "visible" : "hidden", // Keep visibility while the dropdown is opening
-                                    height: dropdownStatesSecond === job._id ? "auto" : "0", // Prevent space taken when hidden
-                                    overflow: dropdownStatesSecond === job._id ? "visible" : "hidden", // Hide overflow when dropdown is closed
+                                    visibility: dropdownStatesSecond === job._id ? "visible" : "hidden",
+                                    height: dropdownStatesSecond === job._id ? "auto" : "0",
+                                    overflow: dropdownStatesSecond === job._id ? "visible" : "hidden",
                                   }}
                                 >
                                   {[{ status: "new", color: "text-blue-600", bgColor: "bg-blue-100" },
@@ -1223,11 +1056,11 @@ const MasterPage = () => {
                                     : "opacity-0 pointer-events-none visibility-hidden"
                                     }`}
                                   style={{
-                                    top: dropdownStatesThird === job._id && !isLastThreeRow(job._id) ? "100%" : "", // Downward for normal rows
-                                    bottom: dropdownStatesThird === job._id && isLastThreeRow(job._id) ? "100%" : "", // Upward for last 3 rows
-                                    visibility: dropdownStatesThird === job._id ? "visible" : "hidden", // Keep visibility while the dropdown is opening
-                                    height: dropdownStatesThird === job._id ? "auto" : "0", // Prevent space taken when hidden
-                                    overflow: dropdownStatesThird === job._id ? "visible" : "hidden", // Hide overflow when dropdown is closed
+                                    top: dropdownStatesThird === job._id && !isLastThreeRow(job._id) ? "100%" : "",
+                                    bottom: dropdownStatesThird === job._id && isLastThreeRow(job._id) ? "100%" : "",
+                                    visibility: dropdownStatesThird === job._id ? "visible" : "hidden",
+                                    height: dropdownStatesThird === job._id ? "auto" : "0",
+                                    overflow: dropdownStatesThird === job._id ? "visible" : "hidden",
                                   }}
                                 >
                                   {[

@@ -13,7 +13,7 @@ function ForgotPasswordModal({ onClose, openResetPasswordModal, setUserEmail }: 
     const [otp, setOtp] = useState(["", "", "", ""]);
     const [emailError, setEmailError] = useState<string | null>(null);
     const [otpError, setOtpError] = useState<string | null>(null);
-    const [successMessage, setSuccessMessage] = useState<string | null>(null); // New state for success message
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [loadingText, setLoadingText] = useState(false);
     const [timer, setTimer] = useState(60);
@@ -65,11 +65,11 @@ function ForgotPasswordModal({ onClose, openResetPasswordModal, setUserEmail }: 
         if (!res.ok) {
             const errorData = await res.json();
             const errorMessage = errorData?.message || "Failed to send OTP!";
-            setEmailError(errorMessage); // Show error in the form
+            setEmailError(errorMessage);
             setLoading(false);
         } else {
             setUserEmail(email);
-            setEmailError(null); // Clear any previous errors
+            setEmailError(null);
             setLoading(false);
             setSuccessMessage("OTP sent to your email!");
             setTimeout(() => setSuccessMessage(null), 10000); 
@@ -122,7 +122,7 @@ function ForgotPasswordModal({ onClose, openResetPasswordModal, setUserEmail }: 
         });
 
         if (!res.ok) {
-            setOtpError("OTP verification failed!"); // Show error in the form
+            setOtpError("OTP verification failed!");
             setLoadingText(false);
         } else {
             setOtpError(null);

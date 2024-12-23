@@ -12,7 +12,7 @@ function ResetPasswordModal({ onClose, userEmail }: ResetPasswordModalProps) {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
-    const [successMessage, setSuccessMessage] = useState<string | null>(null); // Success message state
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -47,7 +47,7 @@ function ResetPasswordModal({ onClose, userEmail }: ResetPasswordModalProps) {
         if (!res.ok) {
             const errorData = await res.json();
             const errorMessage = errorData?.message || "Failed to reset password!";
-            setError(errorMessage);  // Display error message above the form
+            setError(errorMessage);
             setLoading(false);
         } else {
             setSuccessMessage("Password reset successfully!"); 
@@ -73,7 +73,6 @@ function ResetPasswordModal({ onClose, userEmail }: ResetPasswordModalProps) {
                     Please enter your new password. It should meet our security requirements.
                 </p>
 
-                {/* Display error or success message above the form */}
                 {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
                 {successMessage && <p className="text-green-500 text-sm mb-4 text-center">{successMessage}</p>}
 

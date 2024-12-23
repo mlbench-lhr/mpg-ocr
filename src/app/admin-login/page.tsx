@@ -10,7 +10,7 @@ import ResetPasswordModal from "../components/ResetPasswordModal";
 export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const role ="admin";
+    const role = "admin";
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -131,13 +131,6 @@ export default function LoginPage() {
                         {loading ? "Signing In..." : "Sign In"}
                     </button>
                 </form>
-
-                {/* <p className="mt-4 text-center text-sm text-black font-medium">
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-[#005B97] hover:underline">
-            Register
-          </Link>
-        </p> */}
             </div>
             {isForgotPasswordVisible && (
                 <ForgotPasswordModal

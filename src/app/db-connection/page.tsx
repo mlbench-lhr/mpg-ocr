@@ -25,7 +25,6 @@ export default function DBConnectionPage() {
     const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
 
-    // Redirect if not authenticated
     useEffect(() => {
         if (!loading) {
             if (!isAuthenticated || userRole !== "admin") {
@@ -34,7 +33,6 @@ export default function DBConnectionPage() {
         }
     }, [loading, isAuthenticated, userRole, router]);
 
-    // Fetch existing data
     useEffect(() => {
         const fetchExistingData = async () => {
             const token = localStorage.getItem("token");
@@ -67,7 +65,6 @@ export default function DBConnectionPage() {
         fetchExistingData();
     }, [router]);
 
-    // Validate form inputs
     const validateForm = () => {
         if (!systemID.trim()) return "System ID is required.";
         if (!userName.trim()) return "User Name is required.";
@@ -88,7 +85,6 @@ export default function DBConnectionPage() {
         return null;
     };
 
-    // Handle form submission
     const handleDBConnection = useCallback(async () => {
         setError(null);
 
@@ -147,7 +143,6 @@ export default function DBConnectionPage() {
         }
     }, [systemID, userName, password, ipAddress, portNumber, serviceName, router]);
 
-    // Progress bar logic
     useEffect(() => {
         if (isLoading) {
             let progress = 0;
@@ -198,14 +193,6 @@ export default function DBConnectionPage() {
                 {isLoading ? (
                     <LoadingSpinner percentage={percentage} />
                 ) : (
-                    // <form
-                    //     onSubmit={(e) => {
-                    //         e.preventDefault();
-                    //         setIsLoading(true);
-                    //         setPercentage(0);
-                    //         setLoadingComplete(false);
-                    //     }}
-                    // >
                     <form onSubmit={handleSubmit}>
                         <div className="mb-6 text-center text-gray-400">
                             <p>If unchecked, connects through API, not DB</p>
@@ -225,7 +212,6 @@ export default function DBConnectionPage() {
                             />
                         </div>
 
-                        {/* Remaining fields */}
                         <div className="mb-4">
                             <label className="block text-black font-semibold">User Name</label>
                             <input
@@ -259,7 +245,6 @@ export default function DBConnectionPage() {
                             </div>
                         </div>
 
-                        {/* IP Address */}
                         <div className="mb-4">
                             <label className="block text-black font-semibold">IP Address</label>
                             <input
@@ -276,7 +261,6 @@ export default function DBConnectionPage() {
                         </div>
 
 
-                        {/* Port Number */}
                         <div className="mb-4">
                             <label className="block text-black font-semibold">Port Number</label>
                             <input
@@ -289,7 +273,6 @@ export default function DBConnectionPage() {
                             />
                         </div>
 
-                        {/* Service Name */}
                         <div className="mb-4">
                             <label className="block text-black font-semibold">Service Name</label>
                             <input

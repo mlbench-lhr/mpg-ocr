@@ -39,7 +39,7 @@ interface Job {
 const JobDetail = () => {
 
 
-    const [isModalOpen, setIsModalOpen] = useState(false); // Control modal visibility
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [job, setJob] = useState<Job | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -50,15 +50,9 @@ const JobDetail = () => {
     const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
 
 
-    // useEffect(() => {
-    //   const savedState = sessionStorage.getItem("sidebar");
-    //   console.log(savedState);
-    //   if (savedState) setIsSidebarExpanded(JSON.parse(savedState));
-    // }, []);
-
     const handleSidebarStateChange = (newState: boolean) => {
         console.log("Sidebar state updated in parent:", newState);
-        setIsSidebarExpanded(newState); // Update parent's state if needed
+        setIsSidebarExpanded(newState);
     };
 
     useEffect(() => {
@@ -112,16 +106,14 @@ const JobDetail = () => {
         router.back();
     };
 
-    // const handleSidebarToggle = (expanded: boolean) => {
-    //     setIsSidebarExpanded(expanded);
-    // };
+   
 
     const handleOpenModal = () => {
-        setIsModalOpen(true); // Open the modal
+        setIsModalOpen(true);
     };
 
     const handleCloseModal = () => {
-        setIsModalOpen(false); // Close the modal
+        setIsModalOpen(false);
     };
 
 
@@ -170,7 +162,6 @@ const JobDetail = () => {
                 <div className='mx-5'>
                     <h1 className='text-3xl text-gray-800 font-semibold mb-5'>Shipment Information</h1>
 
-                    {/* First Row */}
                     <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 my-5'>
                         <div className='flex items-center gap-5'>
                             <span className='text-xl text-gray-800 font-semibold'>Created On</span>
@@ -186,7 +177,6 @@ const JobDetail = () => {
                         </div>
                     </div>
 
-                    {/* Second Row */}
                     <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 my-5'>
                         <div className='flex items-center gap-5'>
                             <span className='text-xl text-gray-800 font-semibold'>Final Status</span>
@@ -208,7 +198,6 @@ const JobDetail = () => {
                         </div>
                     </div>
 
-                    {/* Cargo Description */}
                     <div className='flex flex-col my-5'>
                         <h1 className='text-xl text-gray-800 font-semibold mb-3'>Cargo Description</h1>
                         <div className='text-gray-400 text-lg text-justify'>{job.cargoDescription}</div>
@@ -217,7 +206,6 @@ const JobDetail = () => {
 
             </div>
 
-            {/* Edit Modal */}
             {isModalOpen && (
                 <EditModal
                     job={job}

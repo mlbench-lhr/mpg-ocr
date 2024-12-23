@@ -8,8 +8,8 @@ import Spinner from '@/app/components/Spinner';
 import Link from 'next/link';
 
 interface Job {
-    _id: string;  // this
-    blNumber: string; // this
+    _id: string;
+    blNumber: string;
     jobName: string;
     carrier: string;
     podDate: string;
@@ -26,13 +26,13 @@ interface Job {
     pdfUrl: string;
     finalStatus: string;
     reviewStatus: string;
-    recognitionStatus: string;  // this
+    recognitionStatus: string;
     breakdownReason: string;
     reviewedBy: string;
     cargoDescription: string;
     receiverSignature: string;
     createdAt: string;
-    updatedAt: string;  // this
+    updatedAt: string;
 
 }
 
@@ -60,13 +60,6 @@ const JobDetail = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [name, setName] = useState("");
 
-
-
-    // useEffect(() => {
-    //   const savedState = sessionStorage.getItem("sidebar");
-    //   console.log(savedState);
-    //   if (savedState) setIsSidebarExpanded(JSON.parse(savedState));
-    // }, []);
 
     const handleSidebarStateChange = (newState: boolean) => {
         console.log("Sidebar state updated in parent:", newState);
@@ -164,7 +157,6 @@ const JobDetail = () => {
 
             const isValidNumeric = /^(0|[1-9][0-9]{0,4})$/.test(value) || value === "";
 
-            // If the input is valid, update the form data
             if (isValidNumeric) {
                 setFormData((prev) => ({
                     ...prev,

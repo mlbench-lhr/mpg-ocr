@@ -19,7 +19,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ message: "Authorized", data: decoded.role }, { status: 200 });
   } catch (error) {
-    // Narrowing down the error type
     if (error instanceof JsonWebTokenError || error instanceof TokenExpiredError) {
       return NextResponse.json({ message: "Invalid or expired token" }, { status: 401 });
     }

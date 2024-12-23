@@ -2,28 +2,27 @@
 
 import Sidebar from '@/app/components/Sidebar';
 import Spinner from '@/app/components/Spinner';
-// import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { FaArrowLeftLong } from "react-icons/fa6";
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { FaCircleDot } from "react-icons/fa6";
 
 const colors = [
-    "#F59E0B", // Amber
-    "#3B82F6", // Blue
-    "#EF4444", // Red
-    "#A855F7", // Purple
-    "#22C55E", // Green
-    "#E11D48", // Rose
-    "#F97316", // Orange
-    "#9333EA", // Indigo
-    "#D97706", // Yellow
-    "#6B21A8", // Violet
-    "#DC2626", // Crimson
-    "#10B981", // Emerald
-    "#8B5CF6", // Periwinkle
-    "#F43F5E", // Coral
-    "#3B82F6", // Sky Blue
+    "#F59E0B",
+    "#3B82F6",
+    "#EF4444",
+    "#A855F7",
+    "#22C55E",
+    "#E11D48",
+    "#F97316",
+    "#9333EA",
+    "#D97706",
+    "#6B21A8", 
+    "#DC2626",
+    "#10B981",
+    "#8B5CF6", 
+    "#F43F5E", 
+    "#3B82F6", 
 ];
 
 
@@ -43,9 +42,6 @@ const JobDetail = () => {
     const [jobHistory, setJobHistory] = useState<JobHistory[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    // const [blNumber, setBlNumber] = useState<string | null>(null);
-
-    // const [userRole, setUserRole] = useState("");
     const router = useRouter();
     const { id } = useParams();
 
@@ -53,44 +49,12 @@ const JobDetail = () => {
     const blNumber = searchParams.get("blNumber");
 
     const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
-
-
-    // useEffect(() => {
-    //   const savedState = sessionStorage.getItem("sidebar");
-    //   console.log(savedState);
-    //   if (savedState) setIsSidebarExpanded(JSON.parse(savedState));
-    // }, []);
+   
 
     const handleSidebarStateChange = (newState: boolean) => {
         console.log("Sidebar state updated in parent:", newState);
         setIsSidebarExpanded(newState);
     };
-
-    // useEffect(() => {
-    //     const token = localStorage.getItem("token");
-
-    //     if (!token) {
-    //         router.push("/login");
-    //         return;
-    //     }
-
-    //     // const decodeJwt = (token: string) => {
-    //     //     const base64Url = token.split(".")[1];
-    //     //     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    //     //     const jsonPayload = decodeURIComponent(
-    //     //         atob(base64)
-    //     //             .split("")
-    //     //             .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-    //     //             .join("")
-    //     //     );
-
-    //     //     return JSON.parse(jsonPayload);
-    //     // };
-
-    //     // const decodedToken = decodeJwt(token);
-    //     // setUserRole(decodedToken.role);
-    //     setLoading(false);
-    // }, [router]);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -100,7 +64,6 @@ const JobDetail = () => {
             return;
         }
 
-        // Fetch job history from the API
         const fetchJobHistory = async () => {
             try {
                 const response = await fetch(`/api/history/get-history-data/${id}`);
@@ -151,21 +114,6 @@ const JobDetail = () => {
                 </div>
                 <div className='mx-5'>
                     <div className="flex gap-3">
-                        {/* <div className="relative flex flex-col items-center justify-between mt-20">
-                            <div className="absolute top-0 bottom-0 w-[4px] bg-gray-200 left-1/2 transform -translate-x-1/2"></div>
-                            <div className="w-6  h-5 mt-0 flex items-start justify-center bg-white z-10">
-                                <FaCircleDot fill={'#F59E0B'} size={25} />
-                            </div>
-                            <div className="w-6 h-5 flex items-end justify-center bg-white z-10">
-                                <FaCircleDot fill={'#3B82F6'} size={25} />
-                            </div>
-                            <div className="w-6 h-5 flex items-center justify-center bg-white z-10">
-                                <FaCircleDot fill={'#EF4444'} size={25} />
-                            </div>
-                            <div className="w-6 h-5 flex items-center justify-center bg-white z-10">
-                                <FaCircleDot fill={'pink'} size={25} />
-                            </div>
-                        </div> */}
                         <div className="relative flex flex-col items-center justify-between mt-20 mb-5">
                             <div className="absolute top-0 bottom-0 w-[4px] bg-gray-200 left-1/2 transform -translate-x-1/2"></div>
                             {jobHistory.map((history: JobHistory, index: number) => (
@@ -211,7 +159,6 @@ const JobDetail = () => {
 
                                                 return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
                                             })() : 'N/A'}
-                                            {/* {history.changedOn} */}
                                         </td>
                                         <td className="py-4 px-4 text-center bg-[#F3F4F6] text-gray-400 rounded-r-lg">
                                             {history.changedBy}
