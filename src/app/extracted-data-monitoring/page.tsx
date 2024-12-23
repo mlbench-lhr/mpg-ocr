@@ -52,7 +52,6 @@ interface Job {
 const MasterPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState("");
   const [isFilterDropDownOpen, setIsFilterDropDownOpen] = useState(true);
   const [loadingTable, setLoadingTable] = useState(false);
@@ -85,8 +84,10 @@ const MasterPage = () => {
   const parentRefRecognition = useRef<Instance | null>(null);
   const parentRefBreakdown = useRef<Instance | null>(null);
 
-  // const [carrierFilter, setCarrierFilter] = useState("");
+  const [firstTime, setFirstTime] = useState(false);
 
+
+  // const [carrierFilter, setCarrierFilter] = useState("");
 
 
   const router = useRouter();
@@ -122,21 +123,22 @@ const MasterPage = () => {
   ];
 
 
-  const isAnyFilterApplied = [
-    finalStatusFilter,
-    reviewStatusFilter,
-    reasonStatusFilter,
-    reviewByStatusFilter,
-    podDateFilter,
-    podDateSignatureFilter,
-    jobNameFilter,
-    bolNumberFilter,
-  ].some((filter) => filter.trim() !== "");
+  // const isAnyFilterApplied = [
+  //   finalStatusFilter,
+  //   reviewStatusFilter,
+  //   reasonStatusFilter,
+  //   reviewByStatusFilter,
+  //   podDateFilter,
+  //   podDateSignatureFilter,
+  //   jobNameFilter,
+  //   bolNumberFilter,
+  // ].some((filter) => filter.trim() !== "");
 
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       if (localStorage.getItem("prev") === "") {
+        setFirstTime(true);
         setFinalStatusFilter(sessionStorage.getItem("finalStatusFilter") || "");
         setReviewStatusFilter(sessionStorage.getItem("reviewStatusFilter") || "");
         setReasonStatusFilter(sessionStorage.getItem("reasonStatusFilter") || "");
@@ -145,9 +147,7 @@ const MasterPage = () => {
         setPodDateSignatureFilter(sessionStorage.getItem("podDateSignatureFilter") || "");
         setJobNameFilter(sessionStorage.getItem("jobNameFilter") || "");
         setBolNumberFilter(sessionStorage.getItem("bolNumberFilter") || "");
-        setIsLoading(false);
         console.log("session 1");
-
       }
       else {
         sessionStorage.setItem("finalStatusFilter", "");
@@ -166,7 +166,8 @@ const MasterPage = () => {
         setPodDateSignatureFilter("");
         setJobNameFilter("");
         setBolNumberFilter("");
-        setIsLoading(false);
+        setFirstTime(false);
+
         console.log("session 2");
 
       }
@@ -383,7 +384,6 @@ const MasterPage = () => {
       console.log("session 4");
       setLoadingTable(true);
 
-      // Read directly from sessionStorage to avoid timing issues
       const filters = {
         bolNumber: sessionStorage.getItem("bolNumberFilter") || "",
         finalStatus: sessionStorage.getItem("finalStatusFilter") || "",
@@ -396,12 +396,12 @@ const MasterPage = () => {
       };
 
       // Check if all filters are empty
-      const hasFilters = Object.values(filters).some((filter) => filter.trim() !== "");
-      if (!hasFilters) {
-        console.log("No filters applied. Skipping fetch.");
-        setLoadingTable(false);
-        return;
-      }
+      // const hasFilters = Object.values(filters).some((filter) => filter.trim() !== "");
+      // if (!hasFilters) {
+      //   console.log("No filters applied. Skipping fetch.");
+      //   setLoadingTable(false);
+      //   return;
+      // }
 
       const queryParams = new URLSearchParams();
       queryParams.set("page", currentPage.toString());
@@ -415,16 +415,6 @@ const MasterPage = () => {
       if (filters.podDateSignature) queryParams.set("podDateSignature", filters.podDateSignature.trim());
       if (filters.jobName) queryParams.set("jobName", filters.jobName.trim());
 
-
-      // if (bolNumberFilter) queryParams.set("bolNumber", bolNumberFilter.trim());
-      // if (finalStatusFilter) queryParams.set("recognitionStatus", finalStatusFilter);
-      // if (reviewStatusFilter) queryParams.set("reviewStatus", reviewStatusFilter);
-      // if (reasonStatusFilter) queryParams.set("breakdownReason", reasonStatusFilter);
-      // if (reviewByStatusFilter) queryParams.set("reviewByStatus", reviewByStatusFilter);
-      // if (podDateFilter) queryParams.set("podDate", podDateFilter);
-      // if (podDateSignatureFilter) queryParams.set("podDateSignature", podDateSignatureFilter.trim());
-      // if (jobNameFilter) queryParams.set("jobName", jobNameFilter.trim());
-      // if (carrierFilter) queryParams.set("carrier", carrierFilter.trim());
 
       // console.log("Query Params:", queryParams.toString());
       const response = await fetch(`/api/process-data/get-data/?${queryParams.toString()}`);
@@ -444,22 +434,24 @@ const MasterPage = () => {
     }
   }, [
     currentPage,
-    bolNumberFilter,
-    finalStatusFilter,
-    reviewStatusFilter,
-    reasonStatusFilter,
-    reviewByStatusFilter,
-    podDateFilter,
-    podDateSignatureFilter,
-    jobNameFilter,
+    // bolNumberFilter,
+    // finalStatusFilter,
+    // reviewStatusFilter,
+    // reasonStatusFilter,
+    // reviewByStatusFilter,
+    // podDateFilter,
+    // podDateSignatureFilter,
+    // jobNameFilter,
     // carrierFilter,
   ]);
 
   useEffect(() => {
-    fetchJobs();
+    if (firstTime) {
+      console.log("session 8");
+      fetchJobs();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    console.log("session 8");
-  }, [currentPage])
+  }, [currentPage, firstTime])
 
   const handleFilterApply = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -475,7 +467,6 @@ const MasterPage = () => {
   };
 
   const resetFiltersAndFetch = async () => {
-    // Reset state values and clear sessionStorage
     sessionStorage.setItem("finalStatusFilter", "");
     sessionStorage.setItem("reviewStatusFilter", "");
     sessionStorage.setItem("reasonStatusFilter", "");
@@ -893,13 +884,19 @@ const MasterPage = () => {
                   Reset Filters
                 </button>
 
-                <button
+                {/* <button
                   type="submit"
                   className={`px-4 py-2 rounded-lg ${isAnyFilterApplied
                     ? "bg-[#005B97] text-white hover:bg-[#2270a3]"
                     : "bg-gray-400 text-gray-200 cursor-not-allowed"
                     }`}
                   disabled={!isAnyFilterApplied}
+                >
+                  Apply Filters
+                </button> */}
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-lg bg-[#005B97] text-white hover:bg-[#2270a3]"
                 >
                   Apply Filters
                 </button>
@@ -923,7 +920,6 @@ const MasterPage = () => {
                 <span className=" text-gray-800 text-xl shadow-xl p-4 rounded-lg">No data found</span>
               </div>
             ) : (
-              // <div className="w-[100vw] sm:w-[78vw] md:w-[90vw] 2xl:w-[93vw] max-w-full me-auto ">
               <div className="overflow-x-auto w-full relative">
                 <table className="table-auto min-w-full w-full border-collapse">
                   <thead>
@@ -1111,10 +1107,17 @@ const MasterPage = () => {
                             placement="bottom"
                             arrow={false}
                             zIndex={50}
-                            onShow={() => setDropdownStates(job._id)}
+                            // onShow={() => setDropdownStates(job._id)}
+                            onShow={() => {
+                              if (userRole !== "standarduser") {
+                                setDropdownStates(job._id);
+                              } else {
+                                return false;
+                              }
+                            }}
                             appendTo={() => document.body}>
                             <div
-                              className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium cursor-pointer ${userRole !== "standarduser" ? 'cursor-pointer' : ''} ${job.finalStatus === "new"
+                              className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${userRole !== "standarduser" ? 'cursor-pointer' : ''} ${job.finalStatus === "new"
                                 ? "bg-blue-100 text-blue-600"
                                 : job.finalStatus === "inProgress"
                                   ? "bg-yellow-100 text-yellow-600"
@@ -1168,7 +1171,14 @@ const MasterPage = () => {
                             placement="bottom"
                             arrow={false}
                             zIndex={50}
-                            onShow={() => setDropdownStatesFirst(job._id)}
+                            // onShow={() => setDropdownStatesFirst(job._id)}
+                            onShow={() => {
+                              if (userRole !== "standarduser") {
+                                setDropdownStatesFirst(job._id);
+                              } else {
+                                return false;
+                              }
+                            }}
                             appendTo={() => document.body}>
 
                             <div
@@ -1269,7 +1279,14 @@ const MasterPage = () => {
                             placement="bottom"
                             arrow={false}
                             zIndex={50}
-                            onShow={() => setDropdownStatesSecond(job._id)}
+                            // onShow={() => setDropdownStatesSecond(job._id)}
+                            onShow={() => {
+                              if (userRole !== "standarduser") {
+                                setDropdownStatesSecond(job._id);
+                              } else {
+                                return false;
+                              }
+                            }}
                             appendTo={() => document.body}>
 
                             <div
@@ -1379,7 +1396,14 @@ const MasterPage = () => {
                             placement="bottom"
                             arrow={false}
                             zIndex={50}
-                            onShow={() => setDropdownStatesThird(job._id)}
+                            // onShow={() => setDropdownStatesThird(job._id)}
+                            onShow={() => {
+                              if (userRole !== "standarduser") {
+                                setDropdownStatesThird(job._id);
+                              } else {
+                                return false;
+                              }
+                            }}
                             appendTo={() => document.body}>
 
                             <div
@@ -1475,7 +1499,6 @@ const MasterPage = () => {
                   </tbody>
                 </table>
               </div>
-              // </div>
             )
             }
 
