@@ -63,6 +63,8 @@ const MasterPage = () => {
   const [showButton, setShowButton] = useState(false);
   const [name, setName] = useState("");
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+
+
   const [finalStatusFilter, setFinalStatusFilter] = useState("");
   const [reviewStatusFilter, setReviewStatusFilter] = useState("");
   const [reasonStatusFilter, setReasonStatusFilter] = useState("");
@@ -70,8 +72,8 @@ const MasterPage = () => {
   const [podDateFilter, setPodDateFilter] = useState("");
   const [podDateSignatureFilter, setPodDateSignatureFilter] = useState("");
   const [jobNameFilter, setJobNameFilter] = useState("");
-  // const [carrierFilter, setCarrierFilter] = useState("");
   const [bolNumberFilter, setBolNumberFilter] = useState("");
+
   const [dropdownStates, setDropdownStates] = useState<string | null>(null);
   const [dropdownStatesFirst, setDropdownStatesFirst] = useState<string | null>(null);
   const [dropdownStatesSecond, setDropdownStatesSecond] = useState<string | null>(null);
@@ -82,6 +84,10 @@ const MasterPage = () => {
   const parentRefReview = useRef<Instance | null>(null);
   const parentRefRecognition = useRef<Instance | null>(null);
   const parentRefBreakdown = useRef<Instance | null>(null);
+
+  // const [carrierFilter, setCarrierFilter] = useState("");
+
+
 
   const router = useRouter();
 
@@ -99,7 +105,6 @@ const MasterPage = () => {
     { status: "deleted", color: "text-red-600", bgColor: "bg-red-100" },
     { status: "denied", color: "text-[#AF9918]", bgColor: "bg-[#faf1be]" },
   ];
-
   const recognitionOptions = [
     { status: "new", color: "text-blue-600", bgColor: "bg-blue-100" },
     { status: "inProgress", color: "text-yellow-600", bgColor: "bg-yellow-100" },
@@ -108,7 +113,6 @@ const MasterPage = () => {
     { status: "failure", color: "text-red-600", bgColor: "bg-red-100" },
     { status: "sent", color: "text-green-600", bgColor: "bg-green-100" },
   ];
-
   const breakdownOptions = [
     { status: "none", color: "text-blue-600", bgColor: "bg-blue-100" },
     { status: "damaged", color: "text-yellow-600", bgColor: "bg-yellow-100" },
@@ -118,9 +122,61 @@ const MasterPage = () => {
   ];
 
 
+  const isAnyFilterApplied = [
+    finalStatusFilter,
+    reviewStatusFilter,
+    reasonStatusFilter,
+    reviewByStatusFilter,
+    podDateFilter,
+    podDateSignatureFilter,
+    jobNameFilter,
+    bolNumberFilter,
+  ].some((filter) => filter.trim() !== "");
+
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (localStorage.getItem("prev") === "") {
+        setFinalStatusFilter(sessionStorage.getItem("finalStatusFilter") || "");
+        setReviewStatusFilter(sessionStorage.getItem("reviewStatusFilter") || "");
+        setReasonStatusFilter(sessionStorage.getItem("reasonStatusFilter") || "");
+        setReviewByStatusFilter(sessionStorage.getItem("reviewByStatusFilter") || "");
+        setPodDateFilter(sessionStorage.getItem("podDateFilter") || "");
+        setPodDateSignatureFilter(sessionStorage.getItem("podDateSignatureFilter") || "");
+        setJobNameFilter(sessionStorage.getItem("jobNameFilter") || "");
+        setBolNumberFilter(sessionStorage.getItem("bolNumberFilter") || "");
+        setIsLoading(false);
+        console.log("session 1");
+
+      }
+      else {
+        sessionStorage.setItem("finalStatusFilter", "");
+        sessionStorage.setItem("reviewStatusFilter", "");
+        sessionStorage.setItem("reasonStatusFilter", "");
+        sessionStorage.setItem("reviewByStatusFilter", "");
+        sessionStorage.setItem("podDateFilter", "");
+        sessionStorage.setItem("podDateSignatureFilter", "");
+        sessionStorage.setItem("jobNameFilter", "");
+        sessionStorage.setItem("bolNumberFilter", "");
+        setFinalStatusFilter("");
+        setReviewStatusFilter("");
+        setReasonStatusFilter("");
+        setReviewByStatusFilter("");
+        setPodDateFilter("");
+        setPodDateSignatureFilter("");
+        setJobNameFilter("");
+        setBolNumberFilter("");
+        setIsLoading(false);
+        console.log("session 2");
+
+      }
+    }
+    console.log("session 0");
+  }, []);
+
+
   // useEffect(() => {
   //   const savedState = sessionStorage.getItem("sidebar");
-  //   console.log(savedState);
   //   if (savedState) setIsSidebarExpanded(JSON.parse(savedState));
   // }, []);
 
@@ -324,17 +380,50 @@ const MasterPage = () => {
 
   const fetchJobs = useCallback(async () => {
     try {
+      console.log("session 4");
       setLoadingTable(true);
+
+      // Read directly from sessionStorage to avoid timing issues
+      const filters = {
+        bolNumber: sessionStorage.getItem("bolNumberFilter") || "",
+        finalStatus: sessionStorage.getItem("finalStatusFilter") || "",
+        reviewStatus: sessionStorage.getItem("reviewStatusFilter") || "",
+        reasonStatus: sessionStorage.getItem("reasonStatusFilter") || "",
+        reviewByStatus: sessionStorage.getItem("reviewByStatusFilter") || "",
+        podDate: sessionStorage.getItem("podDateFilter") || "",
+        podDateSignature: sessionStorage.getItem("podDateSignatureFilter") || "",
+        jobName: sessionStorage.getItem("jobNameFilter") || "",
+      };
+
+      // Check if all filters are empty
+      const hasFilters = Object.values(filters).some((filter) => filter.trim() !== "");
+      if (!hasFilters) {
+        console.log("No filters applied. Skipping fetch.");
+        setLoadingTable(false);
+        return;
+      }
+
       const queryParams = new URLSearchParams();
       queryParams.set("page", currentPage.toString());
-      if (bolNumberFilter) queryParams.set("bolNumber", bolNumberFilter.trim());
-      if (finalStatusFilter) queryParams.set("recognitionStatus", finalStatusFilter);
-      if (reviewStatusFilter) queryParams.set("reviewStatus", reviewStatusFilter);
-      if (reasonStatusFilter) queryParams.set("breakdownReason", reasonStatusFilter);
-      if (reviewByStatusFilter) queryParams.set("reviewByStatus", reviewByStatusFilter);
-      if (podDateFilter) queryParams.set("podDate", podDateFilter);
-      if (podDateSignatureFilter) queryParams.set("podDateSignature", podDateSignatureFilter.trim());
-      if (jobNameFilter) queryParams.set("jobName", jobNameFilter.trim());
+
+      if (filters.bolNumber) queryParams.set("bolNumber", filters.bolNumber.trim());
+      if (filters.finalStatus) queryParams.set("recognitionStatus", filters.finalStatus);
+      if (filters.reviewStatus) queryParams.set("reviewStatus", filters.reviewStatus);
+      if (filters.reasonStatus) queryParams.set("breakdownReason", filters.reasonStatus);
+      if (filters.reviewByStatus) queryParams.set("reviewByStatus", filters.reviewByStatus);
+      if (filters.podDate) queryParams.set("podDate", filters.podDate);
+      if (filters.podDateSignature) queryParams.set("podDateSignature", filters.podDateSignature.trim());
+      if (filters.jobName) queryParams.set("jobName", filters.jobName.trim());
+
+
+      // if (bolNumberFilter) queryParams.set("bolNumber", bolNumberFilter.trim());
+      // if (finalStatusFilter) queryParams.set("recognitionStatus", finalStatusFilter);
+      // if (reviewStatusFilter) queryParams.set("reviewStatus", reviewStatusFilter);
+      // if (reasonStatusFilter) queryParams.set("breakdownReason", reasonStatusFilter);
+      // if (reviewByStatusFilter) queryParams.set("reviewByStatus", reviewByStatusFilter);
+      // if (podDateFilter) queryParams.set("podDate", podDateFilter);
+      // if (podDateSignatureFilter) queryParams.set("podDateSignature", podDateSignatureFilter.trim());
+      // if (jobNameFilter) queryParams.set("jobName", jobNameFilter.trim());
       // if (carrierFilter) queryParams.set("carrier", carrierFilter.trim());
 
       // console.log("Query Params:", queryParams.toString());
@@ -367,59 +456,26 @@ const MasterPage = () => {
   ]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      if (localStorage.getItem("prev") === "") {
-        setFinalStatusFilter(sessionStorage.getItem("finalStatusFilter") || "");
-        setReviewStatusFilter(sessionStorage.getItem("reviewStatusFilter") || "");
-        setReasonStatusFilter(sessionStorage.getItem("reasonStatusFilter") || "");
-        setReviewByStatusFilter(sessionStorage.getItem("reviewByStatusFilter") || "");
-        setPodDateFilter(sessionStorage.getItem("podDateFilter") || "");
-        setPodDateSignatureFilter(sessionStorage.getItem("podDateSignatureFilter") || "");
-        setJobNameFilter(sessionStorage.getItem("jobNameFilter") || "");
-        setBolNumberFilter(sessionStorage.getItem("bolNumberFilter") || "");
-        setIsLoading(false);
-        console.log("session 1");
-
-      }
-      else {
-        sessionStorage.setItem("finalStatusFilter", "");
-        sessionStorage.setItem("reviewStatusFilter", "");
-        sessionStorage.setItem("reasonStatusFilter", "");
-        sessionStorage.setItem("reviewByStatusFilter", "");
-        sessionStorage.setItem("podDateFilter", "");
-        sessionStorage.setItem("podDateSignatureFilter", "");
-        sessionStorage.setItem("jobNameFilter", "");
-        sessionStorage.setItem("bolNumberFilter", "");
-        setFinalStatusFilter("");
-        setReviewStatusFilter("");
-        setReasonStatusFilter("");
-        setReviewByStatusFilter("");
-        setPodDateFilter("");
-        setPodDateSignatureFilter("");
-        setJobNameFilter("");
-        setBolNumberFilter("");
-        setIsLoading(false);
-        console.log("session 2");
-
-      }
-    }
-    console.log("session");
-  }, []);
-
-
-  useEffect(() => {
-    if (!isLoading && currentPage) {
-      fetchJobs();
-    }
+    fetchJobs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, currentPage])
+    console.log("session 8");
+  }, [currentPage])
 
   const handleFilterApply = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    sessionStorage.setItem("finalStatusFilter", finalStatusFilter);
+    sessionStorage.setItem("reviewStatusFilter", reviewStatusFilter);
+    sessionStorage.setItem("reasonStatusFilter", reasonStatusFilter);
+    sessionStorage.setItem("reviewByStatusFilter", reviewByStatusFilter);
+    sessionStorage.setItem("podDateFilter", podDateFilter);
+    sessionStorage.setItem("podDateSignatureFilter", podDateSignatureFilter);
+    sessionStorage.setItem("jobNameFilter", jobNameFilter);
+    sessionStorage.setItem("bolNumberFilter", bolNumberFilter);
     fetchJobs();
   };
 
   const resetFiltersAndFetch = async () => {
+    // Reset state values and clear sessionStorage
     sessionStorage.setItem("finalStatusFilter", "");
     sessionStorage.setItem("reviewStatusFilter", "");
     sessionStorage.setItem("reasonStatusFilter", "");
@@ -432,12 +488,14 @@ const MasterPage = () => {
     setReviewStatusFilter("");
     setReasonStatusFilter("");
     setReviewByStatusFilter("");
-    setBolNumberFilter("");
     setPodDateFilter("");
     setPodDateSignatureFilter("");
     setJobNameFilter("");
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    setBolNumberFilter("");
+    console.log("session 5");
+    setMaster([]);
     await fetchJobs();
+    console.log("session 6");
   };
 
 
@@ -452,6 +510,7 @@ const MasterPage = () => {
       sessionStorage.setItem("jobNameFilter", jobNameFilter);
       sessionStorage.setItem("bolNumberFilter", bolNumberFilter);
     }
+    console.log("session 7");
   };
 
   const handlePageChange = (newPage: number) => {
@@ -836,7 +895,11 @@ const MasterPage = () => {
 
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#005B97] text-white rounded-lg hover:bg-[#2270a3]"
+                  className={`px-4 py-2 rounded-lg ${isAnyFilterApplied
+                    ? "bg-[#005B97] text-white hover:bg-[#2270a3]"
+                    : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                    }`}
+                  disabled={!isAnyFilterApplied}
                 >
                   Apply Filters
                 </button>
