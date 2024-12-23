@@ -77,3 +77,13 @@ div.rdtPicker input.form-control{
 .rs-picker-input-group .rs-input-group .rs-input-group-inside:focus {
   border-color: none !important;
 }
+.tippy-box {
+  background: none !important; 
+  box-shadow: none !important; 
+  border: none !important; 
+  padding: 0 !important;
+}
+
+.tippy-content {
+  padding: 0 !important
+}

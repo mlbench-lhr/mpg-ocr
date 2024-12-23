@@ -207,7 +207,7 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                 </li>
                             </Link>
                         )}
-                        <Link href="/extracted-data-monitoring">
+                        <Link href="/extracted-data-monitoring" onClick={()=>{localStorage.setItem("prev","/roles-requests")}}>
                             <li
                                 className={`flex items-center mb-2 ${isExpanded ? 'justify-start' : 'justify-center'
                                     } space-x-3 px-4 py-2 rounded-lg transition-all ${isActive("/extracted-data-monitoring")
