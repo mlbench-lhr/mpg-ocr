@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
 import ForgotPasswordModal from "../components/ForgotPasswordModal";
 import ResetPasswordModal from "../components/ResetPasswordModal";
+import Router from "next/router";
+
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -20,7 +22,7 @@ export default function LoginPage() {
 
   const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -48,10 +50,18 @@ export default function LoginPage() {
       } else {
         setError("An unexpected error occurred");
       }
-    } finally {
       setLoading(false);
+    } finally {
+      Router.events.on("routeChangeComplete", () => setLoading(false));
     }
-  };
+  }, [email, password, router]);
+
+  useEffect(() => {
+    return () => {
+      Router.events.off("routeChangeComplete", () => setLoading(false));
+    };
+  }, []);
+
 
   const openForgotPasswordModal = () => setIsForgotPasswordVisible(true);
   const closeForgotPasswordModal = () => setIsForgotPasswordVisible(false);

@@ -130,8 +130,6 @@ export default function DBConnectionPage() {
                 timer: 3000,
                 showConfirmButton: false,
             });
-
-            // router.push("/jobs");
         } catch (err: unknown) {
             if (err instanceof Error) {
                 setError(err.message);
