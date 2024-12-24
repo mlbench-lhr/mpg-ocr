@@ -550,7 +550,14 @@ const MasterPage = () => {
           </>
           }
           buttonContent={
-            <Link href="/history">
+            <Link
+              href={{
+                pathname: '/history',
+                query: selectedRows.length > 0
+                  ? { selectedRows: JSON.stringify(selectedRows) }
+                  : undefined,
+              }}
+            >
               <button className="bg-[#005B97] rounded-lg py-2 px-10 text-white md:mt-0 w-60 md:w-auto">
                 History
               </button>
@@ -558,7 +565,7 @@ const MasterPage = () => {
 
           }
         />
-
+        {/* href="/history" */}
 
         <div className="flex-1 px-2 bg-white">
           <div

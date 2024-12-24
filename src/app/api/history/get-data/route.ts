@@ -33,27 +33,50 @@ export async function GET(req: Request) {
     try {
         const client = await clientPromise;
         const db = client.db("my-next-app");
-
         const dataCollection = db.collection<Job>("mockData");
-
         const url = new URL(req.url);
-
         const page = parseInt(url.searchParams.get("page") || "1", 10);
-        const limit = parseInt(url.searchParams.get("limit") || "10", 10);  
+        const limit = parseInt(url.searchParams.get("limit") || "10", 10);
         const skip = (page - 1) * limit;
 
         const searchQuery = url.searchParams.get("search") || "";
+        const selectedRowsParam = url.searchParams.get("selectedRows") || "";
 
-        const filter: Filter<Job> = {
-            $or: [
-                { updatedAt: { $exists: true } },
-                { $expr: { $gt: ["$updatedAt", "$createdAt"] } },
-            ],
-        };
+        let filter: Filter<Job> = {};
 
+        if (selectedRowsParam) {
+            const selectedRows = JSON.parse(selectedRowsParam);
+            filter = {
+                $and: [
+                    {
+                        _id: { $in: selectedRows.map((id: string) => new ObjectId(id)) },
+                    },
+                    {
+                        $or: [
+                            { updatedAt: { $exists: true } },
+                            { $expr: { $gt: ["$updatedAt", "$createdAt"] } },
+                        ],
+                    },
+                ],
+            };
+        } else {
+            filter = {
+                $or: [
+                    { updatedAt: { $exists: true } },
+                    { $expr: { $gt: ["$updatedAt", "$createdAt"] } },
+                ],
+            };
+        }
+
+
+        // const filter: Filter<Job> = {
+        //     $or: [
+        //         { updatedAt: { $exists: true } },
+        //         { $expr: { $gt: ["$updatedAt", "$createdAt"] } },
+        //     ],
+        // };
         if (searchQuery) {
             const searchRegex = { $regex: searchQuery, $options: "i" };
-
             filter.$and = [
                 ...(filter.$and || []),
                 {

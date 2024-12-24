@@ -120,6 +120,10 @@ export async function POST(req: Request) {
 
             data.jobName = job.jobName;
 
+            if (typeof data.blNumber === "number") {
+                data.blNumber = data.blNumber.toString();
+            }
+
             bulkOps.push({
                 insertOne: {
                     document: {
