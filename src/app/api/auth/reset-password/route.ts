@@ -11,7 +11,6 @@ export async function POST(req: Request) {
   try {
     const { email, password }: { email: string; password: string } = await req.json();
 
-    // Validate input
     if (!email || !password) {
       return NextResponse.json(
         { message: "Email and password are required." },
@@ -26,7 +25,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Database connection
     const db = await getDatabase();
     const user = await findUserByEmail(db, email);
 
@@ -37,7 +35,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Hash and update the password
     const hashedPassword = await bcrypt.hash(password, 10);
     await updatePassword(db, email, hashedPassword);
 
@@ -46,7 +43,7 @@ export async function POST(req: Request) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error during password reset:", error);
+    console.log("Error during password reset:", error);
     return NextResponse.json(
       { message: "Internal server error." },
       { status: 500 }
@@ -54,7 +51,6 @@ export async function POST(req: Request) {
   }
 }
 
-// Helper Functions
 async function getDatabase() {
   const client = await clientPromise;
   return client.db(DB_NAME);

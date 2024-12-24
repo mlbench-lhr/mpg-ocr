@@ -34,18 +34,10 @@ const JobPage = () => {
 
   const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
 
-  // useEffect(() => {
-  //   const savedState = sessionStorage.getItem("sidebar");
-  //   console.log(savedState);
-  //   if (savedState) setIsSidebarExpanded(JSON.parse(savedState));
-  // }, []);
-
 
   const handleSidebarStateChange = (newState: boolean) => {
-    console.log("Sidebar state updated in parent:", newState);
     setIsSidebarExpanded(newState);
   };
-
 
 
   useEffect(() => {
@@ -115,7 +107,7 @@ const JobPage = () => {
         });
       } else {
         const errorData = await res.json();
-        console.error("Error updating status:", errorData.error);
+        console.log("Error updating status:", errorData.error);
 
         Swal.fire({
           icon: "error",
@@ -124,7 +116,7 @@ const JobPage = () => {
         });
       }
     } catch (error) {
-      console.error("Error updating status:", error);
+      console.log("Error updating status:", error);
 
       Swal.fire({
         icon: "error",
@@ -146,7 +138,7 @@ const JobPage = () => {
       setEditingJob(jobData);
       setIsEditModalOpen(true);
     } catch (error) {
-      console.error("Error fetching job data:", error);
+      console.log("Error fetching job data:", error);
     }
   };
 
@@ -203,7 +195,7 @@ const JobPage = () => {
           });
         } else {
           const errorData = await response.json();
-          console.error("Failed to delete job:", errorData.error || "Unknown error");
+          console.log("Failed to delete job:", errorData.error || "Unknown error");
           Swal.fire({
             icon: "error",
             title: "Delete Failed",
@@ -211,7 +203,7 @@ const JobPage = () => {
           });
         }
       } catch (error) {
-        console.error("Error deleting job:", error);
+        console.log("Error deleting job:", error);
         Swal.fire({
           icon: "error",
           title: "Unexpected Error",
@@ -236,11 +228,10 @@ const JobPage = () => {
         setTotalJobs(data.totalJobs);
         return data.jobs;
       } else {
-        console.error("Failed to fetch jobs");
         return [];
       }
     } catch (error) {
-      console.error("Error fetching jobs:", error);
+      console.log("Error fetching jobs:", error);
       return []; 
     } finally {
       setLoadingTable(false);
@@ -258,9 +249,7 @@ const JobPage = () => {
 
   return (
     <div className="flex flex-row h-screen bg-white">
-      {/* <Sidebar onToggleExpand={handleSidebarToggle} /> */}
       <Sidebar onStateChange={handleSidebarStateChange} />
-
       <div
         className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isSidebarExpanded ? "ml-64" : "ml-24"
           }`}

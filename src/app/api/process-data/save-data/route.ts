@@ -1,4 +1,3 @@
-
 // import { NextResponse } from 'next/server';
 // import clientPromise from "@/lib/mongodb";
 // import { ObjectId } from "mongodb";
@@ -57,7 +56,7 @@
 //         // Return the result of the insertion
 //         return NextResponse.json({ message: "Data saved successfully", insertedId: result.insertedId }, { status: 200 });
 //     } catch (error) {
-//         console.error("Error saving mock data:", error);
+//         console.log("Error saving mock data:", error);
 //         return NextResponse.json({ error: "Failed to save mock data" }, { status: 500 });
 //     }
 // }
@@ -139,7 +138,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "No valid data to save" }, { status: 400 });
         }
     } catch (error) {
-        console.error("Error saving mock data:", error);
+        console.log("Error saving mock data:", error);
         return NextResponse.json({ error: "Failed to save mock data" }, { status: 500 });
     }
 }

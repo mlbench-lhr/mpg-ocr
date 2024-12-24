@@ -15,7 +15,6 @@ export async function POST(req: Request) {
     const client = await clientPromise;
     const db = client.db('my-next-app');
 
-    // Perform deletion in the database
     const result = await db.collection('mockData').deleteMany({ _id: { $in: objectIds } });
 
     return NextResponse.json({
@@ -23,7 +22,7 @@ export async function POST(req: Request) {
       deletedCount: result.deletedCount,
     }, { status: 200 });
   } catch (error) {
-    console.error('Error deleting rows:', error);
+    console.log('Error deleting rows:', error);
     return NextResponse.json({ error: 'Failed to delete rows' }, { status: 500 });
   }
 }

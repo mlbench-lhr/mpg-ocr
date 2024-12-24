@@ -52,7 +52,6 @@ const JobDetail = () => {
    
 
     const handleSidebarStateChange = (newState: boolean) => {
-        console.log("Sidebar state updated in parent:", newState);
         setIsSidebarExpanded(newState);
     };
 
@@ -71,10 +70,9 @@ const JobDetail = () => {
                     throw new Error("Failed to fetch job history");
                 }
                 const data = await response.json();
-                console.log(data);
                 setJobHistory(data);
             } catch (err) {
-                console.error("Error fetching job history:", err);
+                console.log("Error fetching job history:", err);
                 setError("Failed to fetch job history");
             } finally {
                 setLoading(false);

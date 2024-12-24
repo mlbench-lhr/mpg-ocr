@@ -45,8 +45,8 @@ div.rdtPicker input.form-control{
 }
 
 .custom-date-input[type="date"] {
-  -moz-appearance: textfield; /* Hide default calendar icon for Firefox */
-  appearance: none; /* Hide default calendar icon for Chrome/Safari */
+  -moz-appearance: textfield; 
+  appearance: none;
 }
 
 .custom-time-input[type="time"]::-webkit-calendar-picker-indicator {
@@ -54,12 +54,12 @@ div.rdtPicker input.form-control{
 }
 
 .custom-time-input[type="time"] {
-  -moz-appearance: textfield; /* Hide default calendar icon for Firefox */
-  appearance: none; /* Hide default calendar icon for Chrome/Safari */
+  -moz-appearance: textfield; 
+  appearance: none;
 }
 
 .rs-picker-popup.rs-picker-popup-date {
- z-index: 1050 !important; /* Ensure this is above your modal */
+ z-index: 1050 !important;
 }
 
 .rs-input-group.rs-input-group-inside {

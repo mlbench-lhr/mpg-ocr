@@ -27,11 +27,10 @@ interface Job {
   receiverSignature: string;
 }
 
-// Handle GET requests for a single job by ID
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
-    const id = url.pathname.split("/").pop(); // Extract the ID from the URL path
+    const id = url.pathname.split("/").pop();
 
     if (!id) {
       return NextResponse.json({ error: "Job ID is required" }, { status: 400 });
@@ -42,7 +41,6 @@ export async function GET(req: Request) {
 
     const dataCollection = db.collection<Job>("mockData");
 
-    // Fetch the job by its ObjectId
     const job = await dataCollection.findOne({ _id: new ObjectId(id) });
 
     if (!job) {
@@ -51,10 +49,84 @@ export async function GET(req: Request) {
 
     return NextResponse.json(job, { status: 200 });
   } catch (error) {
-    console.error("Error fetching job by ID:", error);
+    console.log("Error fetching job by ID:", error);
     return NextResponse.json({ error: "Failed to fetch job." }, { status: 500 });
   }
 }
+
+export async function PATCH(req: Request) {
+  try {
+    const url = new URL(req.url);
+    const id = url.pathname.split("/").pop();
+
+    if (!id) {
+      return NextResponse.json({ error: "Job ID is required" }, { status: 400 });
+    }
+
+    const updatedJobData = await req.json();
+
+    const headers = req.headers;
+    const changedBy = headers.get("x-user-name") || "Unknown User";
+
+    const client = await clientPromise;
+    const db = client.db("my-next-app");
+
+    const dataCollection = db.collection("mockData");
+    const historyCollection = db.collection("jobHistory");
+
+    const existingJob = await dataCollection.findOne({ _id: new ObjectId(id) });
+
+    if (!existingJob) {
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    }
+
+    const historyEntries = [];
+    for (const [key, newValue] of Object.entries(updatedJobData)) {
+      const oldValue = existingJob[key];
+      if (oldValue != newValue) {
+        historyEntries.push({
+          jobId: new ObjectId(id),
+          field: key,
+          oldValue: oldValue,
+          newValue: newValue,
+          changedBy: changedBy,
+          changedOn: new Date(),
+        });
+      }
+    }
+
+    if (historyEntries.length === 0) {
+      return NextResponse.json({ message: "No changes detected." }, { status: 200 });
+    }
+
+    updatedJobData.updatedAt = new Date();
+
+    const result = await dataCollection.updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: updatedJobData,
+      }
+    );
+
+    if (result.modifiedCount === 0) {
+      return NextResponse.json({ error: "No changes made" }, { status: 400 });
+    }
+
+    if (historyEntries.length > 0) {
+      await historyCollection.insertMany(historyEntries);
+    }
+
+    return NextResponse.json({ message: "Job updated successfully" }, { status: 200 });
+  } catch (error) {
+    console.log("Error updating job:", error);
+    return NextResponse.json({ error: "Failed to update job." }, { status: 500 });
+  }
+}
+
+export async function OPTIONS() {
+  return NextResponse.json({ allowedMethods: ["GET", "PATCH"] });
+}
+
 
 // Handle PATCH requests to update job data
 // export async function PATCH(req: Request) {
@@ -88,7 +160,7 @@ export async function GET(req: Request) {
 
 //     return NextResponse.json({ message: "Job updated successfully" }, { status: 200 });
 //   } catch (error) {
-//     console.error("Error updating job:", error);
+//     console.log("Error updating job:", error);
 //     return NextResponse.json({ error: "Failed to update job." }, { status: 500 });
 //   }
 // }
@@ -127,89 +199,7 @@ export async function GET(req: Request) {
 
 //     return NextResponse.json({ message: "Job updated successfully" }, { status: 200 });
 //   } catch (error) {
-//     console.error("Error updating job:", error);
+//     console.log("Error updating job:", error);
 //     return NextResponse.json({ error: "Failed to update job." }, { status: 500 });
 //   }
 // }
-
-
-export async function PATCH(req: Request) {
-  try {
-    const url = new URL(req.url);
-    const id = url.pathname.split("/").pop(); // Extract the ID from the URL path
-
-    if (!id) {
-      return NextResponse.json({ error: "Job ID is required" }, { status: 400 });
-    }
-
-    // Parse the request body to get updated job data
-    const updatedJobData = await req.json();
-
-    const headers = req.headers;
-    const changedBy = headers.get("x-user-name") || "Unknown User";
-
-    const client = await clientPromise;
-    const db = client.db("my-next-app");
-
-    const dataCollection = db.collection("mockData");
-    const historyCollection = db.collection("jobHistory");
-
-    // Find the existing job document
-    const existingJob = await dataCollection.findOne({ _id: new ObjectId(id) });
-
-    if (!existingJob) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
-    }
-
-    // Prepare history entries for changes
-    const historyEntries = [];
-    for (const [key, newValue] of Object.entries(updatedJobData)) {
-      const oldValue = existingJob[key];
-      if (oldValue != newValue) {
-        historyEntries.push({
-          jobId: new ObjectId(id),      
-          field: key,                   
-          oldValue: oldValue,          
-          newValue: newValue,
-          changedBy: changedBy,
-          changedOn: new Date(),
-        });
-      }
-    }
-
-     // If no changes, return early without updating
-     if (historyEntries.length === 0) {
-      return NextResponse.json({ message: "No changes detected." }, { status: 200 });
-    }
-
-    // Add the updatedAt timestamp to the updated data
-    updatedJobData.updatedAt = new Date();
-
-    // Update the job in the database
-    const result = await dataCollection.updateOne(
-      { _id: new ObjectId(id) },
-      {
-        $set: updatedJobData,
-      }
-    );
-
-    if (result.modifiedCount === 0) {
-      return NextResponse.json({ error: "No changes made" }, { status: 400 });
-    }
-
-    // Insert history entries if there are any changes
-    if (historyEntries.length > 0) {
-      await historyCollection.insertMany(historyEntries);
-    }
-
-    return NextResponse.json({ message: "Job updated successfully" }, { status: 200 });
-  } catch (error) {
-    console.error("Error updating job:", error);
-    return NextResponse.json({ error: "Failed to update job." }, { status: 500 });
-  }
-}
-
-// Handle OPTIONS requests
-export async function OPTIONS() {
-  return NextResponse.json({ allowedMethods: ["GET", "PATCH"] });
-}

@@ -36,12 +36,10 @@ export async function GET(req: Request) {
 
         const url = new URL(req.url);
 
-        // Pagination
         const page = parseInt(url.searchParams.get("page") || "1", 10);
         const limit = parseInt(url.searchParams.get("limit") || "50", 10);
         const skip = (page - 1) * limit;
 
-        // Filters
         const recognitionStatus = url.searchParams.get("recognitionStatus") || "";
         const reviewStatus = url.searchParams.get("reviewStatus") || "";
         const reviewByStatus = url.searchParams.get("reviewByStatus") || "";
@@ -55,7 +53,6 @@ export async function GET(req: Request) {
 
         const filter: Filter<Job> = {};
 
-        // Add case-insensitive filters for specific fields
         if (podDateSignature) {
             filter.podSignature = { $regex: podDateSignature.trim(), $options: "i" };
         }
@@ -69,7 +66,6 @@ export async function GET(req: Request) {
             filter.jobName = { $regex: jobName.trim(), $options: "i" };
         }
 
-        // Add case-insensitive search across multiple fields
         if (searchQuery) {
             const searchRegex = { $regex: searchQuery, $options: "i" };
             filter.$or = [
@@ -86,7 +82,6 @@ export async function GET(req: Request) {
         if (breakdownReason) filter.breakdownReason = breakdownReason;
         if (podDate) filter.podDate = podDate;
 
-        // Fetch data from MongoDB
         const jobs = await dataCollection.find(filter).skip(skip).limit(limit).toArray();
         const totalJobs = await dataCollection.countDocuments(filter);
 
@@ -95,7 +90,7 @@ export async function GET(req: Request) {
             { status: 200 }
         );
     } catch (error) {
-        console.error("Error fetching jobs:", error);
+        console.log("Error fetching jobs:", error);
         return NextResponse.json({ error: "Failed to fetch jobs." }, { status: 500 });
     }
 }

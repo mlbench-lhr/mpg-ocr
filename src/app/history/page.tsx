@@ -44,7 +44,6 @@ export default function Page() {
     const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
 
     const handleSidebarStateChange = (newState: boolean) => {
-        console.log("Sidebar state updated in parent:", newState);
         setIsSidebarExpanded(newState);
     };
 
@@ -62,15 +61,14 @@ export default function Page() {
 
             if (response.ok) {
                 const data = await response.json();
-                console.log(data.jobs);
                 setUsers(data.jobs);
                 setTotalPages(data.totalPages);
                 setTotalUsers(data.totalJobs);
             } else {
-                console.error("Failed to fetch users");
+                console.log("Failed to fetch users");
             }
         } catch (error) {
-            console.error("Error fetching users:", error);
+            console.log("Error fetching users:", error);
         } finally {
             setLoadingTable(false);
         }

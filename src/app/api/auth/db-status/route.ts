@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { MongoClient, ObjectId } from "mongodb";
 
-// MongoDB client setup
 const client = new MongoClient(process.env.MONGODB_URI || "mongodb://localhost:27017");
 const SECRET_KEY = process.env.NEXT_PUBLIC_JWT_SECRET as string;
 
@@ -31,14 +30,14 @@ const SECRET_KEY = process.env.NEXT_PUBLIC_JWT_SECRET as string;
 //     console.log("Connected to Oracle DB successfully");
 //     return true; // Return true if connected successfully
 //   } catch (error) {
-//     console.error("Error connecting to Oracle DB:", error);
+//     console.log("Error connecting to Oracle DB:", error);
 //     return false; // Return false if the connection failed
 //   } finally {
 //     if (connection) {
 //       try {
 //         await connection.close(); // Close the connection
 //       } catch (err) {
-//         console.error("Error closing Oracle DB connection:", err);
+//         console.log("Error closing Oracle DB connection:", err);
 //       }
 //     }
 //   }
@@ -46,25 +45,20 @@ const SECRET_KEY = process.env.NEXT_PUBLIC_JWT_SECRET as string;
 
 
 
-// API route to save or update the DB connection details
 export async function POST(req: NextRequest) {
   try {
-    // Extract the token from the Authorization header
     const token = req.headers.get("Authorization")?.split(" ")[1];
 
     if (!token) {
       return NextResponse.json({ message: "Authentication required" }, { status: 401 });
     }
 
-    // Verify and decode the JWT token
     const decoded = jwt.verify(token, SECRET_KEY) as { id: string };
     const userId = decoded.id;
 
-    // Get the database connection details from the request body
     const body = await req.json();
     const { systemID, userName, password, ipAddress, portNumber, serviceName } = body;
 
-    // Validate the fields
     if (!systemID || !userName || !password || !ipAddress || !portNumber || !serviceName) {
       return NextResponse.json({ message: "All fields are required" }, { status: 400 });
     }
@@ -76,18 +70,15 @@ export async function POST(req: NextRequest) {
     //   return NextResponse.json({ message: "Failed to connect to Oracle DB" }, { status: 500 });
     // }
 
-    // Connect to MongoDB
     await client.connect();
     const db = client.db("my-next-app");
     const connectionsCollection = db.collection("db_connections");
 
-    // Check if a connection already exists for the given userId and systemID
     const existingConnection = await connectionsCollection.findOne({
       userId: new ObjectId(userId),
     });
 
     if (existingConnection) {
-      // Update the existing connection if it exists
       const result = await connectionsCollection.updateOne(
         { _id: existingConnection._id },
         {
@@ -108,7 +99,6 @@ export async function POST(req: NextRequest) {
         data: result,
       }, { status: 200 });
     } else {
-      // Insert a new connection if it doesn't exist
       const result = await connectionsCollection.insertOne({
         userId: new ObjectId(userId),
         systemID,
@@ -126,7 +116,7 @@ export async function POST(req: NextRequest) {
       }, { status: 201 });
     }
   } catch (error) {
-    console.error("Error saving or updating DB connection:", error);
+    console.log("Error saving or updating DB connection:", error);
     return NextResponse.json({ message: "An error occurred while connecting to your DB. Please try again." }, { status: 500 });
   }
 }
@@ -153,7 +143,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: false, message: "No data found" }, { status: 404 });
   } catch (error) {
-    console.error("Error fetching connection:", error);
+    console.log("Error fetching connection:", error);
     return NextResponse.json({ success: false, message: "An error occurred" }, { status: 500 });
   }
 }

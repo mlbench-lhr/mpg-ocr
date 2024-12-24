@@ -35,7 +35,7 @@ export async function PUT(req: Request) {
             { status: 200 }
         );
     } catch (error) {
-        console.error("Error updating job:", error);
+        console.log("Error updating job:", error);
         return NextResponse.json(
             { error: "Failed to update job" },
             { status: 500 }

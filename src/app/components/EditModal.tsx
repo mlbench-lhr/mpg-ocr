@@ -89,7 +89,6 @@ const EditModal: React.FC<EditModalProps> = ({ job, onClose, onUpdate }) => {
 
             if (response.ok) {
                 const result = await response.json();
-                console.log("Job updated:", result);
                 onUpdate(result.updatedData);
                 onClose();
                 Swal.fire({
@@ -104,7 +103,7 @@ const EditModal: React.FC<EditModalProps> = ({ job, onClose, onUpdate }) => {
                 setErrorMessage(error.error || "Failed to update job.");
             }
         } catch (error) {
-            console.error("Error updating job:", error);
+            console.log("Error updating job:", error);
             setErrorMessage("An unexpected error occurred.");
         } finally {
             setIsSubmitting(false);

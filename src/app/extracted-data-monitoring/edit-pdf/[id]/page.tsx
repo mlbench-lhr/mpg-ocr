@@ -62,7 +62,6 @@ const JobDetail = () => {
 
 
     const handleSidebarStateChange = (newState: boolean) => {
-        console.log("Sidebar state updated in parent:", newState);
         setIsSidebarExpanded(newState);
     };
 
@@ -117,7 +116,7 @@ const JobDetail = () => {
                     setLoading(false);
                 })
                 .catch((err) => {
-                    console.error("Error fetching job details:", err);
+                    console.log("Error fetching job details:", err);
                     setError("Failed to fetch job details");
                     setLoading(false);
                 });
@@ -205,17 +204,14 @@ const JobDetail = () => {
                 body: JSON.stringify(formData),
             });
 
-            const result = await response.json();
-
             if (response.ok) {
-                console.log("Form data saved successfully:", result);
                 setIsEditMode(false);
             } else {
                 setIsEditMode(false);
                 setSaving(false);
             }
         } catch (error) {
-            console.error("Error saving data:", error);
+            console.log("Error saving data:", error);
         } finally {
             setSaving(false);
         }

@@ -4,7 +4,6 @@ import clientPromise from "@/lib/mongodb";
 import { Db } from "mongodb";
 
 
-// Constants
 const DB_NAME = "my-next-app";
 const OTP_COLLECTION = "otps";
 
@@ -34,12 +33,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "OTP verification failed." }, { status: 400 });
     }
   } catch (error) {
-    console.error("Error during OTP verification:", error);
+    console.log("Error during OTP verification:", error);
     return NextResponse.json({ message: "Internal server error." }, { status: 500 });
   }
 }
 
-// Helper Functions
 async function getDatabase() {
   const client = await clientPromise;
   return client.db(DB_NAME);

@@ -63,7 +63,6 @@ const MasterPage = () => {
   const [name, setName] = useState("");
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
-
   const [finalStatusFilter, setFinalStatusFilter] = useState("");
   const [reviewStatusFilter, setReviewStatusFilter] = useState("");
   const [reasonStatusFilter, setReasonStatusFilter] = useState("");
@@ -83,13 +82,8 @@ const MasterPage = () => {
   const parentRefReview = useRef<Instance | null>(null);
   const parentRefRecognition = useRef<Instance | null>(null);
   const parentRefBreakdown = useRef<Instance | null>(null);
-
   const [firstTime, setFirstTime] = useState(false);
-
-
   // const [carrierFilter, setCarrierFilter] = useState("");
-
-
   const router = useRouter();
 
   const finalOptions = [
@@ -122,18 +116,18 @@ const MasterPage = () => {
     { status: "refused", color: "text-red-600", bgColor: "bg-red-100" },
   ];
 
-
-  // const isAnyFilterApplied = [
-  //   finalStatusFilter,
-  //   reviewStatusFilter,
-  //   reasonStatusFilter,
-  //   reviewByStatusFilter,
-  //   podDateFilter,
-  //   podDateSignatureFilter,
-  //   jobNameFilter,
-  //   bolNumberFilter,
-  // ].some((filter) => filter.trim() !== "");
-
+  const isAnyFilterApplied = () => {
+    return (
+      sessionStorage.getItem("finalStatusFilter") ||
+      sessionStorage.getItem("reviewStatusFilter") ||
+      sessionStorage.getItem("reasonStatusFilter") ||
+      sessionStorage.getItem("reviewByStatusFilter") ||
+      sessionStorage.getItem("podDateFilter") ||
+      sessionStorage.getItem("podDateSignatureFilter") ||
+      sessionStorage.getItem("jobNameFilter") ||
+      sessionStorage.getItem("bolNumberFilter")
+    );
+  };
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -147,7 +141,6 @@ const MasterPage = () => {
         setPodDateSignatureFilter(sessionStorage.getItem("podDateSignatureFilter") || "");
         setJobNameFilter(sessionStorage.getItem("jobNameFilter") || "");
         setBolNumberFilter(sessionStorage.getItem("bolNumberFilter") || "");
-        console.log("session 1");
       }
       else {
         sessionStorage.setItem("finalStatusFilter", "");
@@ -167,12 +160,8 @@ const MasterPage = () => {
         setJobNameFilter("");
         setBolNumberFilter("");
         setFirstTime(false);
-
-        console.log("session 2");
-
       }
     }
-    console.log("session 0");
   }, []);
 
 
@@ -182,35 +171,8 @@ const MasterPage = () => {
   // }, []);
 
   const handleSidebarStateChange = (newState: boolean) => {
-    console.log("Sidebar state updated in parent:", newState);
     setIsSidebarExpanded(newState);
   };
-
-
-
-  // const toggleDropdown = (jobId: string) => {
-  //   if (userRole !== 'standarduser') {
-  //     setDropdownStates((prev) => (prev === jobId ? null : jobId));
-  //   }
-  // };
-
-  // const toggleDropdownFirst = (jobId: string) => {
-  //   if (userRole !== 'standarduser') {
-  //     setDropdownStatesFirst((prev) => (prev === jobId ? null : jobId));
-  //   }
-  // };
-
-  // const toggleDropdownSecond = (jobId: string) => {
-  //   if (userRole !== 'standarduser') {
-  //     setDropdownStatesSecond((prev) => (prev === jobId ? null : jobId));
-  //   }
-  // };
-
-  // const toggleDropdownThird = (jobId: string) => {
-  //   if (userRole !== 'standarduser') {
-  //     setDropdownStatesThird((prev) => (prev === jobId ? null : jobId));
-  //   }
-  // };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -312,12 +274,12 @@ const MasterPage = () => {
         });
       } else {
         const errorData = await res.json();
-        console.error(
+        console.log(
           `Failed to update status: ${errorData.message || "Unknown error"}`
         );
       }
     } catch (error) {
-      console.error("Error updating status:", error);
+      console.log("Error updating status:", error);
     }
   };
 
@@ -368,7 +330,7 @@ const MasterPage = () => {
             });
           }
         } catch (error) {
-          console.error('Error deleting files:', error);
+          console.log('Error deleting files:', error);
           Swal.fire({
             title: 'Error!',
             text: 'Failed to delete files due to a network or server error.',
@@ -381,9 +343,7 @@ const MasterPage = () => {
 
   const fetchJobs = useCallback(async () => {
     try {
-      console.log("session 4");
       setLoadingTable(true);
-
       const filters = {
         bolNumber: sessionStorage.getItem("bolNumberFilter") || "",
         finalStatus: sessionStorage.getItem("finalStatusFilter") || "",
@@ -398,7 +358,6 @@ const MasterPage = () => {
       // Check if all filters are empty
       // const hasFilters = Object.values(filters).some((filter) => filter.trim() !== "");
       // if (!hasFilters) {
-      //   console.log("No filters applied. Skipping fetch.");
       //   setLoadingTable(false);
       //   return;
       // }
@@ -425,10 +384,10 @@ const MasterPage = () => {
         setTotalPages(data.totalPages);
         setTotalJobs(data.totalJobs);
       } else {
-        console.error("Failed to fetch jobs");
+        console.log("Failed to fetch jobs");
       }
     } catch (error) {
-      console.error("Error fetching jobs:", error);
+      console.log("Error fetching jobs:", error);
     } finally {
       setLoadingTable(false);
     }
@@ -447,7 +406,6 @@ const MasterPage = () => {
 
   useEffect(() => {
     if (firstTime) {
-      console.log("session 8");
       fetchJobs();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -483,10 +441,8 @@ const MasterPage = () => {
     setPodDateSignatureFilter("");
     setJobNameFilter("");
     setBolNumberFilter("");
-    console.log("session 5");
     setMaster([]);
     await fetchJobs();
-    console.log("session 6");
   };
 
 
@@ -501,7 +457,6 @@ const MasterPage = () => {
       sessionStorage.setItem("jobNameFilter", jobNameFilter);
       sessionStorage.setItem("bolNumberFilter", bolNumberFilter);
     }
-    console.log("session 7");
   };
 
   const handlePageChange = (newPage: number) => {
@@ -543,6 +498,7 @@ const MasterPage = () => {
 
   return (
     <div className="h-screen bg-white overflow-x-hidden max-w-screen">
+      {/* <Sidebar onToggleExpand={handleSidebarToggle} /> */}
       <Sidebar onStateChange={handleSidebarStateChange} />
       <div
         className={`flex-1 flex flex-col transition-all bg-white duration-300 ${!isSidebarExpanded ? "ml-24" : "ml-64"
@@ -878,29 +834,19 @@ const MasterPage = () => {
 
               <div className="flex justify-end items-center gap-4 col-span-3">
                 <button
-                  className="text-[#005B97] underline cursor-pointer"
+                  className={`text-[#005B97] underline ${!isAnyFilterApplied() ? "text-gray-400 underline cursor-not-allowed" : "cursor-pointer"
+                    }`}
                   onClick={resetFiltersAndFetch}
+                  disabled={!isAnyFilterApplied()}
                 >
                   Reset Filters
                 </button>
-
-                {/* <button
-                  type="submit"
-                  className={`px-4 py-2 rounded-lg ${isAnyFilterApplied
-                    ? "bg-[#005B97] text-white hover:bg-[#2270a3]"
-                    : "bg-gray-400 text-gray-200 cursor-not-allowed"
-                    }`}
-                  disabled={!isAnyFilterApplied}
-                >
-                  Apply Filters
-                </button> */}
                 <button
                   type="submit"
                   className="px-4 py-2 rounded-lg bg-[#005B97] text-white hover:bg-[#2270a3]"
                 >
                   Apply Filters
                 </button>
-
               </div>
             </form>
           </div>
@@ -1107,7 +1053,6 @@ const MasterPage = () => {
                             placement="bottom"
                             arrow={false}
                             zIndex={50}
-                            // onShow={() => setDropdownStates(job._id)}
                             onShow={() => {
                               if (userRole !== "standarduser") {
                                 setDropdownStates(job._id);
@@ -1171,7 +1116,6 @@ const MasterPage = () => {
                             placement="bottom"
                             arrow={false}
                             zIndex={50}
-                            // onShow={() => setDropdownStatesFirst(job._id)}
                             onShow={() => {
                               if (userRole !== "standarduser") {
                                 setDropdownStatesFirst(job._id);
@@ -1279,7 +1223,6 @@ const MasterPage = () => {
                             placement="bottom"
                             arrow={false}
                             zIndex={50}
-                            // onShow={() => setDropdownStatesSecond(job._id)}
                             onShow={() => {
                               if (userRole !== "standarduser") {
                                 setDropdownStatesSecond(job._id);
@@ -1396,7 +1339,6 @@ const MasterPage = () => {
                             placement="bottom"
                             arrow={false}
                             zIndex={50}
-                            // onShow={() => setDropdownStatesThird(job._id)}
                             onShow={() => {
                               if (userRole !== "standarduser") {
                                 setDropdownStatesThird(job._id);

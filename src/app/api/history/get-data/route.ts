@@ -26,7 +26,7 @@ interface Job {
     cargoDescription: string;
     receiverSignature: string;
     createdAt: string;
-    updatedAt?: string; // Optional since not all documents might have it
+    updatedAt?: string;
 }
 
 export async function GET(req: Request) {
@@ -38,12 +38,10 @@ export async function GET(req: Request) {
 
         const url = new URL(req.url);
 
-        // Pagination
         const page = parseInt(url.searchParams.get("page") || "1", 10);
         const limit = parseInt(url.searchParams.get("limit") || "10", 10);  
         const skip = (page - 1) * limit;
 
-        // Filters
         const searchQuery = url.searchParams.get("search") || "";
 
         const filter: Filter<Job> = {
@@ -56,7 +54,6 @@ export async function GET(req: Request) {
         if (searchQuery) {
             const searchRegex = { $regex: searchQuery, $options: "i" };
 
-            // Apply search query to specific fields (blNumber, recognitionStatus)
             filter.$and = [
                 ...(filter.$and || []),
                 {
@@ -68,10 +65,8 @@ export async function GET(req: Request) {
             ];
         }
 
-        // Fetch total count of matching documents (for pagination)
         const totalJobs = await dataCollection.countDocuments(filter);
 
-        // Fetch filtered data with pagination
         const jobs = await dataCollection.find(filter).skip(skip).limit(limit).toArray();
 
         return NextResponse.json(
@@ -79,7 +74,7 @@ export async function GET(req: Request) {
             { status: 200 }
         );
     } catch (error) {
-        console.error("Error fetching jobs:", error);
+        console.log("Error fetching jobs:", error);
         return NextResponse.json({ error: "Failed to fetch jobs." }, { status: 500 });
     }
 }

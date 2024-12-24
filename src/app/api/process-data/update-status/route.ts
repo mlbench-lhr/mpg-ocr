@@ -42,7 +42,7 @@ export async function PATCH(req: Request) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error updating document:", error);
+    console.log("Error updating document:", error);
     return NextResponse.json(
       { error: "Failed to update the field" },
       { status: 500 }

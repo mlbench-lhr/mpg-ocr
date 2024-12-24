@@ -122,12 +122,10 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
         return;
       }
 
-      const responseData = await response.json();
-      console.log("Job added successfully:", responseData);
       onSubmit(jobData);
       onClose();
     } catch (error) {
-      console.error("Error adding job:", error);
+      console.log("Error adding job:", error);
       setErrorMessage("An unexpected error occurred.");
     } finally {
       setIsSubmitting(false);

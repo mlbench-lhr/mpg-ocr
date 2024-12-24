@@ -107,11 +107,11 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                 }
             } else {
                 const errorData = await response.json();
-                console.error('Logout failed:', errorData.message);
+                console.log(errorData);
             }
 
         } catch (error) {
-            console.error('Error during logout:', error);
+            console.log('Error during logout:', error);
         }
     };
 

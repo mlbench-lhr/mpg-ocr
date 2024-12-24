@@ -4,7 +4,6 @@ import clientPromise from "@/lib/mongodb";
 import { Db } from "mongodb";
 
 
-// Constants
 const DB_NAME = "my-next-app";
 const USERS_COLLECTION = "users";
 const OTPS_COLLECTION = "otps";
@@ -13,13 +12,11 @@ export async function POST(req: NextRequest) {
   try {
     const { email }: { email: string } = await req.json();
 
-    // Validate email
     const emailError = validateEmail(email);
     if (emailError) {
       return NextResponse.json({ message: emailError }, { status: 400 });
     }
 
-    // Check user status
     const db = await getDatabase();
     const userExists = await checkUserExists(db, email);
     if (!userExists) {
@@ -29,7 +26,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if OTP already exists
     const otpData = await db.collection(OTPS_COLLECTION).findOne({ email });
     if (otpData && Date.now() - otpData.timestamp < 60 * 1000) {
       return NextResponse.json(
@@ -38,21 +34,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate and save OTP
     const otp = generateOtp();
     await saveOrUpdateOtp(db, email, otp);
-
-    // Send OTP email
     await sendOtpEmail(email, otp);
 
     return NextResponse.json({ message: "OTP sent to your email!" }, { status: 200 });
   } catch (error) {
-    console.error("Error in POST handler:", error);
+    console.log("Error in POST handler:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }
 
-// Helper Functions
 function validateEmail(email: string): string | null {
   if (!email) return "Email is required.";
   const emailRegex = /^\S+@\S+\.\S+$/;
@@ -60,7 +52,7 @@ function validateEmail(email: string): string | null {
 }
 
 function generateOtp(): string {
-  return Math.floor(1000 + Math.random() * 9000).toString(); // 4-digit OTP
+  return Math.floor(1000 + Math.random() * 9000).toString();
 }
 
 async function getDatabase() {

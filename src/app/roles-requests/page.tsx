@@ -75,7 +75,6 @@ export default function Page() {
    
 
     const handleSidebarStateChange = (newState: boolean) => {
-        console.log("Sidebar state updated in parent:", newState);
         setIsSidebarExpanded(newState);
       };
 
@@ -96,10 +95,10 @@ export default function Page() {
                 setTotalPages(data.totalPages);
                 setTotalUsers(data.totalUsers);
             } else {
-                console.error("Failed to fetch users");
+                console.log("Failed to fetch users");
             }
         } catch (error) {
-            console.error("Error fetching users:", error);
+            console.log("Error fetching users:", error);
         } finally {
             setLoadingTable(false);
         }
@@ -143,7 +142,7 @@ export default function Page() {
                 }
             }
         } catch (error) {
-            console.error('Error updating status:', error);
+            console.log('Error updating status:', error);
             Swal.fire('Error!', 'Something went wrong. Please try again later.', 'error');
         }
     };

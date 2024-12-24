@@ -34,7 +34,7 @@
 
 //         return NextResponse.json(jobHistory, { status: 200 });
 //     } catch (error) {
-//         console.error("Error fetching job history:", error);
+//         console.log("Error fetching job history:", error);
 //         return NextResponse.json({ error: "Failed to fetch job history." }, { status: 500 });
 //     }
 // }
@@ -75,7 +75,7 @@ export async function GET(req: Request) {
 
         return NextResponse.json(jobHistory, { status: 200 });
     } catch (error) {
-        console.error("Error fetching job history:", error);
+        console.log("Error fetching job history:", error);
         return NextResponse.json({ error: "Failed to fetch job history." }, { status: 500 });
     }
 }

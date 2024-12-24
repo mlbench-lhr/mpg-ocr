@@ -139,13 +139,10 @@ const EditJobModal: React.FC<EditJobModalProps> = ({ job, onClose, onSubmit }) =
                 return;
             }
 
-            const responseData = await response.json();
-            console.log("Job updated successfully:", responseData);
-
             onSubmit(updatedJob);
             onClose();
         } catch (error) {
-            console.error("Error updating job:", error);
+            console.log("Error updating job:", error);
             setErrorMessage("An unexpected error occurred.");
         } finally {
             setIsSubmitting(false);

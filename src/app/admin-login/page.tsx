@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Image from "next/image";
 import ForgotPasswordModal from "../components/ForgotPasswordModal";
 import ResetPasswordModal from "../components/ResetPasswordModal";
+import Router from "next/router";
+
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -20,7 +22,36 @@ export default function LoginPage() {
 
     const router = useRouter();
 
-    const handleLogin = async (e: React.FormEvent) => {
+    // const handleLogin = useCallback(async (e: React.FormEvent) => {
+    //     e.preventDefault();
+    //     setError(null);
+    //     setLoading(true);
+    //     try {
+    //         const res = await fetch("/api/auth/login", {
+    //             method: "POST",
+    //             headers: { "Content-Type": "application/json" },
+    //             body: JSON.stringify({ email, password, role }),
+    //         });
+
+    //         if (!res.ok) {
+    //             const data = await res.json();
+    //             throw new Error(data.message);
+    //         }
+    //         const { token } = await res.json();
+    //         localStorage.setItem("token", token);
+    //         router.push("/db-connection");
+    //     } catch (err: unknown) {
+    //         if (err instanceof Error) {
+    //             setError(err.message);
+    //         } else {
+    //             setError("An unexpected error occurred");
+    //         }
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // }, [email, password, role, router]);
+
+    const handleLogin = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
         setLoading(true);
@@ -39,7 +70,6 @@ export default function LoginPage() {
 
             const { token } = await res.json();
             localStorage.setItem("token", token);
-
             router.push("/db-connection");
         } catch (err: unknown) {
             if (err instanceof Error) {
@@ -47,10 +77,17 @@ export default function LoginPage() {
             } else {
                 setError("An unexpected error occurred");
             }
-        } finally {
             setLoading(false);
+        } finally {
+            Router.events.on("routeChangeComplete", () => setLoading(false));
         }
-    };
+    }, [email, password, role, router]);
+
+    useEffect(() => {
+        return () => {
+            Router.events.off("routeChangeComplete", () => setLoading(false));
+        };
+    }, []);
 
     const closeForgotPasswordModal = () => setIsForgotPasswordVisible(false);
 

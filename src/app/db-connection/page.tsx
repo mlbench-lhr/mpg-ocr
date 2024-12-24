@@ -131,7 +131,7 @@ export default function DBConnectionPage() {
                 showConfirmButton: false,
             });
 
-            router.push("/jobs");
+            // router.push("/jobs");
         } catch (err: unknown) {
             if (err instanceof Error) {
                 setError(err.message);
@@ -141,10 +141,35 @@ export default function DBConnectionPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [systemID, userName, password, ipAddress, portNumber, serviceName, router]);
+    }, [systemID, userName, password, ipAddress, portNumber, serviceName]);
+
+    const handleJobsAPI = useCallback(async () => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            console.error("Authentication error: Token missing");
+            return;
+        }
+
+        try {
+            const res = await fetch("/jobs", {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!res.ok) {
+                console.error("Error fetching jobs:", await res.text());
+            }
+        } catch (error) {
+            console.error("Background jobs API call failed:", error);
+        }
+    }, []);
 
     useEffect(() => {
         if (isLoading) {
+            handleJobsAPI();
+
             let progress = 0;
             const interval = setInterval(() => {
                 if (progress < 100) {
@@ -158,13 +183,14 @@ export default function DBConnectionPage() {
 
             return () => clearInterval(interval);
         }
-    }, [isLoading]);
+    }, [isLoading, handleJobsAPI]);
 
     useEffect(() => {
         if (loadingComplete) {
             handleDBConnection();
+            router.push("/jobs");
         }
-    }, [loadingComplete, handleDBConnection]);
+    }, [loadingComplete, router, handleDBConnection]);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -177,12 +203,10 @@ export default function DBConnectionPage() {
                 setError(validationError);
                 return;
             }
-
             setIsLoading(true);
             setPercentage(0);
             setLoadingComplete(false);
         }
-
     };
 
     return (

@@ -21,39 +21,34 @@ export async function GET(req: Request) {
         const skip = (page - 1) * limit;
         const searchQuery = url.searchParams.get("search") || "";
 
-        // Base filter: fetch users with status 0 or 2
         let filter: Filter<User> = { status: { $in: [0, 1, 2] } };
 
-        // Add search functionality for name or email
         if (searchQuery) {
-            const searchRegex = { $regex: searchQuery, $options: "i" }; // Case-insensitive search
+            const searchRegex = { $regex: searchQuery, $options: "i" };
             filter = {
                 ...filter,
                 $or: [
-                    { name: searchRegex }, // Match name
-                    { email: searchRegex }, // Match email
-                    { role: searchRegex }, // Match email
+                    { name: searchRegex }, 
+                    { email: searchRegex },
+                    { role: searchRegex },
 
                 ],
             };
         }
 
-        // Fetch users with the applied filters
         const users = await usersCollection.find(filter).skip(skip).limit(limit).toArray();
         const totalUsers = await usersCollection.countDocuments(filter);
 
-        // Return response with users and pagination info
         return NextResponse.json(
             { users, totalUsers, page, totalPages: Math.ceil(totalUsers / limit) },
             { status: 200 }
         );
     } catch (error) {
-        console.error("Error fetching users:", error);
+        console.log("Error fetching users:", error);
         return NextResponse.json({ error: "Failed to fetch users." }, { status: 500 });
     }
 }
 
-// OPTIONS: Define Allowed Methods
 export async function OPTIONS() {
     return NextResponse.json({ allowedMethods: ["GET"] });
 }
