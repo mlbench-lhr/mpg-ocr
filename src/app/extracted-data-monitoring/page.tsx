@@ -62,7 +62,6 @@ const MasterPage = () => {
   const [showButton, setShowButton] = useState(false);
   const [name, setName] = useState("");
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
-
   const [finalStatusFilter, setFinalStatusFilter] = useState("");
   const [reviewStatusFilter, setReviewStatusFilter] = useState("");
   const [reasonStatusFilter, setReasonStatusFilter] = useState("");
@@ -71,13 +70,11 @@ const MasterPage = () => {
   const [podDateSignatureFilter, setPodDateSignatureFilter] = useState("");
   const [jobNameFilter, setJobNameFilter] = useState("");
   const [bolNumberFilter, setBolNumberFilter] = useState("");
-
   const [dropdownStates, setDropdownStates] = useState<string | null>(null);
   const [dropdownStatesFirst, setDropdownStatesFirst] = useState<string | null>(null);
   const [dropdownStatesSecond, setDropdownStatesSecond] = useState<string | null>(null);
   const [dropdownStatesThird, setDropdownStatesThird] = useState<string | null>(null);
   const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
-
   const parentRefFinal = useRef<Instance | null>(null);
   const parentRefReview = useRef<Instance | null>(null);
   const parentRefRecognition = useRef<Instance | null>(null);
@@ -164,7 +161,6 @@ const MasterPage = () => {
     }
   }, []);
 
-
   // useEffect(() => {
   //   const savedState = sessionStorage.getItem("sidebar");
   //   if (savedState) setIsSidebarExpanded(JSON.parse(savedState));
@@ -176,13 +172,10 @@ const MasterPage = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-
     if (!token) {
       router.push("/login");
       return;
     }
-
-
     const decodeJwt = (token: string) => {
       const base64Url = token.split(".")[1];
       const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
@@ -445,7 +438,6 @@ const MasterPage = () => {
     await fetchJobs();
   };
 
-
   const handleRouteChange = () => {
     if (typeof window !== "undefined") {
       sessionStorage.setItem("finalStatusFilter", finalStatusFilter);
@@ -491,10 +483,8 @@ const MasterPage = () => {
     setShowButton(selectedRows.length > 0);
   }, [selectedRows]);
 
-
   if (loading) return <Spinner />;
   if (!isAuthenticated) return <p>Access Denied. Redirecting...</p>;
-
 
   return (
     <div className="h-screen bg-white overflow-x-hidden max-w-screen">
@@ -607,7 +597,7 @@ const MasterPage = () => {
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                    className="absolute inset-y-0 right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-default"
                   >
                     <FiSearch size={20} className="text-[#005B97]" />
                   </button>
@@ -621,7 +611,7 @@ const MasterPage = () => {
                 <div className="relative">
                   <select
                     id="finalStatusFilter"
-                    className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none"
+                    className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none cursor-pointer"
                     value={finalStatusFilter}
                     onChange={(e) => setFinalStatusFilter(e.target.value)}
                   >
@@ -635,7 +625,7 @@ const MasterPage = () => {
                   </select>
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500"
+                    className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500 cursor-default"
                   >
                     <FaChevronDown size={16} className="text-[#005B97]" />
                   </button>
@@ -649,7 +639,7 @@ const MasterPage = () => {
                 <div className="relative">
                   <select
                     id="finalStatusFilter"
-                    className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none"
+                    className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none cursor-pointer"
                     value={reviewStatusFilter}
                     onChange={(e) => setReviewStatusFilter(e.target.value)}
                   >
@@ -662,7 +652,7 @@ const MasterPage = () => {
                   </select>
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500"
+                    className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500 cursor-default"
                   >
                     <FaChevronDown size={16} className="text-[#005B97]" />
                   </button>
@@ -774,7 +764,7 @@ const MasterPage = () => {
                 <div className="relative">
                   <select
                     id="finalStatusFilter"
-                    className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none"
+                    className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none cursor-pointer"
                     value={reviewByStatusFilter}
                     onChange={(e) => setReviewByStatusFilter(e.target.value)}
                   >
@@ -784,7 +774,7 @@ const MasterPage = () => {
                   </select>
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500"
+                    className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500 cursor-default"
                   >
                     <FaChevronDown size={16} className="text-[#005B97]" />
                   </button>
@@ -798,7 +788,7 @@ const MasterPage = () => {
                 <div className="relative">
                   <select
                     id="finalStatusFilter"
-                    className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none"
+                    className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none cursor-pointer"
                     value={reasonStatusFilter}
                     onChange={(e) => setReasonStatusFilter(e.target.value)}
                   >
@@ -812,7 +802,7 @@ const MasterPage = () => {
                   </select>
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500"
+                    className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500 cursor-default"
                   >
                     <FaChevronDown size={16} className="text-[#005B97]" />
                   </button>

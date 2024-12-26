@@ -221,7 +221,7 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
             <div className="relative">
               <select
                 id="everyTime"
-                className="w-full px-4 py-[6px] mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none"
+                className="w-full px-4 py-[6px] mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none cursor-pointer"
                 value={everyTime}
                 onChange={(e) => setEveryTime(e.target.value)}
                 required
@@ -235,7 +235,7 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
               </select>
               <button
                 type="button"
-                className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500"
+                className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500 cursor-default"
               >
                 <FaChevronDown size={16} className="text-[#005B97]" />
               </button>

@@ -24,7 +24,6 @@ export default function Page() {
     const [searchQuery, setSearchQuery] = useState("");
     const [loadingTable, setLoadingTable] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-
     const [users, setUsers] = useState<User[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -70,13 +69,11 @@ export default function Page() {
         setLoadingTable(false);
     }, [router]);
 
-
     const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
-   
 
     const handleSidebarStateChange = (newState: boolean) => {
         setIsSidebarExpanded(newState);
-      };
+    };
 
     const handlePageChange = (newPage: number) => {
         setCurrentPage(newPage);
@@ -147,7 +144,6 @@ export default function Page() {
         }
     };
 
-
     useEffect(() => {
         fetchUsers();
     }, [currentPage, fetchUsers, searchQuery]);
@@ -156,7 +152,7 @@ export default function Page() {
 
     return (
         <div className="flex flex-row h-screen bg-white">
-            <Sidebar onStateChange={handleSidebarStateChange}/>
+            <Sidebar onStateChange={handleSidebarStateChange} />
             <div
                 className={`flex-1 flex flex-col transition-all bg-white duration-300 ${!isSidebarExpanded ? "ml-24" : "ml-64"
                     }`}

@@ -60,7 +60,6 @@ const JobDetail = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [name, setName] = useState("");
 
-
     const handleSidebarStateChange = (newState: boolean) => {
         setIsSidebarExpanded(newState);
     };
@@ -223,7 +222,7 @@ const JobDetail = () => {
 
     if (loading) return <div><Spinner /></div>;
     if (error) return <div>{error}</div>;
-    if (!job) return <div><Spinner /></div>;
+    if (!job) return <>{error}</>;
 
     return (
         <div className="flex flex-row h-screen bg-white">
@@ -253,7 +252,7 @@ const JobDetail = () => {
 
                 <div className="mx-5 flex bg-white pt-3 h-5/6">
 
-                    <div className="flex-auto xl:h-[calc(142vh-6rem)] 2xl:h-screen bg-white relative">
+                    <div className="flex-auto xl:h-[calc(143vh-6rem)] 2xl:h-screen bg-white relative">
 
                         {isLoading && (
                             <div className="absolute inset-0 flex items-start justify-center mt-10 bg-white z-10">

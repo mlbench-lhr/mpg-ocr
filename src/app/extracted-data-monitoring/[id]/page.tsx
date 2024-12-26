@@ -37,8 +37,6 @@ interface Job {
 }
 
 const JobDetail = () => {
-
-
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [job, setJob] = useState<Job | null>(null);
     const [loading, setLoading] = useState(true);
@@ -80,7 +78,6 @@ const JobDetail = () => {
         setLoading(false);
     }, [router]);
 
-
     useEffect(() => {
         if (id) {
             fetch(`/api/process-data/detail-data/${id}`)
@@ -105,8 +102,6 @@ const JobDetail = () => {
         router.back();
     };
 
-   
-
     const handleOpenModal = () => {
         setIsModalOpen(true);
     };
@@ -115,8 +110,6 @@ const JobDetail = () => {
         setIsModalOpen(false);
     };
 
-
-
     const handleUpdateJob = (updatedJob: Job) => {
         setJob(updatedJob);
         setIsModalOpen(false);
@@ -124,7 +117,7 @@ const JobDetail = () => {
 
     if (loading) return <div><Spinner /></div>;
     if (error) return <div>{error}</div>;
-    if (!job) return <div>Job not found</div>;
+    if (!job) return <>{error}</>;
 
     return (
         <div className="flex flex-row h-screen bg-white">

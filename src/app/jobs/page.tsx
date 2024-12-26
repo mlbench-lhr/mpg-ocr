@@ -31,24 +31,18 @@ const JobPage = () => {
   const router = useRouter();
   const [dropdownStates, setDropdownStates] = useState<string | null>(null);
 
-
   const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
-
 
   const handleSidebarStateChange = (newState: boolean) => {
     setIsSidebarExpanded(newState);
   };
 
-
   useEffect(() => {
-
     const token = localStorage.getItem("token");
-
     if (!token) {
       router.push("/admin-login");
       return;
     }
-
     const decodeJwt = (token: string) => {
       const base64Url = token.split(".")[1];
       const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
@@ -60,21 +54,17 @@ const JobPage = () => {
       );
       return JSON.parse(jsonPayload);
     };
-
     const decodedToken = decodeJwt(token);
     const currentTime = Date.now() / 1000;
-
     if (decodedToken.exp < currentTime) {
       localStorage.removeItem("token");
       router.push("/admin-login");
       return;
     }
-
     if (decodedToken.role !== "admin") {
       router.push("/extracted-data-monitoring");
       return;
     }
-
     setIsAuthenticated(true);
     setLoading(false);
   }, [router]);
@@ -125,7 +115,6 @@ const JobPage = () => {
       });
     }
   };
-
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
@@ -213,7 +202,6 @@ const JobPage = () => {
     }
   };
 
-
   const fetchJobs = useCallback(async (): Promise<Job[]> => {
     try {
       setLoadingTable(true);
@@ -237,7 +225,6 @@ const JobPage = () => {
       setLoadingTable(false);
     }
   }, [currentPage, searchQuery]);
-
 
   useEffect(() => {
     fetchJobs();

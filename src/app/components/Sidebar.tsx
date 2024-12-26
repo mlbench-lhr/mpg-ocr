@@ -172,10 +172,11 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     return (
         <>
             <div
-                className={`fixed top-0 left-0 bg-gray-100 text-gray-800 h-screen z-50 transform transition-all duration-300 ${!isExpanded ? "w-24" : "w-64"
+                className={`fixed top-0 left-0 bg-gray-100 text-gray-800 h-screen z-50 transform transition-all duration-300 ease-in-out ${!isExpanded ? "w-24" : "w-64"
                     } flex flex-col justify-between`}
             >
-                <div className="flex items-center justify-between p-4 bg-gray-100">
+                {/* <div className="flex items-center justify-between p-4 bg-gray-100"> */}
+                <div className="flex items-center justify-center h-20 bg-gray-100">
                     {isExpanded ? (
                         <Image
                             src={sideBarLogo}
@@ -194,23 +195,32 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                         {userRole === "admin" && (
                             <Link href="/jobs">
                                 <li
-                                    className={`flex items-center mb-2 ${isExpanded ? "justify-start" : "justify-center"
-                                        } space-x-3 px-4 py-2 rounded-lg transition-all ${isActive("/jobs")
-                                            ? "bg-blue-200 font-bold"
-                                            : "hover:bg-gray-200"
+                                    className={`flex items-center mb-2 justify-start
+                                     space-x-3 pl-5 pr-0 py-2 rounded-lg transition-all duration-300 ease-in-out ${isActive("/jobs") ? "bg-blue-200 font-bold" : "hover:bg-gray-200"
                                         }`}
                                 >
-                                    <BsClipboard2CheckFill className="text-[#005B97] text-2xl" />
-                                    {isExpanded && (
-                                        <p className="text-gray-800 text-lg">Jobs</p>
-                                    )}
+                                    <span className="flex-shrink-0">
+                                        <BsClipboard2CheckFill className="text-[#005B97] text-2xl" />
+                                    </span>
+                                    <span
+                                        className={`text-gray-800 text-lg transition-all duration-300 ease-in-out`}
+                                        style={{
+                                            width: isExpanded ? "auto" : "0",
+                                            overflow: "hidden",
+                                            whiteSpace: "nowrap",
+                                            opacity: isExpanded ? 1 : 0,
+                                            transition: "opacity 0.3s ease, width 0.3s ease",
+                                        }}
+                                    >
+                                        Jobs
+                                    </span>
                                 </li>
                             </Link>
                         )}
-                        <Link href="/extracted-data-monitoring" onClick={()=>{localStorage.setItem("prev","/roles-requests")}}>
+                        {/* <Link href="/extracted-data-monitoring" onClick={() => { localStorage.setItem("prev", "/roles-requests") }}>
                             <li
                                 className={`flex items-center mb-2 ${isExpanded ? 'justify-start' : 'justify-center'
-                                    } space-x-3 px-4 py-2 rounded-lg transition-all ${isActive("/extracted-data-monitoring")
+                                    } space-x-3 px-4 py-2 rounded-lg transition-all duration-300 ease-in-out ${isActive("/extracted-data-monitoring")
                                         ? "bg-blue-200 font-bold"
                                         : "hover:bg-gray-200"
                                     }`}
@@ -222,53 +232,117 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                     </p>
                                 )}
                             </li>
+                        </Link> */}
+                        <Link href="/extracted-data-monitoring" onClick={() => localStorage.setItem("prev", "/roles-requests")}>
+                            <li
+                                className={`flex items-center mb-2 justify-start
+                                     space-x-3 pl-5 pr-0 py-2 rounded-lg transition-all duration-300 ease-in-out ${isActive("/extracted-data-monitoring") ? "bg-blue-200 font-bold" : "hover:bg-gray-200"
+                                    }`}
+                            >
+                                <span className="flex-shrink-0">
+                                    <FaClipboardList className="text-[#005B97] text-2xl" />
+                                </span>
+                                <span
+                                    className={`text-gray-800 text-lg transition-all duration-300 ease-in-out`}
+                                    style={{
+                                        width: isExpanded ? "auto" : "0",
+                                        overflow: "hidden",
+                                        whiteSpace: "nowrap",
+                                        opacity: isExpanded ? 1 : 0,
+                                        transition: "opacity 0.3s ease, width 0.3s ease",
+                                    }}
+                                >
+                                    Extracted Data
+                                </span>
+                            </li>
                         </Link>
-
                         {userRole === "admin" && (
                             <Link href="/roles-requests">
                                 <li
-                                    className={`flex items-center ${isExpanded ? 'justify-start' : 'justify-center'
-                                        } space-x-3 px-4 py-2 rounded-lg transition-all ${isActive("/roles-requests")
-                                            ? "bg-blue-200 font-bold"
-                                            : "hover:bg-gray-200"
+                                    className={`flex items-center mb-2 justify-start
+                                     space-x-3 pl-5 pr-0 py-2 rounded-lg transition-all duration-300 ease-in-out ${isActive("/roles-requests") ? "bg-blue-200 font-bold" : "hover:bg-gray-200"
                                         }`}
                                 >
-                                    <FaUserPlus className="text-[#005B97] text-2xl" />
-                                    {isExpanded && (
-                                        <p className="text-gray-800 text-lg">
-                                            Roles Requests
-                                        </p>
-                                    )}
+                                    <span className="flex-shrink-0">
+                                        <FaUserPlus className="text-[#005B97] text-2xl" />
+                                    </span>
+                                    <span
+                                        className={`text-gray-800 text-lg transition-all duration-300 ease-in-out`}
+                                        style={{
+                                            width: isExpanded ? "auto" : "0",
+                                            overflow: "hidden",
+                                            whiteSpace: "nowrap",
+                                            opacity: isExpanded ? 1 : 0,
+                                            transition: "opacity 0.3s ease, width 0.3s ease",
+                                        }}
+                                    >
+                                        Roles Requests
+                                    </span>
                                 </li>
                             </Link>
                         )}
-
                     </ul>
                 </nav>
 
                 <div className="p-4 bg-gray-100 mt-auto">
-
                     {userRole === 'admin' &&
+                        // <ul className="mb-5 relative">
+                        //     <li
+                        //         className={`flex items-center ${isExpanded ? 'justify-start' : 'justify-center'
+                        //             } justify-between px-4 py-2 rounded-lg transition-all duration-300 ease-in-out`}
+                        //     >
+                        //         <div className="flex items-center gap-2">
+                        //             <span className="flex-shrink-0">
+                        //                 <IoSettingsSharp className="text-[#005B97] text-2xl hover:bg-none cursor-pointer" onClick={toggleDropdown} />
+                        //             </span>
+                        //             {isExpanded && (
+                        //                 <p className="text-gray-800 text-lg cursor-pointer" onClick={toggleDropdown}>
+                        //                     Settings
+                        //                 </p>
+                        //             )}
+                        //         </div>
+
+                        //         {isExpanded && (
+                        //             <IoIosArrowForward
+                        //                 className="text-lg text-gray-600 transition-transform duration-300 ease-in-out cursor-pointer"
+                        //                 onClick={toggleDropdown}
+                        //             />
+                        //         )}
+                        //     </li>
+                        // </ul>
+
                         <ul className="mb-5 relative">
                             <li
-                                className={`flex items-center ${isExpanded ? 'justify-start' : 'justify-center'
-                                    } justify-between px-4 py-2 rounded-lg transition-all`}
+                                className={`flex items-center justify-start pl-5 pr-0 py-2 rounded-lg transition-all duration-300 ease-in-out`}
                             >
                                 <div className="flex items-center gap-2">
-                                    <IoSettingsSharp className="text-[#005B97] text-2xl hover:bg-none cursor-pointer" onClick={toggleDropdown} />
-                                    {isExpanded && (
-                                        <p className="text-gray-800 text-lg cursor-pointer" onClick={toggleDropdown}>
-                                            Settings
-                                        </p>
-                                    )}
-                                </div>
-
-                                {isExpanded && (
-                                    <IoIosArrowForward
-                                        className="text-lg text-gray-600 transition-transform duration-300 cursor-pointer"
+                                    <span className="flex-shrink-0">
+                                        <IoSettingsSharp
+                                            className="text-[#005B97] text-2xl cursor-pointer"
+                                            onClick={toggleDropdown}
+                                        />
+                                    </span>
+                                    <span
+                                        className={`text-gray-800 text-lg transition-opacity duration-300 ease-in-out cursor-pointer ${isExpanded ? "opacity-100 visible" : "opacity-0 invisible"
+                                            }`}
+                                        style={{
+                                            width: isExpanded ? "auto" : "0px",
+                                            overflow: "hidden",
+                                            whiteSpace: "nowrap",
+                                            transition: "opacity 0.3s ease, width 0.3s ease",
+                                        }}
                                         onClick={toggleDropdown}
-                                    />
-                                )}
+                                    >
+                                        Settings
+                                    </span>
+                                </div>
+                                <span
+                                    className={`transition-transform ml-20 duration-300 ease-in-out cursor-pointer ${isExpanded ? "opacity-100 visible" : "opacity-0 invisible"
+                                        }`}
+                                    onClick={toggleDropdown}
+                                >
+                                    <IoIosArrowForward className="text-lg text-gray-600" />
+                                </span>
                             </li>
                         </ul>
                     }
@@ -311,7 +385,7 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                                     </span>
                                                     <RiArrowDropDownLine
                                                         size={30}
-                                                        className={`p-0 transform transition-transform text-[#005B97] duration-300 ${isDropdownOpenZone ? "rotate-180" : ""
+                                                        className={`p-0 transform transition-transform text-[#005B97] duration-300 ease-in-out ${isDropdownOpenZone ? "rotate-180" : ""
                                                             }`}
                                                     />
                                                 </div>
@@ -399,13 +473,12 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                 {userRole !== 'admin' && (
                                     <div>
                                         <IoIosArrowForward
-                                            className="text-lg text-gray-600 transition-transform duration-300 cursor-pointer"
+                                            className="text-lg text-gray-600 transition-transform duration-300 ease-in-out cursor-pointer"
                                             onClick={toggleDropdown}
                                         />
                                     </div>
                                 )}
                             </div>
-
                         )}
                     </div>
                 </div>
@@ -415,12 +488,12 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
 
             <button
                 onClick={toggleExpand}
-                className={`fixed top-16 ${isExpanded ? "left-60" : "left-20"
-                    } z-50 text-white px-[2px] rounded-full transition-all duration-300 flex items-center justify-center`
+                className={`fixed top-16 ${isExpanded ? "translate-x-60" : "translate-x-20"
+                    } z-50 text-white px-[2px] rounded-full transition-all duration-300 ease-in-out flex items-center justify-center`
                 }
             >
                 <span
-                    className={`transition-transform duration-300 ${isExpanded ? "rotate-180" : "rotate-0"}`}
+                    className={`transition-all duration-300 ease-in-out ${isExpanded ? "rotate-180" : "rotate-0"}`}
                 >
                     <IoIosArrowDroprightCircle fill="#979EAF" size={29} />
                 </span>
