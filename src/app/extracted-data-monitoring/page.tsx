@@ -444,19 +444,6 @@ const MasterPage = () => {
     await fetchJobs();
   };
 
-  // const handleRouteChange = () => {
-  //   if (typeof window !== "undefined") {
-  //     sessionStorage.setItem("finalStatusFilter", finalStatusFilter);
-  //     sessionStorage.setItem("reviewStatusFilter", reviewStatusFilter);
-  //     sessionStorage.setItem("reasonStatusFilter", reasonStatusFilter);
-  //     sessionStorage.setItem("reviewByStatusFilter", reviewByStatusFilter);
-  //     sessionStorage.setItem("podDateFilter", podDateFilter);
-  //     sessionStorage.setItem("podDateSignatureFilter", podDateSignatureFilter);
-  //     sessionStorage.setItem("jobNameFilter", jobNameFilter);
-  //     sessionStorage.setItem("bolNumberFilter", bolNumberFilter);
-  //   }
-  // };
-
   const handleRouteChange = () => {
     if (typeof window !== "undefined") {
       const filters = {

@@ -58,7 +58,7 @@ function PageContent() {
     const [totalPages, setTotalPages] = useState(1);
     const router = useRouter();
 
-
+    
     const selectedRows = useMemo(() => {
         const selectedRowsParam = searchParams.get("selectedRows");
         return selectedRowsParam ? JSON.parse(selectedRowsParam) : [];
@@ -69,7 +69,6 @@ function PageContent() {
     const handleSidebarStateChange = (newState: boolean) => {
         // setIsSidebarExpanded(newState);
         return newState;
-
     };
 
     const handlePageChange = (newPage: number) => {
