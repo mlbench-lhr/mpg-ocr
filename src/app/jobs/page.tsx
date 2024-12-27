@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSidebar } from "../context/SidebarContext";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import Sidebar from "../components/Sidebar";
@@ -31,10 +32,11 @@ const JobPage = () => {
   const router = useRouter();
   const [dropdownStates, setDropdownStates] = useState<string | null>(null);
 
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
+  const { isExpanded } = useSidebar();
 
   const handleSidebarStateChange = (newState: boolean) => {
-    setIsSidebarExpanded(newState);
+    console.log("Sidebar state changed:", newState);
+    // setIsSidebarExpanded(newState);
   };
 
   useEffect(() => {
@@ -220,7 +222,7 @@ const JobPage = () => {
       }
     } catch (error) {
       console.log("Error fetching jobs:", error);
-      return []; 
+      return [];
     } finally {
       setLoadingTable(false);
     }
@@ -238,7 +240,7 @@ const JobPage = () => {
     <div className="flex flex-row h-screen bg-white">
       <Sidebar onStateChange={handleSidebarStateChange} />
       <div
-        className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isSidebarExpanded ? "ml-64" : "ml-24"
+        className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isExpanded ? "ml-64" : "ml-24"
           }`}
       >
         <Header

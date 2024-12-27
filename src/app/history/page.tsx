@@ -7,6 +7,8 @@ import Header from "../components/Header";
 import Spinner from "../components/Spinner";
 import Image from "next/image";
 import Link from "next/link";
+import { useSidebar } from "../context/SidebarContext";
+
 
 export const dynamic = 'force-dynamic';
 
@@ -53,15 +55,22 @@ function PageContent() {
     const [users, setUsers] = useState<History[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
+    // const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
 
     const selectedRows = useMemo(() => {
         const selectedRowsParam = searchParams.get("selectedRows");
         return selectedRowsParam ? JSON.parse(selectedRowsParam) : [];
     }, [searchParams]);
 
+    // const handleSidebarStateChange = (newState: boolean) => {
+    //     setIsSidebarExpanded(newState);
+    // };
+
+    const { isExpanded } = useSidebar();
+
     const handleSidebarStateChange = (newState: boolean) => {
-        setIsSidebarExpanded(newState);
+        console.log("Sidebar state changed:", newState);
+        // setIsSidebarExpanded(newState);
     };
 
     const handlePageChange = (newPage: number) => {
@@ -98,7 +107,7 @@ function PageContent() {
         <div className="flex flex-row h-screen bg-white">
             <Sidebar onStateChange={handleSidebarStateChange} />
             <div
-                className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isSidebarExpanded ? "ml-64" : "ml-24"
+                className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isExpanded ? "ml-64" : "ml-24"
                     }`}
             >
                 <Header

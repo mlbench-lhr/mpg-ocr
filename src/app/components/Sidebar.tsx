@@ -14,36 +14,58 @@ import { FaHouseSignal } from "react-icons/fa6";
 import { TbCloudDataConnection } from "react-icons/tb";
 import { useRouter } from "next/navigation";
 import { IoIosArrowDroprightCircle } from "react-icons/io";
-
+import { useSidebar } from "../context/SidebarContext";
 
 
 interface SidebarProps {
     onStateChange: (newState: boolean) => void;
 }
 
-
 export default function Sidebar({ onStateChange }: SidebarProps) {
-
-    const [isExpanded, setIsExpanded] = useState<boolean>();
-
-    useEffect(() => {
-        const savedState = sessionStorage.getItem("sidebar");
-        if (savedState !== null) {
-            const parsedState = JSON.parse(savedState);
-            setIsExpanded(parsedState);
-            onStateChange(parsedState);
-        }
-    }, [onStateChange]);
-
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const [isAutoConfirmationOpen, setAutoConfirmationOpen] = useState(false);
     const [isDropdownOpenZone, setIsDropdownOpenZone] = useState(false);
     const [selectedTimeZone, setSelectedTimeZone] = useState("UTC+00:00");
     const [userName, setUserName] = useState("User");
     const [userRole, setUserRole] = useState("");
-
     const router = useRouter();
+    const { isExpanded, toggleSidebar } = useSidebar();
+    const [isImageLoaded, setIsImageLoaded] = useState(true);
 
+    useEffect(() => {
+        const preloadImage = new window.Image();
+        preloadImage.src = "/images/sidbar.svg";
+        console.log(isImageLoaded);
+        preloadImage.onload = () => setIsImageLoaded(true);
+    }, []);
+
+    // const [isExpanded, setIsExpanded] = useState<boolean>();
+
+    // useEffect(() => {
+    //     const savedState = localStorage.getItem("sidebar");
+    //     if (savedState !== null) {
+    //         const parsedState = JSON.parse(savedState);
+    //         setIsExpanded(parsedState);
+    //         onStateChange(parsedState);
+    //         console.log("sidebar 0");
+
+    //     }
+    // }, [onStateChange]);
+
+    // const toggleExpand = () => {
+    //     setDropdownOpen(false);
+    //     const newState = !isExpanded;
+    //     setIsExpanded(newState);
+    //     localStorage.setItem("sidebar", JSON.stringify(newState));
+    //     onStateChange(newState);
+    //     console.log("sidebar 1");
+
+    // };
+
+    const toggleExpand = () => {
+        toggleSidebar();
+        onStateChange(isExpanded);
+    };
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -95,7 +117,7 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
 
             if (response.ok) {
 
-                sessionStorage.setItem('sidebar', JSON.stringify(false));
+                localStorage.setItem("sidebar", JSON.stringify(false));
                 localStorage.removeItem("token");
                 localStorage.removeItem("username");
                 localStorage.removeItem("role");
@@ -114,7 +136,6 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
             console.log('Error during logout:', error);
         }
     };
-
 
     const timeZones = [
         "UTC-12:00",
@@ -144,29 +165,16 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
         "UTC+12:00",
     ];
 
-
     const handleSelectTimeZone = (zone: string) => {
         setSelectedTimeZone(zone);
         setIsDropdownOpenZone(false);
     };
-
 
     const toggleDropdown = () => {
         setDropdownOpen(!isDropdownOpen);
     };
 
     const pathname = usePathname();
-
-
-
-    const toggleExpand = () => {
-        setDropdownOpen(false);
-        const newState = !isExpanded;
-        setIsExpanded(newState);
-        sessionStorage.setItem("sidebar", JSON.stringify(newState));
-        onStateChange(newState);
-    };
-
     const isActive = (path: string) => pathname === path;
 
     return (
@@ -175,9 +183,8 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                 className={`fixed top-0 left-0 bg-gray-100 text-gray-800 h-screen z-50 transform transition-all duration-300 ease-in-out ${!isExpanded ? "w-24" : "w-64"
                     } flex flex-col justify-between`}
             >
-                {/* <div className="flex items-center justify-between p-4 bg-gray-100"> */}
                 <div className="flex items-center justify-center h-20 bg-gray-100">
-                    {isExpanded ? (
+                    {isExpanded && isImageLoaded ? (
                         <Image
                             src={sideBarLogo}
                             alt="logo"
@@ -217,22 +224,6 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                 </li>
                             </Link>
                         )}
-                        {/* <Link href="/extracted-data-monitoring" onClick={() => { localStorage.setItem("prev", "/roles-requests") }}>
-                            <li
-                                className={`flex items-center mb-2 ${isExpanded ? 'justify-start' : 'justify-center'
-                                    } space-x-3 px-4 py-2 rounded-lg transition-all duration-300 ease-in-out ${isActive("/extracted-data-monitoring")
-                                        ? "bg-blue-200 font-bold"
-                                        : "hover:bg-gray-200"
-                                    }`}
-                            >
-                                <FaClipboardList className="text-[#005B97] text-2xl" />
-                                {isExpanded && (
-                                    <p className="text-gray-800 text-lg">
-                                        Extracted Data
-                                    </p>
-                                )}
-                            </li>
-                        </Link> */}
                         <Link href="/extracted-data-monitoring" onClick={() => localStorage.setItem("prev", "/roles-requests")}>
                             <li
                                 className={`flex items-center mb-2 justify-start
@@ -286,31 +277,6 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
 
                 <div className="p-4 bg-gray-100 mt-auto">
                     {userRole === 'admin' &&
-                        // <ul className="mb-5 relative">
-                        //     <li
-                        //         className={`flex items-center ${isExpanded ? 'justify-start' : 'justify-center'
-                        //             } justify-between px-4 py-2 rounded-lg transition-all duration-300 ease-in-out`}
-                        //     >
-                        //         <div className="flex items-center gap-2">
-                        //             <span className="flex-shrink-0">
-                        //                 <IoSettingsSharp className="text-[#005B97] text-2xl hover:bg-none cursor-pointer" onClick={toggleDropdown} />
-                        //             </span>
-                        //             {isExpanded && (
-                        //                 <p className="text-gray-800 text-lg cursor-pointer" onClick={toggleDropdown}>
-                        //                     Settings
-                        //                 </p>
-                        //             )}
-                        //         </div>
-
-                        //         {isExpanded && (
-                        //             <IoIosArrowForward
-                        //                 className="text-lg text-gray-600 transition-transform duration-300 ease-in-out cursor-pointer"
-                        //                 onClick={toggleDropdown}
-                        //             />
-                        //         )}
-                        //     </li>
-                        // </ul>
-
                         <ul className="mb-5 relative">
                             <li
                                 className={`flex items-center justify-start pl-5 pr-0 py-2 rounded-lg transition-all duration-300 ease-in-out`}
@@ -482,10 +448,7 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                         )}
                     </div>
                 </div>
-
             </div >
-
-
             <button
                 onClick={toggleExpand}
                 className={`fixed top-16 ${isExpanded ? "translate-x-60" : "translate-x-20"
@@ -498,7 +461,6 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                     <IoIosArrowDroprightCircle fill="#979EAF" size={29} />
                 </span>
             </button>
-
         </>
     );
 }

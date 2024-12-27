@@ -5,6 +5,7 @@ import Sidebar from '@/app/components/Sidebar';
 import { useParams, useRouter } from 'next/navigation';
 import { FaArrowLeftLong } from "react-icons/fa6";
 import Spinner from '@/app/components/Spinner';
+import { useSidebar } from "../../../context/SidebarContext";
 import Link from 'next/link';
 
 interface Job {
@@ -53,15 +54,24 @@ const JobDetail = () => {
         sealIntact: "",
     });
     const [isEditMode, setIsEditMode] = useState(false);
-    const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
     const [saving, setSaving] = useState(false);
     const router = useRouter();
     const [userRole, setUserRole] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [name, setName] = useState("");
 
+    // const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
+
+
+    // const handleSidebarStateChange = (newState: boolean) => {
+    //     setIsSidebarExpanded(newState);
+    // };
+
+    const { isExpanded } = useSidebar();
+
     const handleSidebarStateChange = (newState: boolean) => {
-        setIsSidebarExpanded(newState);
+        console.log("Sidebar state changed:", newState);
+        // setIsSidebarExpanded(newState);
     };
 
     useEffect(() => {
@@ -228,7 +238,7 @@ const JobDetail = () => {
         <div className="flex flex-row h-screen bg-white">
             <Sidebar onStateChange={handleSidebarStateChange} />
             <div
-                className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isSidebarExpanded ? "ml-64" : "ml-24"}`}
+                className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isExpanded ? "ml-64" : "ml-24"}`}
             >
                 <div className="bg-gray-100 py-4 flex justify-between items-center my-10 mx-5 rounded-lg px-8">
                     <div className="flex items-center gap-5">

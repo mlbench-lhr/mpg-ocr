@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useSidebar } from "../context/SidebarContext";
 import { useRouter } from "next/navigation";
 import Sidebar from "../components/Sidebar";
 import Spinner from "../components/Spinner";
@@ -74,7 +75,6 @@ const MasterPage = () => {
   const [dropdownStatesFirst, setDropdownStatesFirst] = useState<string | null>(null);
   const [dropdownStatesSecond, setDropdownStatesSecond] = useState<string | null>(null);
   const [dropdownStatesThird, setDropdownStatesThird] = useState<string | null>(null);
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
   const parentRefFinal = useRef<Instance | null>(null);
   const parentRefReview = useRef<Instance | null>(null);
   const parentRefRecognition = useRef<Instance | null>(null);
@@ -161,14 +161,28 @@ const MasterPage = () => {
     }
   }, []);
 
+  // const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
+
   // useEffect(() => {
-  //   const savedState = sessionStorage.getItem("sidebar");
-  //   if (savedState) setIsSidebarExpanded(JSON.parse(savedState));
+  //   const savedState = localStorage.getItem("sidebar");
+  //   if (savedState) {
+  //     setIsSidebarExpanded(JSON.parse(savedState));
+  //   }
+  //   console.log("sidebar 2");
   // }, []);
 
+  // const handleSidebarStateChange = (newState: boolean) => {
+  //   setIsSidebarExpanded(newState);
+  //   console.log("sidebar 3");
+  // };
+
+  const { isExpanded } = useSidebar();
+
   const handleSidebarStateChange = (newState: boolean) => {
-    setIsSidebarExpanded(newState);
+    console.log("Sidebar state changed:", newState);
+    // setIsSidebarExpanded(newState);
   };
+
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -488,10 +502,9 @@ const MasterPage = () => {
 
   return (
     <div className="h-screen bg-white overflow-x-hidden max-w-screen">
-      {/* <Sidebar onToggleExpand={handleSidebarToggle} /> */}
       <Sidebar onStateChange={handleSidebarStateChange} />
       <div
-        className={`flex-1 flex flex-col transition-all bg-white duration-300 ${!isSidebarExpanded ? "ml-24" : "ml-64"
+        className={`flex-1 flex flex-col transition-all bg-white duration-300 ${!isExpanded ? "ml-24" : "ml-64"
           }`}
       >
         <Header
@@ -555,8 +568,6 @@ const MasterPage = () => {
 
           }
         />
-        {/* href="/history" */}
-
         <div className="flex-1 px-2 bg-white">
           <div
             className={`bg-gray-200 p-3 mb-0 transition-all duration-500 ease-in-out w-full sm:w-auto ${isFilterDropDownOpen ? "rounded-t-lg" : "rounded-lg"}`}
@@ -965,61 +976,6 @@ const MasterPage = () => {
                           ) : job.sealIntact}
                         </td>
                         <td className="py-2 px-4 border-b text-center">
-                          {/* <div
-                            className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${userRole !== "standarduser" ? 'cursor-pointer' : ''} ${job.finalStatus === "new"
-                              ? "bg-blue-100 text-blue-600"
-                              : job.finalStatus === "inProgress"
-                                ? "bg-yellow-100 text-yellow-600"
-                                : job.finalStatus === "valid"
-                                  ? "bg-green-100 text-green-600"
-                                  : job.finalStatus === "partiallyValid"
-                                    ? "bg-[#faf1be] text-[#AF9918]"
-                                    : job.finalStatus === "failure"
-                                      ? "bg-red-100 text-red-600"
-                                      : job.finalStatus === "sent"
-                                        ? "bg-green-100 text-green-600"
-                                        : "bg-gray-100 text-gray-600"
-                              }`}
-
-                            onClick={() => toggleDropdown(job._id)}
-                          >
-                            <div>{job.finalStatus}</div>
-                            <div className="relative">
-                              <RiArrowDropDownLine
-                                className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${dropdownStates === job._id ? "rotate-180" : ""}`}
-                              />
-                              <ul
-                                className={`absolute right-0 z-50 bg-white border rounded-md shadow-lg w-32 transition-all duration-300 ease-in-out ${dropdownStates === job._id
-                                  ? "scale-100 opacity-100 pointer-events-auto"
-                                  : "scale-0 opacity-0 pointer-events-none"
-                                  }`}
-                                style={{
-                                  top: dropdownStates === job._id && !isLastThreeRow(job._id) ? "100%" : "",
-                                  bottom: dropdownStates === job._id && isLastThreeRow(job._id) ? "100%" : "",
-                                  visibility: dropdownStates === job._id ? "visible" : "hidden",
-                                  height: dropdownStates === job._id ? "auto" : "0",
-                                  overflow: dropdownStates === job._id ? "visible" : "hidden",
-                                }}
-                              >
-                                {[{ status: "new", color: "text-blue-600", bgColor: "bg-blue-100" },
-                                { status: "inProgress", color: "text-yellow-600", bgColor: "bg-yellow-100" },
-                                { status: "valid", color: "text-green-600", bgColor: "bg-green-100" },
-                                { status: "partiallyValid", color: "text-[#AF9918]", bgColor: "bg-[#faf1be]" },
-                                { status: "failure", color: "text-red-600", bgColor: "bg-red-100" },
-                                { status: "sent", color: "text-green-600", bgColor: "bg-green-100" },
-                                ].map(({ status, color, bgColor }) => (
-                                  <li
-                                    key={status}
-                                    className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${job.finalStatus === status ? `${color} ${bgColor}` : color
-                                      }`}
-                                    onClick={() => updateStatus(job._id, "finalStatus", status, name)}
-                                  >
-                                    {status}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </div> */}
                           <Tippy
                             onMount={(instance) => {
                               parentRefFinal.current = instance;
@@ -1139,55 +1095,6 @@ const MasterPage = () => {
                               />
                             </div>
                           </Tippy>
-                          {/* <div
-                            className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${userRole !== "standarduser" ? 'cursor-pointer' : ''} ${job.reviewStatus === "unConfirmed"
-                              ? "bg-yellow-100 text-yellow-600"
-                              : job.reviewStatus === "confirmed"
-                                ? "bg-green-100 text-green-600"
-                                : job.reviewStatus === "denied"
-                                  ? "bg-[#faf1be] text-[#AF9918]"
-                                  : job.reviewStatus === "deleted"
-                                    ? "bg-red-100 text-red-600"
-                                    : ""
-                              }`}
-                            onClick={() => toggleDropdownFirst(job._id)}
-                          >
-                            <div>{job.reviewStatus}</div>
-                            <div className="relative">
-                              <RiArrowDropDownLine
-                                className={`text-2xl transform transition-transform duration-300 ease-in-out ${dropdownStatesFirst === job._id ? "rotate-180" : ""}`}
-                              />
-                              <ul
-                                className={`absolute right-0 z-50 bg-white border rounded-md shadow-lg w-32 transition-all duration-300 ease-in-out ${dropdownStatesFirst === job._id
-                                  ? "scale-100 opacity-100 pointer-events-auto"
-                                  : "scale-0 opacity-0 pointer-events-none"
-                                  }`}
-                                style={{
-                                  top: dropdownStatesFirst === job._id && !isLastThreeRow(job._id) ? "100%" : "",
-                                  bottom: dropdownStatesFirst === job._id && isLastThreeRow(job._id) ? "100%" : "",
-                                  visibility: dropdownStatesFirst === job._id ? "visible" : "hidden",
-                                  height: dropdownStatesFirst === job._id ? "auto" : "0",
-                                  overflow: dropdownStatesFirst === job._id ? "visible" : "hidden",
-                                }}
-                              >
-                                {[
-                                  { status: "unConfirmed", color: "text-yellow-600", bgColor: "bg-yellow-100" },
-                                  { status: "confirmed", color: "text-green-600", bgColor: "bg-green-100" },
-                                  { status: "deleted", color: "text-red-600", bgColor: "bg-red-100" },
-                                  { status: "denied", color: "text-[#AF9918]", bgColor: "bg-[#faf1be]" },
-                                ].map(({ status, color, bgColor }) => (
-                                  <li
-                                    key={status}
-                                    className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${job.reviewStatus === status ? `${color} ${bgColor}` : color
-                                      }`}
-                                    onClick={() => updateStatus(job._id, "reviewStatus", status, name)}
-                                  >
-                                    {status}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </div> */}
                         </td>
                         <td className="py-2 px-4 border-b text-center">
                           <Tippy
@@ -1250,60 +1157,6 @@ const MasterPage = () => {
                               />
                             </div>
                           </Tippy>
-                          {/* <div
-                            className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${userRole !== "standarduser" ? 'cursor-pointer' : ''} ${job.recognitionStatus === "new"
-                              ? "bg-blue-100 text-blue-600"
-                              : job.recognitionStatus === "inProgress"
-                                ? "bg-yellow-100 text-yellow-600"
-                                : job.recognitionStatus === "valid"
-                                  ? "bg-green-100 text-green-600"
-                                  : job.recognitionStatus === "partiallyValid"
-                                    ? "bg-[#faf1be] text-[#AF9918]"
-                                    : job.recognitionStatus === "failure"
-                                      ? "bg-red-100 text-red-600"
-                                      : job.recognitionStatus === "sent"
-                                        ? "bg-green-100 text-green-600"
-                                        : ""
-                              }`}
-                            onClick={() => toggleDropdownSecond(job._id)}
-                          >
-                            <div>{job.recognitionStatus}</div>
-                            <div className="relative">
-                              <RiArrowDropDownLine
-                                className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${dropdownStatesSecond === job._id ? "rotate-180" : ""}`}
-                              />
-                              <ul
-                                className={`absolute mt-2 right-0 z-50 bg-white border rounded-md shadow-lg w-32 transition-all duration-300 ease-in-out ${dropdownStatesSecond === job._id
-                                  ? "scale-100 opacity-100 pointer-events-auto"
-                                  : "scale-0 opacity-0 pointer-events-none"
-                                  }`}
-                                style={{
-                                  top: dropdownStatesSecond === job._id && !isLastThreeRow(job._id) ? "100%" : "",
-                                  bottom: dropdownStatesSecond === job._id && isLastThreeRow(job._id) ? "100%" : "",
-                                  visibility: dropdownStatesSecond === job._id ? "visible" : "hidden",
-                                  height: dropdownStatesSecond === job._id ? "auto" : "0",
-                                  overflow: dropdownStatesSecond === job._id ? "visible" : "hidden",
-                                }}
-                              >
-                                {[{ status: "new", color: "text-blue-600", bgColor: "bg-blue-100" },
-                                { status: "inProgress", color: "text-yellow-600", bgColor: "bg-yellow-100" },
-                                { status: "valid", color: "text-green-600", bgColor: "bg-green-100" },
-                                { status: "partiallyValid", color: "text-[#AF9918]", bgColor: "bg-[#faf1be]" },
-                                { status: "failure", color: "text-red-600", bgColor: "bg-red-100" },
-                                { status: "sent", color: "text-green-600", bgColor: "bg-green-100" },
-                                ].map(({ status, color, bgColor }) => (
-                                  <li
-                                    key={status}
-                                    className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${job.recognitionStatus === status ? `${color} ${bgColor}` : color
-                                      }`}
-                                    onClick={() => updateStatus(job._id, "recognitionStatus", status, name)}
-                                  >
-                                    {status}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </div> */}
                         </td>
                         <td className="py-2 px-4 border-b text-center">
                           <Tippy
@@ -1365,59 +1218,6 @@ const MasterPage = () => {
                               />
                             </div>
                           </Tippy>
-                          {/* <div
-                            className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${userRole !== "standarduser" ? 'cursor-pointer' : ''} ${job.breakdownReason === "none"
-                              ? "bg-blue-100 text-blue-600"
-                              : job.breakdownReason === "damaged"
-                                ? "bg-yellow-100 text-yellow-600"
-                                : job.breakdownReason === "shortage"
-                                  ? "bg-green-100 text-green-600"
-                                  : job.breakdownReason === "overage"
-                                    ? "bg-[#faf1be] text-[#AF9918]"
-                                    : job.breakdownReason === "refused"
-                                      ? "bg-red-100 text-red-600"
-                                      : ""
-                              }`}
-                            onClick={() => toggleDropdownThird(job._id)}
-                          >
-                            <div>{job.breakdownReason}</div>
-                            <div className="relative">
-                              <RiArrowDropDownLine
-                                className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${dropdownStatesThird === job._id ? "rotate-180" : ""
-                                  }`}
-                              />
-                              <ul
-                                className={`absolute right-0 z-50 bg-white border rounded-md shadow-lg w-32 transition-opacity duration-300 ease-in-out ${dropdownStatesThird === job._id
-                                  ? "opacity-100 pointer-events-auto"
-                                  : "opacity-0 pointer-events-none visibility-hidden"
-                                  }`}
-                                style={{
-                                  top: dropdownStatesThird === job._id && !isLastThreeRow(job._id) ? "100%" : "",
-                                  bottom: dropdownStatesThird === job._id && isLastThreeRow(job._id) ? "100%" : "",
-                                  visibility: dropdownStatesThird === job._id ? "visible" : "hidden",
-                                  height: dropdownStatesThird === job._id ? "auto" : "0",
-                                  overflow: dropdownStatesThird === job._id ? "visible" : "hidden",
-                                }}
-                              >
-                                {[
-                                  { status: "none", color: "text-blue-600", bgColor: "bg-blue-100" },
-                                  { status: "damaged", color: "text-yellow-600", bgColor: "bg-yellow-100" },
-                                  { status: "shortage", color: "text-green-600", bgColor: "bg-green-100" },
-                                  { status: "overage", color: "text-[#AF9918]", bgColor: "bg-[#faf1be]" },
-                                  { status: "refused", color: "text-red-600", bgColor: "bg-red-100" },
-                                ].map(({ status, color, bgColor }) => (
-                                  <li
-                                    key={status}
-                                    className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${job.breakdownReason === status ? `${color} ${bgColor}` : color
-                                      }`}
-                                    onClick={() => updateStatus(job._id, "breakdownReason", status, name)}
-                                  >
-                                    {status}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </div> */}
                         </td>
                         <td className="py-2 px-4 border-b text-center">{job.reviewedBy}</td>
                         <td className="py-2 px-6 border-b text-center">

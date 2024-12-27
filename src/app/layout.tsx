@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { SidebarProvider } from "./context/SidebarContext";
 
 export const metadata: Metadata = {
   title: "MPG OCR",
@@ -14,7 +15,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="h-screen bg-white">
-        {children}
+        <SidebarProvider>
+          {children}
+        </SidebarProvider>
       </body>
     </html>
   );

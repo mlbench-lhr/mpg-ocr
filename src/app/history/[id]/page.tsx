@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react';
 import { FaArrowLeftLong } from "react-icons/fa6";
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { FaCircleDot } from "react-icons/fa6";
+import { useSidebar } from "../../context/SidebarContext";
+
 
 const colors = [
     "#F59E0B",
@@ -44,10 +46,17 @@ const JobDetail = () => {
     const searchParams = useSearchParams();
     const blNumber = searchParams.get("blNumber");
 
-    const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
+    // const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
+
+    // const handleSidebarStateChange = (newState: boolean) => {
+    //     setIsSidebarExpanded(newState);
+    // };
+
+    const { isExpanded } = useSidebar();
 
     const handleSidebarStateChange = (newState: boolean) => {
-        setIsSidebarExpanded(newState);
+        console.log("Sidebar state changed:", newState);
+        // setIsSidebarExpanded(newState);
     };
 
     useEffect(() => {
@@ -90,7 +99,7 @@ const JobDetail = () => {
             <Sidebar onStateChange={handleSidebarStateChange} />
 
             <div
-                className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isSidebarExpanded ? "ml-64" : "ml-24"
+                className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isExpanded ? "ml-64" : "ml-24"
                     }`}
             >
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Sidebar from "../components/Sidebar";
+import { useSidebar } from "../context/SidebarContext";
 import Header from "../components/Header";
 import Spinner from "../components/Spinner";
 import { useRouter } from "next/navigation";
@@ -69,10 +70,10 @@ export default function Page() {
         setLoadingTable(false);
     }, [router]);
 
-    const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
+    const { isExpanded } = useSidebar();
 
     const handleSidebarStateChange = (newState: boolean) => {
-        setIsSidebarExpanded(newState);
+        console.log("Sidebar state changed:", newState);
     };
 
     const handlePageChange = (newPage: number) => {
@@ -154,7 +155,7 @@ export default function Page() {
         <div className="flex flex-row h-screen bg-white">
             <Sidebar onStateChange={handleSidebarStateChange} />
             <div
-                className={`flex-1 flex flex-col transition-all bg-white duration-300 ${!isSidebarExpanded ? "ml-24" : "ml-64"
+                className={`flex-1 flex flex-col transition-all bg-white duration-300 ${!isExpanded ? "ml-24" : "ml-64"
                     }`}
             >
                 <Header

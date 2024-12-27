@@ -9,6 +9,8 @@ import { useEffect, useState } from 'react';
 import { FaArrowLeftLong } from "react-icons/fa6";
 import { useRouter } from 'next/navigation';
 import { BiSolidEditAlt } from 'react-icons/bi';
+import { useSidebar } from "../../context/SidebarContext";
+
 
 interface Job {
     _id: string;
@@ -45,11 +47,18 @@ const JobDetail = () => {
     const router = useRouter();
     const { id } = useParams();
 
-    const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
+    // const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
 
+
+    // const handleSidebarStateChange = (newState: boolean) => {
+    //     setIsSidebarExpanded(newState);
+    // };
+
+    const { isExpanded } = useSidebar();
 
     const handleSidebarStateChange = (newState: boolean) => {
-        setIsSidebarExpanded(newState);
+        console.log("Sidebar state changed:", newState);
+        // setIsSidebarExpanded(newState);
     };
 
     useEffect(() => {
@@ -124,7 +133,7 @@ const JobDetail = () => {
             <Sidebar onStateChange={handleSidebarStateChange} />
 
             <div
-                className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isSidebarExpanded ? "ml-64" : "ml-24"
+                className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isExpanded ? "ml-64" : "ml-24"
                     }`}
             >
 
