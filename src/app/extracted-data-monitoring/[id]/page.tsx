@@ -117,8 +117,7 @@ const JobDetail = () => {
         setIsModalOpen(false);
     };
 
-    if (loading) return <div><Spinner /></div>;
-    if (error) return <div>{error}</div>;
+    if (loading) return <Spinner />;
     if (!job) return <>{error}</>;
 
     return (
