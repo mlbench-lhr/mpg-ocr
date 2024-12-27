@@ -444,18 +444,38 @@ const MasterPage = () => {
     await fetchJobs();
   };
 
+  // const handleRouteChange = () => {
+  //   if (typeof window !== "undefined") {
+  //     sessionStorage.setItem("finalStatusFilter", finalStatusFilter);
+  //     sessionStorage.setItem("reviewStatusFilter", reviewStatusFilter);
+  //     sessionStorage.setItem("reasonStatusFilter", reasonStatusFilter);
+  //     sessionStorage.setItem("reviewByStatusFilter", reviewByStatusFilter);
+  //     sessionStorage.setItem("podDateFilter", podDateFilter);
+  //     sessionStorage.setItem("podDateSignatureFilter", podDateSignatureFilter);
+  //     sessionStorage.setItem("jobNameFilter", jobNameFilter);
+  //     sessionStorage.setItem("bolNumberFilter", bolNumberFilter);
+  //   }
+  // };
+
   const handleRouteChange = () => {
     if (typeof window !== "undefined") {
-      sessionStorage.setItem("finalStatusFilter", finalStatusFilter);
-      sessionStorage.setItem("reviewStatusFilter", reviewStatusFilter);
-      sessionStorage.setItem("reasonStatusFilter", reasonStatusFilter);
-      sessionStorage.setItem("reviewByStatusFilter", reviewByStatusFilter);
-      sessionStorage.setItem("podDateFilter", podDateFilter);
-      sessionStorage.setItem("podDateSignatureFilter", podDateSignatureFilter);
-      sessionStorage.setItem("jobNameFilter", jobNameFilter);
-      sessionStorage.setItem("bolNumberFilter", bolNumberFilter);
+      const filters = {
+        finalStatusFilter,
+        reviewStatusFilter,
+        reasonStatusFilter,
+        reviewByStatusFilter,
+        podDateFilter,
+        podDateSignatureFilter,
+        jobNameFilter,
+        bolNumberFilter,
+      };
+
+      Object.entries(filters).forEach(([key, value]) => {
+        sessionStorage.setItem(key, value);
+      });
     }
   };
+
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
