@@ -35,7 +35,6 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     useEffect(() => {
         const preloadImage = new window.Image();
         preloadImage.src = "/images/sidbar.svg";
-        console.log(isImageLoaded);
         preloadImage.onload = () => setIsImageLoaded(true);
     }, []);
 
@@ -47,8 +46,6 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     //         const parsedState = JSON.parse(savedState);
     //         setIsExpanded(parsedState);
     //         onStateChange(parsedState);
-    //         console.log("sidebar 0");
-
     //     }
     // }, [onStateChange]);
 
@@ -58,8 +55,6 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     //     setIsExpanded(newState);
     //     localStorage.setItem("sidebar", JSON.stringify(newState));
     //     onStateChange(newState);
-    //     console.log("sidebar 1");
-
     // };
 
     const toggleExpand = () => {
@@ -175,7 +170,11 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     };
 
     const pathname = usePathname();
-    const isActive = (path: string) => pathname === path;
+    // const isActive = (path: string) => pathname === path;
+
+    const isActive = (path: string) => {
+        return pathname?.startsWith(path);
+    };
 
     return (
         <>
@@ -187,10 +186,11 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                     {isExpanded && isImageLoaded ? (
                         <Image
                             src={sideBarLogo}
-                            alt="logo"
+                            alt="Sidebar Logo"
                             width={200}
                             height={200}
                             priority
+                            style={{ width: "auto", height: "auto" }}
                         />
                     ) : (
                         <p className="text-2xl font-bold text-[#005B97]">MPG</p>
@@ -203,14 +203,16 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                             <Link href="/jobs">
                                 <li
                                     className={`flex items-center mb-2 justify-start
-                                     space-x-3 pl-5 pr-0 py-2 rounded-lg transition-all duration-300 ease-in-out ${isActive("/jobs") ? "bg-blue-200 font-bold" : "hover:bg-gray-200"
+                                     space-x-3 pl-5 pr-0 py-2 rounded-lg transition-all duration-300 ease-in-out ${isActive("/jobs") ? "bg-gray-200" : "hover:bg-gray-200"
                                         }`}
                                 >
                                     <span className="flex-shrink-0">
-                                        <BsClipboard2CheckFill className="text-[#005B97] text-2xl" />
+                                        <BsClipboard2CheckFill className={` ${isActive("/jobs") ? "text-[#005B97]" : "text-[#7B849A]"
+                                            } transition-all duration-300 ease-in-out text-2xl`} />
                                     </span>
                                     <span
-                                        className={`text-gray-800 text-lg transition-all duration-300 ease-in-out`}
+                                        className={`${isActive("/jobs") ? " text-gray-950" : "text-gray-400"
+                                            } text-lg transition-all duration-300 ease-in-out`}
                                         style={{
                                             width: isExpanded ? "auto" : "0",
                                             overflow: "hidden",
@@ -227,14 +229,16 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                         <Link href="/extracted-data-monitoring" onClick={() => localStorage.setItem("prev", "/roles-requests")}>
                             <li
                                 className={`flex items-center mb-2 justify-start
-                                     space-x-3 pl-5 pr-0 py-2 rounded-lg transition-all duration-300 ease-in-out ${isActive("/extracted-data-monitoring") ? "bg-blue-200 font-bold" : "hover:bg-gray-200"
+                                     space-x-3 pl-5 pr-0 py-2 rounded-lg transition-all duration-300 ease-in-out ${isActive("/extracted-data-monitoring") || isActive("/history") ? "bg-gray-200" : "hover:bg-gray-200"
                                     }`}
                             >
                                 <span className="flex-shrink-0">
-                                    <FaClipboardList className="text-[#005B97] text-2xl" />
+                                    <FaClipboardList className={` ${isActive("/extracted-data-monitoring") || isActive("/history") ? "text-[#005B97]" : "text-[#7B849A]"
+                                        } transition-all duration-300 ease-in-out text-2xl`} />
                                 </span>
                                 <span
-                                    className={`text-gray-800 text-lg transition-all duration-300 ease-in-out`}
+                                    className={`${isActive("/extracted-data-monitoring") || isActive("/history") ? " text-gray-950" : "text-gray-400"
+                                        }  text-lg transition-all duration-300 ease-in-out`}
                                     style={{
                                         width: isExpanded ? "auto" : "0",
                                         overflow: "hidden",
@@ -251,14 +255,16 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                             <Link href="/roles-requests">
                                 <li
                                     className={`flex items-center mb-2 justify-start
-                                     space-x-3 pl-5 pr-0 py-2 rounded-lg transition-all duration-300 ease-in-out ${isActive("/roles-requests") ? "bg-blue-200 font-bold" : "hover:bg-gray-200"
+                                     space-x-3 pl-5 pr-0 py-2 rounded-lg transition-all duration-300 ease-in-out ${isActive("/roles-requests") ? "bg-gray-200" : "hover:bg-gray-200"
                                         }`}
                                 >
                                     <span className="flex-shrink-0">
-                                        <FaUserPlus className="text-[#005B97] text-2xl" />
+                                        <FaUserPlus className={` ${isActive("/roles-requests") ? "text-[#005B97]" : "text-[#7B849A]"
+                                            } transition-all duration-300 ease-in-out text-2xl`} />
                                     </span>
                                     <span
-                                        className={`text-gray-800 text-lg transition-all duration-300 ease-in-out`}
+                                        className={`${isActive("/roles-requests") ? " text-gray-950" : "text-gray-400"
+                                            } text-lg transition-all duration-300 ease-in-out`}
                                         style={{
                                             width: isExpanded ? "auto" : "0",
                                             overflow: "hidden",
@@ -284,7 +290,7 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                 <div className="flex items-center gap-2">
                                     <span className="flex-shrink-0">
                                         <IoSettingsSharp
-                                            className="text-[#005B97] text-2xl cursor-pointer"
+                                            className="text-[#7B849A] text-2xl cursor-pointer"
                                             onClick={toggleDropdown}
                                         />
                                     </span>

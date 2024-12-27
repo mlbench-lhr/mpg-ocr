@@ -46,17 +46,11 @@ const JobDetail = () => {
     const searchParams = useSearchParams();
     const blNumber = searchParams.get("blNumber");
 
-    // const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
-
-    // const handleSidebarStateChange = (newState: boolean) => {
-    //     setIsSidebarExpanded(newState);
-    // };
-
     const { isExpanded } = useSidebar();
 
     const handleSidebarStateChange = (newState: boolean) => {
-        console.log("Sidebar state changed:", newState);
         // setIsSidebarExpanded(newState);
+        return newState;
     };
 
     useEffect(() => {

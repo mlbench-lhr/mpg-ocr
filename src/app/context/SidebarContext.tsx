@@ -13,7 +13,6 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
     useEffect(() => {
-        // Check if we're running in the client environment
         if (typeof window !== "undefined") {
             const savedState = sessionStorage.getItem("sidebar");
             if (savedState !== null) {
@@ -25,8 +24,6 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const toggleSidebar = () => {
         const newState = !isExpanded;
         setIsExpanded(newState);
-
-        // Ensure sessionStorage is only accessed in the client environment
         if (typeof window !== "undefined") {
             sessionStorage.setItem("sidebar", JSON.stringify(newState));
         }

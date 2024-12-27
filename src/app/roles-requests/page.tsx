@@ -73,7 +73,8 @@ export default function Page() {
     const { isExpanded } = useSidebar();
 
     const handleSidebarStateChange = (newState: boolean) => {
-        console.log("Sidebar state changed:", newState);
+        // setIsSidebarExpanded(newState);
+        return newState;
     };
 
     const handlePageChange = (newPage: number) => {
@@ -187,6 +188,7 @@ export default function Page() {
                                 width={200}
                                 height={200}
                                 priority
+                                style={{ width: "auto", height: "auto" }}
                             />
                         </div>
                     ) : (

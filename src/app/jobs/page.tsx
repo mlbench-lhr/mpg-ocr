@@ -35,8 +35,9 @@ const JobPage = () => {
   const { isExpanded } = useSidebar();
 
   const handleSidebarStateChange = (newState: boolean) => {
-    console.log("Sidebar state changed:", newState);
     // setIsSidebarExpanded(newState);
+    return newState;
+
   };
 
   useEffect(() => {
@@ -278,6 +279,8 @@ const JobPage = () => {
                 width={200}
                 height={200}
                 priority
+                style={{ width: "auto", height: "auto" }}
+
               />
             </div>
           ) : (

@@ -163,23 +163,15 @@ const MasterPage = () => {
 
   // const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
 
-  // useEffect(() => {
-  //   const savedState = localStorage.getItem("sidebar");
-  //   if (savedState) {
-  //     setIsSidebarExpanded(JSON.parse(savedState));
-  //   }
-  //   console.log("sidebar 2");
-  // }, []);
-
   // const handleSidebarStateChange = (newState: boolean) => {
   //   setIsSidebarExpanded(newState);
-  //   console.log("sidebar 3");
   // };
 
   const { isExpanded } = useSidebar();
 
   const handleSidebarStateChange = (newState: boolean) => {
-    console.log("Sidebar state changed:", newState);
+    return newState;
+    // console.log("Sidebar state changed:", newState);
     // setIsSidebarExpanded(newState);
   };
 
