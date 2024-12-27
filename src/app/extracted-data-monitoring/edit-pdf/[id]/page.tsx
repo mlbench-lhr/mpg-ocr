@@ -40,7 +40,7 @@ interface Job {
 const JobDetail = () => {
     const { id } = useParams();
     const [job, setJob] = useState<Job | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         blNumber: "",
@@ -69,12 +69,10 @@ const JobDetail = () => {
 
     useEffect(() => {
         const token = localStorage.getItem("token");
-
         if (!token) {
             router.push("/login");
             return;
         }
-
         const decodeJwt = (token: string) => {
             const base64Url = token.split(".")[1];
             const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
@@ -87,15 +85,15 @@ const JobDetail = () => {
 
             return JSON.parse(jsonPayload);
         };
-
         const decodedToken = decodeJwt(token);
         setUserRole(decodedToken.role);
         setName(decodedToken.username);
-        setLoading(false);
     }, [router]);
 
     useEffect(() => {
         if (id) {
+            setLoading(true);
+
             fetch(`/api/process-data/detail-data/${id}`)
                 .then((res) => res.json())
                 .then((data) => {
@@ -114,6 +112,7 @@ const JobDetail = () => {
                             refused: data.refused ?? "",
                             sealIntact: data.sealIntact ?? "",
                         });
+                        setLoading(false);
                     }
                     setLoading(false);
                 })

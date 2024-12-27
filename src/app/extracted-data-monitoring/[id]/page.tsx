@@ -41,7 +41,7 @@ interface Job {
 const JobDetail = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [job, setJob] = useState<Job | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [userRole, setUserRole] = useState("");
     const router = useRouter();
@@ -56,12 +56,10 @@ const JobDetail = () => {
 
     useEffect(() => {
         const token = localStorage.getItem("token");
-
         if (!token) {
             router.push("/login");
             return;
         }
-
         const decodeJwt = (token: string) => {
             const base64Url = token.split(".")[1];
             const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
@@ -74,14 +72,13 @@ const JobDetail = () => {
 
             return JSON.parse(jsonPayload);
         };
-
         const decodedToken = decodeJwt(token);
         setUserRole(decodedToken.role);
-        setLoading(false);
     }, [router]);
 
     useEffect(() => {
         if (id) {
+            setLoading(true);
             fetch(`/api/process-data/detail-data/${id}`)
                 .then((res) => res.json())
                 .then((data) => {
@@ -89,6 +86,7 @@ const JobDetail = () => {
                         setError(data.error);
                     } else {
                         setJob(data);
+                        setLoading(false);
                     }
                     setLoading(false);
                 })
@@ -120,12 +118,10 @@ const JobDetail = () => {
     return (
         <div className="flex flex-row h-screen bg-white">
             <Sidebar onStateChange={handleSidebarStateChange} />
-
             <div
                 className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isExpanded ? "ml-64" : "ml-24"
                     }`}
             >
-
                 <div className="bg-gray-100 py-3 flex justify-between items-center my-10 mx-5 rounded-lg px-8">
                     <div className="flex items-center gap-5">
                         <span className="text-[#005B97] cursor-pointer" onClick={handleGoBack}>
@@ -197,7 +193,6 @@ const JobDetail = () => {
 
 
                 </div>
-
             </div>
 
             {isModalOpen && (

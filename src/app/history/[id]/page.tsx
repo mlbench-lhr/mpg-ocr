@@ -87,16 +87,13 @@ const JobDetail = () => {
     };
 
     if (error) return <div className="text-red-500">{error}</div>;
-
     return (
         <div className="flex flex-row h-screen bg-white">
             <Sidebar onStateChange={handleSidebarStateChange} />
-
             <div
                 className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isExpanded ? "ml-64" : "ml-24"
                     }`}
             >
-
                 <div className="bg-gray-100 py-3 flex justify-between items-center my-10 mx-5 rounded-lg px-8">
                     <div className="flex items-center gap-5">
                         <span className="text-[#005B97] cursor-pointer" onClick={handleGoBack}>
@@ -170,10 +167,7 @@ const JobDetail = () => {
                         </div>
                     )}
                 </div>
-
             </div>
-
-
         </div>
     );
 };
