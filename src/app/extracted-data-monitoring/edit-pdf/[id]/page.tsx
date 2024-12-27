@@ -223,7 +223,6 @@ const JobDetail = () => {
         setIsEditMode(true);
     };
 
-    if (loading) return <Spinner />;
     if (!job) return <>{error}</>;
 
     return (
@@ -251,80 +250,81 @@ const JobDetail = () => {
                         </Link>
                     </div>
                 </div>
+                {loading ? <Spinner /> :
+                    <>
+                        <div className="mx-5 flex bg-white pt-3 h-5/6">
+                            <div className="flex-auto xl:h-[calc(143vh-6rem)] 2xl:h-screen bg-white relative">
 
-                <div className="mx-5 flex bg-white pt-3 h-5/6">
-
-                    <div className="flex-auto xl:h-[calc(143vh-6rem)] 2xl:h-screen bg-white relative">
-
-                        {isLoading && (
-                            <div className="absolute inset-0 flex items-start justify-center mt-10 bg-white z-10">
-                                <div className="loader text-gray-800">Loading...</div>
-                            </div>
-                        )}
-
-
-                        <iframe
-                            src={`${job.pdfUrl}#toolbar=0`}
-                            className="w-11/12 h-full bg-white"
-                            loading="lazy"
-                            onLoad={handleIframeLoad}
-                        />
-                    </div>
-
-
-                    <div className="flex-1 bg-gray-100 rounded-xl p-6 flex flex-col  xl:h-[calc(160vh-6rem)] 2xl:h-[calc(120vh-6rem)]">
-                        <div className='flex justify-between items-center mb-4'>
-                            <span>
-                                <h3 className="text-xl font-medium text-gray-800">Extracted Data</h3>
-                            </span>
-                            <span>
-                                {(userRole === "admin" || userRole === "standarduser") && (
-                                    <button
-                                        className={`text-[#005B97] underline ${isEditMode ? "text-blue-300" : ""}`}
-                                        onClick={handleEditClick}
-                                        disabled={isEditMode}
-                                    >
-                                        Edit Data
-                                    </button>
+                                {isLoading && (
+                                    <div className="absolute inset-0 flex items-start justify-center mt-10 bg-white z-10">
+                                        <div className="loader text-gray-800">Loading...</div>
+                                    </div>
                                 )}
 
-                            </span>
-                        </div>
-                        <form className="space-y-10 flex-1 overflow-y-auto">
-                            {Object.keys(formData).map((key) => (
-                                <div
-                                    key={key}
-                                    className="flex items-center gap-3 bg-white px-2 border-l-8 border-[#005B97] rounded-lg py-[7px]"
-                                >
-                                    <label className="font-medium text-gray-500 capitalize w-32">
-                                        {key.replace(/([A-Z])/g, " $1")} :
-                                    </label>
-                                    <input
-                                        type={key === "podDate" ? "date" : "text"}
-                                        name={key}
-                                        value={formData[key as keyof typeof formData]}
-                                        onChange={handleChange}
-                                        disabled={!isEditMode}
-                                        className="p-2 text-gray-800 border-none focus:outline-none w-full"
-                                    />
-                                </div>
-                            ))}
-                        </form>
 
-                        {isEditMode && (
-                            <>
-                                <button
-                                    type="button"
-                                    onClick={handleSave}
-                                    className="w-full bg-[#005B97] text-white font-medium py-3 rounded-lg hover:bg-[#2772a3] mt-auto"
-                                    disabled={saving}
-                                >
-                                    {saving ? "Saving..." : "Save Changes"}
-                                </button>
-                            </>
-                        )}
-                    </div>
-                </div>
+                                <iframe
+                                    src={`${job.pdfUrl}#toolbar=0`}
+                                    className="w-11/12 h-full bg-white"
+                                    loading="lazy"
+                                    onLoad={handleIframeLoad}
+                                />
+                            </div>
+                            <div className="flex-1 bg-gray-100 rounded-xl p-6 flex flex-col  xl:h-[calc(160vh-6rem)] 2xl:h-[calc(120vh-6rem)]">
+                                <div className='flex justify-between items-center mb-4'>
+                                    <span>
+                                        <h3 className="text-xl font-medium text-gray-800">Extracted Data</h3>
+                                    </span>
+                                    <span>
+                                        {(userRole === "admin" || userRole === "standarduser") && (
+                                            <button
+                                                className={`text-[#005B97] underline ${isEditMode ? "text-blue-300" : ""}`}
+                                                onClick={handleEditClick}
+                                                disabled={isEditMode}
+                                            >
+                                                Edit Data
+                                            </button>
+                                        )}
+
+                                    </span>
+                                </div>
+                                <form className="space-y-10 flex-1 overflow-y-auto">
+                                    {Object.keys(formData).map((key) => (
+                                        <div
+                                            key={key}
+                                            className="flex items-center gap-3 bg-white px-2 border-l-8 border-[#005B97] rounded-lg py-[7px]"
+                                        >
+                                            <label className="font-medium text-gray-500 capitalize w-32">
+                                                {key.replace(/([A-Z])/g, " $1")} :
+                                            </label>
+                                            <input
+                                                type={key === "podDate" ? "date" : "text"}
+                                                name={key}
+                                                value={formData[key as keyof typeof formData]}
+                                                onChange={handleChange}
+                                                disabled={!isEditMode}
+                                                className="p-2 text-gray-800 border-none focus:outline-none w-full"
+                                            />
+                                        </div>
+                                    ))}
+                                </form>
+
+                                {isEditMode && (
+                                    <>
+                                        <button
+                                            type="button"
+                                            onClick={handleSave}
+                                            className="w-full bg-[#005B97] text-white font-medium py-3 rounded-lg hover:bg-[#2772a3] mt-auto"
+                                            disabled={saving}
+                                        >
+                                            {saving ? "Saving..." : "Save Changes"}
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </>
+                }
+
             </div>
         </div>
     );

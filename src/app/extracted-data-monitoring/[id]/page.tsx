@@ -116,10 +116,7 @@ const JobDetail = () => {
         setJob(updatedJob);
         setIsModalOpen(false);
     };
-
-    if (loading) return <Spinner />;
     if (!job) return <>{error}</>;
-
     return (
         <div className="flex flex-row h-screen bg-white">
             <Sidebar onStateChange={handleSidebarStateChange} />
@@ -155,46 +152,50 @@ const JobDetail = () => {
                 <div className='mx-5'>
                     <h1 className='text-3xl text-gray-800 font-semibold mb-5'>Shipment Information</h1>
 
-                    <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 my-5'>
-                        <div className='flex items-center gap-5'>
-                            <span className='text-xl text-gray-800 font-semibold'>Created On</span>
-                            <span className='text-xl text-gray-400 font-medium'>
-                                {job.createdAt ? format(new Date(job.createdAt), 'dd/MM/yyyy') : 'N/A'}
-                            </span>
-                        </div>
-                        <div className='flex items-center gap-5'>
-                            <span className='text-xl text-gray-800 font-semibold'>Delivery Date</span>
-                            <span className='text-xl text-gray-400 font-medium'>
-                                {job.deliveryDate ? format(new Date(job.deliveryDate), 'dd/MM/yyyy') : 'N/A'}
-                            </span>
-                        </div>
-                    </div>
+                    {loading ? <Spinner /> :
+                        <>
+                            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 my-5'>
+                                <div className='flex items-center gap-5'>
+                                    <span className='text-xl text-gray-800 font-semibold'>Created On</span>
+                                    <span className='text-xl text-gray-400 font-medium'>
+                                        {job.createdAt ? format(new Date(job.createdAt), 'dd/MM/yyyy') : 'N/A'}
+                                    </span>
+                                </div>
+                                <div className='flex items-center gap-5'>
+                                    <span className='text-xl text-gray-800 font-semibold'>Delivery Date</span>
+                                    <span className='text-xl text-gray-400 font-medium'>
+                                        {job.deliveryDate ? format(new Date(job.deliveryDate), 'dd/MM/yyyy') : 'N/A'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 my-5'>
+                                <div className='flex items-center gap-5'>
+                                    <span className='text-xl text-gray-800 font-semibold'>Final Status</span>
+                                    <span className='text-xl text-[#005B97] font-medium bg-blue-100 py-1 px-4 rounded-3xl'>
+                                        {job.finalStatus}
+                                    </span>
+                                </div>
+                                <div className='flex items-center gap-5'>
+                                    <span className='text-xl text-gray-800 font-semibold'>Review Status</span>
+                                    <span className='text-xl text-green-600 font-medium bg-green-100 py-1 px-4 rounded-3xl'>
+                                        {job.reviewStatus}
+                                    </span>
+                                </div>
+                                <div className='flex items-center gap-5'>
+                                    <span className='text-xl text-gray-800 font-semibold'>Recognition Status</span>
+                                    <span className='text-xl text-yellow-600 font-medium bg-yellow-100 py-1 px-4 rounded-3xl'>
+                                        {job.recognitionStatus}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className='flex flex-col my-5'>
+                                <h1 className='text-xl text-gray-800 font-semibold mb-3'>Cargo Description</h1>
+                                <div className='text-gray-400 text-lg text-justify'>{job.cargoDescription}</div>
+                            </div>
+                        </>
+                    }
 
-                    <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 my-5'>
-                        <div className='flex items-center gap-5'>
-                            <span className='text-xl text-gray-800 font-semibold'>Final Status</span>
-                            <span className='text-xl text-[#005B97] font-medium bg-blue-100 py-1 px-4 rounded-3xl'>
-                                {job.finalStatus}
-                            </span>
-                        </div>
-                        <div className='flex items-center gap-5'>
-                            <span className='text-xl text-gray-800 font-semibold'>Review Status</span>
-                            <span className='text-xl text-green-600 font-medium bg-green-100 py-1 px-4 rounded-3xl'>
-                                {job.reviewStatus}
-                            </span>
-                        </div>
-                        <div className='flex items-center gap-5'>
-                            <span className='text-xl text-gray-800 font-semibold'>Recognition Status</span>
-                            <span className='text-xl text-yellow-600 font-medium bg-yellow-100 py-1 px-4 rounded-3xl'>
-                                {job.recognitionStatus}
-                            </span>
-                        </div>
-                    </div>
 
-                    <div className='flex flex-col my-5'>
-                        <h1 className='text-xl text-gray-800 font-semibold mb-3'>Cargo Description</h1>
-                        <div className='text-gray-400 text-lg text-justify'>{job.cargoDescription}</div>
-                    </div>
                 </div>
 
             </div>
