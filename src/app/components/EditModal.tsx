@@ -56,7 +56,7 @@ const EditModal: React.FC<EditModalProps> = ({ job, onClose, onUpdate }) => {
         e.preventDefault();
 
         if (!formData.cargoDescription.trim()) {
-            setErrorMessage("Cargo description is required.");
+            setErrorMessage("Description is required.");
             return;
         }
 
@@ -184,7 +184,7 @@ const EditModal: React.FC<EditModalProps> = ({ job, onClose, onUpdate }) => {
                     </div>
 
                     <div className="mb-4">
-                        <label className="block font-semibold text-gray-800 mb-3">Cargo Description</label>
+                        <label className="block font-semibold text-gray-800 mb-3">Description</label>
                         <textarea
                             name="cargoDescription"
                             value={formData.cargoDescription}

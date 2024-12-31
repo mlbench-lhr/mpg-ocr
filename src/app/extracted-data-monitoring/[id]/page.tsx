@@ -185,7 +185,7 @@ const JobDetail = () => {
                                 </div>
                             </div>
                             <div className='flex flex-col my-5'>
-                                <h1 className='text-xl text-gray-800 font-semibold mb-3'>Cargo Description</h1>
+                                <h1 className='text-xl text-gray-800 font-semibold mb-3'>Description</h1>
                                 <div className='text-gray-400 text-lg text-justify'>{job.cargoDescription}</div>
                             </div>
                         </>
