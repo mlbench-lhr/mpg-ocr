@@ -12,30 +12,19 @@ dayjs.extend(isBetween);
 
 
 interface OCRData {
-    bill_of_lading?: {
-        bill_no: string;
-    };
-    carrier?: {
-        carrier_name: string;
-    };
-    stamp?: {
-        pod_date: string;
-        pod_sign: string;
-        ctns_delivered: number;
-        ctns_damaged: number;
-        ctns_short: number;
-        ctns_over: number;
-        refused: string;
-        seal_intact: string;
-        damaged: string;
-    };
-    signatures?: {
-        receiver_signature: string;
-    };
-    customer_order_info?: {
-        total_order_quantity: number;
-    };
+    B_L_Number: number | null;
+    Stamp_Exists: string;
+    POD_Date: string | null;
+    Signature_Exists: string;
+    Issued_Qty:  number | null | string;
+    Received_Qty:  number | null | string;
+    Damage_Qty:  number | null | string;
+    Short_Qty:  number | null | string;
+    Over_Qty:  number | null | string;
+    Refused_Qty:  number | null | string;
+    Customer_Order_Num: string | string[] | null;
 }
+
 
 export async function GET() {
     try {
@@ -60,56 +49,87 @@ export async function GET() {
                 const from = dayjs(fromTime).utc();
                 const to = dayjs(toTime).utc();
                 if (currentTime.isBetween(from, to)) {
-
-
                     const intervalMinutes = parseInt(job.everyTime);
                     const minuteDifference = currentTime.diff(from, 'minute');
-
                     if (minuteDifference % intervalMinutes === 0) {
-                        
                         const pdfUrls = await fetchPdfUrls();
                         if (pdfUrls.length > 0) {
                             for (const pdfUrl of pdfUrls) {
                                 try {
+                                    // const ocrData = await fetchOCRData(pdfUrl);
+                                    // const processedDataArray = ocrData.map((data: OCRData) => ({
+                                    //     blNumber: data.bill_of_lading?.bill_no || "Unknown",
+                                    //     jobId: job._id ? job._id.toString() : null,
+                                    //     jobName: job.jobName,
+                                    //     pdfUrl: pdfUrl,
+                                    //     carrier: data.carrier?.carrier_name || "Unknown Carrier",
+                                    //     podDate: data.stamp?.pod_date,
+                                    //     deliveryDate: new Date(),
+                                    //     podSignature: data.stamp?.pod_sign,
+                                    //     receiverSignature: data.signatures?.receiver_signature,
+                                    //     totalQty: data.customer_order_info?.total_order_quantity,
+                                    //     noOfPages: 1,
+                                    //     delivered: data.stamp?.ctns_delivered,
+                                    //     damaged: data.stamp?.ctns_damaged,
+                                    //     short: data.stamp?.ctns_short,
+                                    //     over: data.stamp?.ctns_over,
+                                    //     refused: data.stamp?.refused,
+                                    //     sealIntact: data.stamp?.seal_intact === "yes" ? "Y" : "N",
+                                    //     finalStatus: "new",
+                                    //     reviewStatus: "unConfirmed",
+                                    //     recognitionStatus: "new",
+                                    //     breakdownReason: data.stamp?.damaged === "yes" ? "damaged" : "none",
+                                    //     reviewedBy: "OCR Engine",
+                                    //     cargoDescription: "Processed from OCR API.",
+                                    // }));
+                                    // await saveProcessedDataToDB(processedDataArray);
+                                    // console.log('Processed and saved OCR data for PDF URL:', pdfUrl);
+
                                     const ocrData = await fetchOCRData(pdfUrl);
                                     const processedDataArray = ocrData.map((data: OCRData) => ({
-                                        blNumber: data.bill_of_lading?.bill_no || "Unknown",
                                         jobId: job._id ? job._id.toString() : null,
-                                        jobName: job.jobName,
                                         pdfUrl: pdfUrl,
-                                        carrier: data.carrier?.carrier_name || "Unknown Carrier",
-                                        podDate: data.stamp?.pod_date || null,
                                         deliveryDate: new Date(),
-                                        podSignature: data.stamp?.pod_sign || "none",
-                                        receiverSignature: data.signatures?.receiver_signature || "none",
-                                        totalQty: data.customer_order_info?.total_order_quantity || 0,
                                         noOfPages: 1,
-                                        delivered: data.stamp?.ctns_delivered || 0,
-                                        damaged: data.stamp?.ctns_damaged || 0,
-                                        short: data.stamp?.ctns_short || 0,
-                                        over: data.stamp?.ctns_over || 0,
-                                        refused: data.stamp?.refused === "yes" ? 1 : 0,
-                                        sealIntact: data.stamp?.seal_intact === "yes" ? "Y" : "N",
+
+
+                                        blNumber: data.B_L_Number || null,
+                                        jobName: job.jobName,
+
+                                        podDate: data.POD_Date,
+                                        podSignature: data.Signature_Exists === "yes" ? "Yes" : data.Signature_Exists === "no" ? "No" : data.Signature_Exists,
+                                        totalQty: data.Issued_Qty,
+
+                                        received: data.Received_Qty,
+                                        damaged: data.Damage_Qty,
+                                        short: data.Short_Qty,
+                                        over: data.Over_Qty,
+                                        refused: data.Refused_Qty,
+
+                                        customerOrderNum: data.Customer_Order_Num || null,
+
+                                        stampExists: data.Stamp_Exists === "yes" ? "Y" : data.Stamp_Exists === "no" ? "N" : data.Stamp_Exists,
+
                                         finalStatus: "new",
                                         reviewStatus: "unConfirmed",
                                         recognitionStatus: "new",
-                                        breakdownReason: data.stamp?.damaged === "yes" ? "damaged" : "none",
+                                        breakdownReason: "none",
                                         reviewedBy: "OCR Engine",
                                         cargoDescription: "Processed from OCR API.",
                                     }));
+
                                     await saveProcessedDataToDB(processedDataArray);
                                     console.log('Processed and saved OCR data for PDF URL:', pdfUrl);
+
                                 } catch (error) {
                                     console.error('Error processing OCR data for PDF URL:', pdfUrl, error);
                                 }
                             }
                         }
-
                     }
                 }
             }
         }
-
         return NextResponse.json({ message: 'Jobs processed, PDFs fetched, and OCR data saved successfully.' }, { status: 200 });
     } catch (error) {
         console.log('Error processing jobs:', error);

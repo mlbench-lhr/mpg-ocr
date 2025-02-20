@@ -6,25 +6,25 @@ interface Job {
     _id: ObjectId;
     blNumber: string;
     jobName: string;
-    carrier: string;
     podDate: string;
-    deliveryDate: string;
+    deliveryDate: Date;
     podSignature: string;
     totalQty: number;
-    delivered: number;
+    received: number;
     damaged: number;
     short: number;
     over: number;
     refused: number;
     noOfPages: number;
-    sealIntact: string;
+    stampExists: string;
     finalStatus: string;
     reviewStatus: string;
     recognitionStatus: string;
     breakdownReason: string;
     reviewedBy: string;
     cargoDescription: string;
-    receiverSignature: string;
+    createdAt: string;
+    updatedAt?: string;
 }
 
 export async function GET(req: Request) {
@@ -46,7 +46,6 @@ export async function GET(req: Request) {
         const breakdownReason = url.searchParams.get("breakdownReason") || "";
         const podDate = url.searchParams.get("podDate") || "";
         const podDateSignature = url.searchParams.get("podDateSignature") || "";
-        const carrier = url.searchParams.get("carrier") || "";
         const bolNumber = url.searchParams.get("bolNumber") || "";
         const jobName = url.searchParams.get("jobName") || "";
         const searchQuery = url.searchParams.get("search") || "";
@@ -55,9 +54,6 @@ export async function GET(req: Request) {
 
         if (podDateSignature) {
             filter.podSignature = { $regex: podDateSignature.trim(), $options: "i" };
-        }
-        if (carrier) {
-            filter.carrier = { $regex: carrier.trim(), $options: "i" };
         }
         if (bolNumber) {
             filter.blNumber = { $regex: bolNumber.trim(), $options: "i" };

@@ -2,34 +2,34 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
+import { ObjectId } from "mongodb";
 import { IoCalendar } from "react-icons/io5";
 import Swal from 'sweetalert2';
 
 
 interface Job {
-    _id: string;
+    _id: ObjectId;
     blNumber: string;
     jobName: string;
-    createdAt: string;
     podDate: string;
-    deliveryDate: string;
-    cargoDescription: string;
-    carrier: string;
+    deliveryDate: Date;
     podSignature: string;
     totalQty: number;
-    delivered: number;
+    received: number;
     damaged: number;
     short: number;
     over: number;
     refused: number;
     noOfPages: number;
-    sealIntact: string;
+    stampExists: string;
     finalStatus: string;
     reviewStatus: string;
     recognitionStatus: string;
     breakdownReason: string;
     reviewedBy: string;
-    receiverSignature: string;
+    cargoDescription: string;
+    createdAt: string;
+    updatedAt?: string;
 }
 
 interface EditModalProps {

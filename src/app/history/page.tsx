@@ -17,25 +17,23 @@ interface History {
     _id: string;
     blNumber: string;
     jobName: string;
-    carrier: string;
     podDate: string;
-    deliveryDate: string;
+    deliveryDate: Date;
     podSignature: string;
     totalQty: number;
-    delivered: number;
+    received: number;
     damaged: number;
     short: number;
     over: number;
     refused: number;
     noOfPages: number;
-    sealIntact: string;
+    stampExists: string;
     finalStatus: string;
     reviewStatus: string;
     recognitionStatus: string;
     breakdownReason: string;
     reviewedBy: string;
     cargoDescription: string;
-    receiverSignature: string;
     createdAt: string;
     updatedAt?: string;
 }
@@ -58,7 +56,7 @@ function PageContent() {
     const [totalPages, setTotalPages] = useState(1);
     const router = useRouter();
 
-    
+
     const selectedRows = useMemo(() => {
         const selectedRowsParam = searchParams.get("selectedRows");
         return selectedRowsParam ? JSON.parse(selectedRowsParam) : [];

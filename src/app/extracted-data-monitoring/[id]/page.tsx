@@ -10,32 +10,32 @@ import { FaArrowLeftLong } from "react-icons/fa6";
 import { useRouter } from 'next/navigation';
 import { BiSolidEditAlt } from 'react-icons/bi';
 import { useSidebar } from "../../context/SidebarContext";
+import { ObjectId } from "mongodb";
 
 
 interface Job {
-    _id: string;
+    _id: ObjectId;
     blNumber: string;
     jobName: string;
-    carrier: string;
     podDate: string;
-    deliveryDate: string;
+    deliveryDate: Date;
     podSignature: string;
     totalQty: number;
-    delivered: number;
+    received: number;
     damaged: number;
     short: number;
     over: number;
     refused: number;
     noOfPages: number;
-    sealIntact: string;
+    stampExists: string;
     finalStatus: string;
     reviewStatus: string;
     recognitionStatus: string;
     breakdownReason: string;
     reviewedBy: string;
     cargoDescription: string;
-    receiverSignature: string;
     createdAt: string;
+    updatedAt?: string;
 }
 
 const JobDetail = () => {

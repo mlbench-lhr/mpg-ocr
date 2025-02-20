@@ -7,34 +7,32 @@ import { FaArrowLeftLong } from "react-icons/fa6";
 import Spinner from '@/app/components/Spinner';
 import { useSidebar } from "../../../context/SidebarContext";
 import Link from 'next/link';
+import { ObjectId } from "mongodb";
 
 interface Job {
-    _id: string;
+    _id: ObjectId;
+    pdfUrl: string;
     blNumber: string;
     jobName: string;
-    carrier: string;
     podDate: string;
-    deliveryDate: string;
+    deliveryDate: Date;
     podSignature: string;
     totalQty: number;
-    delivered: number;
+    received: number;
     damaged: number;
     short: number;
     over: number;
     refused: number;
     noOfPages: number;
-    sealIntact: string;
-    pdfUrl: string;
+    stampExists: string;
     finalStatus: string;
     reviewStatus: string;
     recognitionStatus: string;
     breakdownReason: string;
     reviewedBy: string;
     cargoDescription: string;
-    receiverSignature: string;
     createdAt: string;
-    updatedAt: string;
-
+    updatedAt?: string;
 }
 
 const JobDetail = () => {
@@ -46,12 +44,12 @@ const JobDetail = () => {
         blNumber: "",
         podDate: "",
         totalQty: "",
-        delivered: "",
+        received: "",
         damaged: "",
         short: "",
         over: "",
         refused: "",
-        sealIntact: "",
+        stampExists: "",
     });
     const [isEditMode, setIsEditMode] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -105,12 +103,12 @@ const JobDetail = () => {
                             blNumber: data.blNumber || "",
                             podDate: data.podDate || "",
                             totalQty: data.totalQty?.toString() ?? "",
-                            delivered: data.delivered ?? "",
+                            received: data.received ?? "",
                             damaged: data.damaged ?? "",
                             short: data.short ?? "",
                             over: data.over ?? "",
                             refused: data.refused ?? "",
-                            sealIntact: data.sealIntact ?? "",
+                            stampExists: data.stampExists ?? "",
                         });
                         setLoading(false);
                     }
@@ -137,7 +135,7 @@ const JobDetail = () => {
 
         const numericFields = [
             "totalQty",
-            "delivered",
+            "received",
             "damaged",
             "short",
             "over",
@@ -150,7 +148,7 @@ const JobDetail = () => {
             "carrier",
             "podSignature",
             "receiverSignature",
-            "sealIntact",
+            "stampExists",
         ];
 
         if (numericFields.includes(name)) {
@@ -164,8 +162,6 @@ const JobDetail = () => {
                 }));
             }
         } else if (nonNumericFields.includes(name)) {
-
-
 
             const isValidNonNumeric =
                 value === "" ||

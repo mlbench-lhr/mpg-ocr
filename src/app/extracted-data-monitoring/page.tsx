@@ -20,35 +20,38 @@ import Tippy from '@tippyjs/react';
 import { Instance } from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 
+
 type FinalStatus = "new" | "inProgress" | "valid" | "partiallyValid" | "failure" | "sent";
 type ReviewStatus = "unConfirmed" | "confirmed" | "denied" | "deleted";
 type RecognitionStatus = "new" | "inProgress" | "valid" | "partiallyValid" | "failure" | "sent";
 type BreakdownReason = "none" | "damaged" | "shortage" | "overage" | "refused";
 
+
 interface Job {
   _id: string;
   blNumber: string;
   jobName: string;
-  carrier: string;
   podDate: string;
-  deliveryDate: string;
+  deliveryDate: Date;
   podSignature: string;
   totalQty: number;
-  delivered: number;
+  received: number;
   damaged: number;
   short: number;
   over: number;
   refused: number;
-  sealIntact: string;
   noOfPages: number;
+  stampExists: string;
   finalStatus: FinalStatus;
   reviewStatus: ReviewStatus;
   recognitionStatus: RecognitionStatus;
   breakdownReason: BreakdownReason;
   reviewedBy: string;
   cargoDescription: string;
-  receiverSignature: string;
+  createdAt: string;
+  updatedAt?: string;
 }
+
 
 const MasterPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -881,14 +884,15 @@ const MasterPage = () => {
                         onChange={handleSelectAll} /></span>BL Number</th>
                       <th className="py-2 px-4 border-b text-center min-w-32">Job Name</th>
                       <th className="py-2 px-4 border-b text-center min-w-32">POD Date</th>
-                      <th className="py-2 px-4 border-b text-center min-w-40">POD Signature</th>
-                      <th className="py-2 px-4 border-b text-center min-w-28">Total Qty</th>
-                      <th className="py-2 px-4 border-b text-center min-w-24">Delivered</th>
-                      <th className="py-2 px-4 border-b text-center min-w-24">Damaged</th>
-                      <th className="py-2 px-4 border-b text-center min-w-20">Short</th>
-                      <th className="py-2 px-4 border-b text-center min-w-20">Over</th>
-                      <th className="py-2 px-4 border-b text-center min-w-24">Refused</th>
-                      <th className="py-2 px-4 border-b text-center min-w-32">Seal Intact</th>
+                      <th className="py-2 px-4 border-b text-center min-w-32">Stamp Exists</th>
+                      <th className="py-2 px-4 border-b text-center min-w-40">Signature Exists</th>
+                      <th className="py-2 px-4 border-b text-center min-w-28">Issued Qty</th>
+                      <th className="py-2 px-4 border-b text-center min-w-24">Received Qty</th>
+                      <th className="py-2 px-4 border-b text-center min-w-24">Damaged Qty</th>
+                      <th className="py-2 px-4 border-b text-center min-w-20">Short Qty</th>
+                      <th className="py-2 px-4 border-b text-center min-w-20">Over Qty</th>
+                      <th className="py-2 px-4 border-b text-center min-w-24">Refused Qty</th>
+                      <th className="py-2 px-4 border-b text-center min-w-24">Customer Order Num</th>
                       <th className="py-2 px-4 border-b text-center min-w-32">Final Status</th>
                       <th className="py-2 px-4 border-b text-center min-w-36">Review Status</th>
                       <th className="py-2 px-4 border-b text-center min-w-48">Recognition Status</th>
@@ -916,6 +920,13 @@ const MasterPage = () => {
                         </td>
                         <td className="py-2 px-4 border-b text-center">{job.podDate}</td>
                         <td className="py-2 px-4 border-b text-center">
+                          {job.stampExists === null || job.stampExists === undefined ? (
+                            <span className="flex justify-center items-center">
+                              <IoIosInformationCircle className="text-2xl text-red-500" />
+                            </span>
+                          ) : job.stampExists}
+                        </td>
+                        <td className="py-2 px-4 border-b text-center">
                           {job.podSignature === "" || job.podSignature === null || job.podSignature === undefined ? (
                             <span className="flex justify-center items-center">
                               <IoIosInformationCircle className="text-2xl text-red-500" />
@@ -933,11 +944,11 @@ const MasterPage = () => {
 
                         </td>
                         <td className="py-2 px-4 border-b text-center">
-                          {job.delivered === null || job.delivered === undefined ? (
+                          {job.received === null || job.received === undefined ? (
                             <span className="flex justify-center items-center">
                               <IoIosInformationCircle className="text-2xl text-red-500" />
                             </span>
-                          ) : job.delivered}
+                          ) : job.received}
                         </td>
                         <td className="py-2 px-4 border-b text-center">
                           {job.damaged === null || job.damaged === undefined ? (
@@ -968,11 +979,7 @@ const MasterPage = () => {
                           ) : job.refused}
                         </td>
                         <td className="py-2 px-4 border-b text-center">
-                          {job.sealIntact === null || job.sealIntact === undefined ? (
-                            <span className="flex justify-center items-center">
-                              <IoIosInformationCircle className="text-2xl text-red-500" />
-                            </span>
-                          ) : job.sealIntact}
+                          bs2345dio123, bs2345dio123, bs2345dio123
                         </td>
                         <td className="py-2 px-4 border-b text-center">
                           <Tippy
