@@ -17,7 +17,7 @@ export async function fetchOCRData(pdfUrl) {
             )
         ]);
     };
-
+    
     try {
         const response = await fetchWithTimeout(ocrApiUrl, {
             method: "POST",

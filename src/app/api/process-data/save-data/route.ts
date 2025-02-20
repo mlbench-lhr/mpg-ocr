@@ -34,9 +34,9 @@ export async function POST(req: Request) {
 
         for (const data of dataArray) {
             for (const field of requiredFields) {
-                if (!(field in data)) {
-                    return NextResponse.json({ error: `${field} is missing in one of the objects` }, { status: 400 });
-                }
+                // if (!(field in data)) {
+                //     return NextResponse.json({ error: `${field} is missing in one of the objects` }, { status: 400 });
+                // }
 
                 if (typeof data[field] === "string") {
                     data[field] = data[field].trim();
