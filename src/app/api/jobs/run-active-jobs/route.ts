@@ -56,35 +56,6 @@ export async function GET() {
                         if (pdfUrls.length > 0) {
                             for (const pdfUrl of pdfUrls) {
                                 try {
-                                    // const ocrData = await fetchOCRData(pdfUrl);
-                                    // const processedDataArray = ocrData.map((data: OCRData) => ({
-                                    //     blNumber: data.bill_of_lading?.bill_no || "Unknown",
-                                    //     jobId: job._id ? job._id.toString() : null,
-                                    //     jobName: job.jobName,
-                                    //     pdfUrl: pdfUrl,
-                                    //     carrier: data.carrier?.carrier_name || "Unknown Carrier",
-                                    //     podDate: data.stamp?.pod_date,
-                                    //     deliveryDate: new Date(),
-                                    //     podSignature: data.stamp?.pod_sign,
-                                    //     receiverSignature: data.signatures?.receiver_signature,
-                                    //     totalQty: data.customer_order_info?.total_order_quantity,
-                                    //     noOfPages: 1,
-                                    //     delivered: data.stamp?.ctns_delivered,
-                                    //     damaged: data.stamp?.ctns_damaged,
-                                    //     short: data.stamp?.ctns_short,
-                                    //     over: data.stamp?.ctns_over,
-                                    //     refused: data.stamp?.refused,
-                                    //     sealIntact: data.stamp?.seal_intact === "yes" ? "Y" : "N",
-                                    //     finalStatus: "new",
-                                    //     reviewStatus: "unConfirmed",
-                                    //     recognitionStatus: "new",
-                                    //     breakdownReason: data.stamp?.damaged === "yes" ? "damaged" : "none",
-                                    //     reviewedBy: "OCR Engine",
-                                    //     cargoDescription: "Processed from OCR API.",
-                                    // }));
-                                    // await saveProcessedDataToDB(processedDataArray);
-                                    // console.log('Processed and saved OCR data for PDF URL:', pdfUrl);
-
                                     const ocrData = await fetchOCRData(pdfUrl);
                                     const processedDataArray = ocrData.map((data: OCRData) => ({
                                         jobId: job._id ? job._id.toString() : null,
@@ -119,6 +90,7 @@ export async function GET() {
                                     }));
 
                                     await saveProcessedDataToDB(processedDataArray);
+                                    
                                     console.log('Processed and saved OCR data for PDF URL:', pdfUrl);
 
                                 } catch (error) {

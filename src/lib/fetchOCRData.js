@@ -7,7 +7,7 @@ export async function fetchOCRData(pdfUrl) {
         throw new Error("OCR API URL is not defined in the environment variables");
     }
 
-    const timeout = 100000;
+    const timeout = 180000; // 3 minutes timeout
 
     const fetchWithTimeout = (url, options, timeout) => {
         return Promise.race([
