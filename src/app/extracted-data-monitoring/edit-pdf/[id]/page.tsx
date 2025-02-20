@@ -65,6 +65,21 @@ const JobDetail = () => {
         return newState;
     };
 
+    // Function to convert MM/DD/YY to YYYY-MM-DD
+    const formatDateForInput = (dateStr: string | null) => {
+        if (!dateStr) return ""; // Handle null or empty values
+        const [month, day, year] = dateStr.split("/");
+        return `20${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`; // Convert to YYYY-MM-DD
+    };
+
+    // Function to convert YYYY-MM-DD back to MM/DD/YY
+    const formatDateForDB = (dateStr: string) => {
+        if (!dateStr) return ""; // Handle empty string
+        const [year, month, day] = dateStr.split("-");
+        return `${month}/${day}/${year.slice(-2)}`; // Convert to MM/DD/YY
+    };
+
+
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (!token) {
@@ -101,7 +116,8 @@ const JobDetail = () => {
                         setJob(data);
                         setFormData({
                             blNumber: data.blNumber || "",
-                            podDate: data.podDate || "",
+                            podDate: formatDateForInput(data.podDate || ""),
+                            // podDate: data.podDate || "",
                             totalQty: data.totalQty?.toString() ?? "",
                             received: data.received ?? "",
                             damaged: data.damaged ?? "",
@@ -151,6 +167,14 @@ const JobDetail = () => {
             "stampExists",
         ];
 
+        if (name === "podDate") {
+            setFormData((prev) => ({
+                ...prev,
+                podDate: value,
+            }));
+            return;
+        }
+
         if (numericFields.includes(name)) {
 
             const isValidNumeric = /^(0|[1-9][0-9]{0,4})$/.test(value) || value === "";
@@ -192,13 +216,18 @@ const JobDetail = () => {
 
             const formattedReviewedBy = capitalizeFirstLetter(name);
 
+            const formattedData = {
+                ...formData,
+                podDate: formatDateForDB(formData.podDate),
+            };
+
             const response = await fetch(`/api/process-data/detail-data/${id}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
                     "x-user-name": formattedReviewedBy,
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(formattedData),
             });
 
             if (response.ok) {
@@ -288,7 +317,7 @@ const JobDetail = () => {
                                             key={key}
                                             className="flex items-center gap-3 bg-white px-2 border-l-8 border-[#005B97] rounded-lg py-[7px]"
                                         >
-                                            <label className="font-medium text-gray-500 capitalize w-32">
+                                            <label className="font-medium text-gray-500 capitalize min-w-28">
                                                 {key.replace(/([A-Z])/g, " $1")} :
                                             </label>
                                             <input

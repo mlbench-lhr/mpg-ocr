@@ -50,6 +50,7 @@ interface Job {
   cargoDescription: string;
   createdAt: string;
   updatedAt?: string;
+  customerOrderNum?: string | string[] | null;
 }
 
 
@@ -752,7 +753,7 @@ const MasterPage = () => {
 
               <div className="flex flex-col">
                 <label htmlFor="search" className="text-sm font-semibold text-gray-800">
-                  POD Signature
+                  Signature Exists
                 </label>
                 <div className="relative">
                   <input
@@ -884,15 +885,15 @@ const MasterPage = () => {
                         onChange={handleSelectAll} /></span>BL Number</th>
                       <th className="py-2 px-4 border-b text-center min-w-32">Job Name</th>
                       <th className="py-2 px-4 border-b text-center min-w-32">POD Date</th>
-                      <th className="py-2 px-4 border-b text-center min-w-32">Stamp Exists</th>
+                      <th className="py-2 px-4 border-b text-center min-w-36">Stamp Exists</th>
                       <th className="py-2 px-4 border-b text-center min-w-40">Signature Exists</th>
-                      <th className="py-2 px-4 border-b text-center min-w-28">Issued Qty</th>
-                      <th className="py-2 px-4 border-b text-center min-w-24">Received Qty</th>
-                      <th className="py-2 px-4 border-b text-center min-w-24">Damaged Qty</th>
-                      <th className="py-2 px-4 border-b text-center min-w-20">Short Qty</th>
-                      <th className="py-2 px-4 border-b text-center min-w-20">Over Qty</th>
-                      <th className="py-2 px-4 border-b text-center min-w-24">Refused Qty</th>
-                      <th className="py-2 px-4 border-b text-center min-w-24">Customer Order Num</th>
+                      <th className="py-2 px-4 border-b text-center min-w-32">Issued Qty</th>
+                      <th className="py-2 px-4 border-b text-center min-w-36">Received Qty</th>
+                      <th className="py-2 px-4 border-b text-center min-w-36">Damaged Qty</th>
+                      <th className="py-2 px-4 border-b text-center min-w-28">Short Qty</th>
+                      <th className="py-2 px-4 border-b text-center min-w-28">Over Qty</th>
+                      <th className="py-2 px-4 border-b text-center min-w-32">Refused Qty</th>
+                      <th className="py-2 px-4 border-b text-center min-w-52">Customer Order Num</th>
                       <th className="py-2 px-4 border-b text-center min-w-32">Final Status</th>
                       <th className="py-2 px-4 border-b text-center min-w-36">Review Status</th>
                       <th className="py-2 px-4 border-b text-center min-w-48">Recognition Status</th>
@@ -979,7 +980,7 @@ const MasterPage = () => {
                           ) : job.refused}
                         </td>
                         <td className="py-2 px-4 border-b text-center">
-                          bs2345dio123, bs2345dio123, bs2345dio123
+                          {job.customerOrderNum}
                         </td>
                         <td className="py-2 px-4 border-b text-center">
                           <Tippy

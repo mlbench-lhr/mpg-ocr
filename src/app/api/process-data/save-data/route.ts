@@ -13,9 +13,9 @@ export async function POST(req: Request) {
         }
 
         const requiredFields = [
-            "blNumber", "jobId", "pdfUrl", "podDate", "deliveryDate", "podSignature", "totalQty",
-            "received", "damaged", "short", "over", "refused",
-            "stampExists", "finalStatus", "reviewStatus", "recognitionStatus", "breakdownReason", "reviewedBy", "cargoDescription"
+            "B_L_Number", "jobId", "pdfUrl", "POD_Date", "podSignature", "Issued_Qty",
+            "Received_Qty", "Short_Qty", "Over_Qty", "Refused_Qty", "Stamp_Exists",
+             "finalStatus", "reviewStatus", "recognitionStatus", "breakdownReason", "reviewedBy", "cargoDescription"
         ];
 
         const client = await clientPromise;
