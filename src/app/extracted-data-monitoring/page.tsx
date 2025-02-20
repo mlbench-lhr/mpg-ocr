@@ -980,7 +980,9 @@ const MasterPage = () => {
                           ) : job.refused}
                         </td>
                         <td className="py-2 px-4 border-b text-center">
-                          {job.customerOrderNum}
+                          {Array.isArray(job.customerOrderNum)
+                            ? job.customerOrderNum.join(", ")
+                            : job.customerOrderNum || ""}
                         </td>
                         <td className="py-2 px-4 border-b text-center">
                           <Tippy
