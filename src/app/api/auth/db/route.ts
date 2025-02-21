@@ -15,8 +15,8 @@ export async function POST(req: NextRequest) {
 
     const { id: userId } = jwt.verify(token, SECRET_KEY) as { id: string };
 
-    const { systemID, userName, password, ipAddress, portNumber, serviceName } = await req.json();
-    if (!systemID || !userName || !password || !ipAddress || !portNumber || !serviceName) {
+    const { systemID, userName, password, ipAddress, portNumber, serviceName, dataBase } = await req.json();
+    if (!systemID || !userName || !password || !ipAddress || !portNumber || !serviceName || !dataBase) {
       return NextResponse.json({ message: "All fields are required" }, { status: 400 });
     }
 
@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
           ipAddress,
           portNumber,
           serviceName,
+          dataBase,
           updatedAt: new Date(),
         },
       },

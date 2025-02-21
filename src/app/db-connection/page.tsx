@@ -11,6 +11,7 @@ export default function DBConnectionPage() {
     const { isAuthenticated, userRole, loading } = useAuth("/admin-login");
     const [systemID, setSystemID] = useState("");
     const [userName, setUserName] = useState("");
+    const [dataBase, setDataBase] = useState("local"); 
     const [password, setPassword] = useState("");
     const [ipAddress, setIpAddress] = useState("");
     const [portNumber, setPortNumber] = useState("");
@@ -18,7 +19,6 @@ export default function DBConnectionPage() {
     const [checkbox, setCheckBox] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     const [buttonloading, setButttonLoading] = useState(false);
-
     const [error, setError] = useState<string | null>(null);
     const [percentage, setPercentage] = useState(0);
     const [loadingComplete, setLoadingComplete] = useState(false);
@@ -58,6 +58,7 @@ export default function DBConnectionPage() {
                     setIpAddress(data.ipAddress || "");
                     setPortNumber(data.portNumber || "");
                     setServiceName(data.serviceName || "");
+                    setDataBase(data.dataBase || "");
                 }
             }
         };
@@ -108,6 +109,7 @@ export default function DBConnectionPage() {
                     ipAddress,
                     portNumber,
                     serviceName,
+                    dataBase,
                 }),
             });
 
@@ -139,7 +141,7 @@ export default function DBConnectionPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [systemID, userName, password, ipAddress, portNumber, serviceName]);
+    }, [systemID, userName, password, ipAddress, portNumber, serviceName, dataBase]);
 
     const handleJobsAPI = useCallback(async () => {
         const token = localStorage.getItem("token");
@@ -209,20 +211,20 @@ export default function DBConnectionPage() {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-[url('/images/bg.jpg')] bg-cover bg-center">
-            <div className="w-full max-w-md bg-white rounded-sm shadow-lg p-6 mx-5 my-5">
-                <h1 className="text-2xl font-bold text-center mb-2 text-black">DB Connection</h1>
+            <div className="w-full max-w-md bg-white rounded-sm shadow-lg px-6 pb-2 pt-1 mx-5 mb-5 mt-1">
+                <h1 className="text-2xl font-bold text-center mb-0 text-black">DB Connection</h1>
 
                 {isLoading ? (
                     <LoadingSpinner percentage={percentage} />
                 ) : (
                     <form onSubmit={handleSubmit}>
-                        <div className="mb-6 text-center text-gray-400">
+                        <div className="mb-3 text-center text-gray-400">
                             <p>If unchecked, connects through API, not DB</p>
                         </div>
 
                         {error && <p className="text-red-500 text-center mb-3">{error}</p>}
 
-                        <div className="mb-4">
+                        <div className="mb-3">
                             <label className="block text-black font-semibold">System ID</label>
                             <input
                                 type="text"
@@ -234,7 +236,7 @@ export default function DBConnectionPage() {
                             />
                         </div>
 
-                        <div className="mb-4">
+                        <div className="mb-3">
                             <label className="block text-black font-semibold">User Name</label>
                             <input
                                 type="text"
@@ -246,7 +248,7 @@ export default function DBConnectionPage() {
                             />
                         </div>
 
-                        <div className="mb-4">
+                        <div className="mb-3">
                             <label className="block text-black font-semibold">Password</label>
                             <div className="relative">
                                 <input
@@ -267,7 +269,7 @@ export default function DBConnectionPage() {
                             </div>
                         </div>
 
-                        <div className="mb-4">
+                        <div className="mb-3">
                             <label className="block text-black font-semibold">IP Address</label>
                             <input
                                 type="text"
@@ -283,7 +285,7 @@ export default function DBConnectionPage() {
                         </div>
 
 
-                        <div className="mb-4">
+                        <div className="mb-3">
                             <label className="block text-black font-semibold">Port Number</label>
                             <input
                                 type="number"
@@ -295,7 +297,7 @@ export default function DBConnectionPage() {
                             />
                         </div>
 
-                        <div className="mb-4">
+                        <div className="mb-3">
                             <label className="block text-black font-semibold">Service Name</label>
                             <input
                                 type="text"
@@ -307,7 +309,21 @@ export default function DBConnectionPage() {
                             />
                         </div>
 
-                        <div className="mb-8 flex items-center justify-start gap-5">
+                        <div className="mb-3">
+                            <label className="block text-black font-semibold">Select DB</label>
+                            <select
+                                value={dataBase}
+                                onChange={(e) => setDataBase(e.target.value)}
+                                className="w-full px-4 py-2 mt-1 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] cursor-pointer"
+                                required
+                            >
+                                <option value="remote">Remote DB</option>
+                                <option value="local">Local DB</option>
+                                <option value="api">API</option>
+                            </select>
+                        </div>
+
+                        <div className="mb-4 flex items-center justify-start gap-5">
                             <div className="flex items-center">
                                 <input
                                     className="w-4 h-4 text-[#005B97] bg-slate-600 border-gray-300 rounded active:bg-transparent cursor-pointer"

@@ -573,8 +573,9 @@ const MasterPage = () => {
           }
         />
         <div className="flex-1 px-2 bg-white">
+
           <div
-            className={`bg-gray-200 p-3 mb-0 transition-all duration-500 ease-in-out w-full sm:w-auto ${isFilterDropDownOpen ? "rounded-t-lg" : "rounded-lg"}`}
+            className={`bg-gray-200 p-3 mb-0 transition-all duration-500 ease-in w-full sm:w-auto ${isFilterDropDownOpen ? "rounded-t-lg" : "rounded-lg"}`}
           >
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setIsFilterDropDownOpen(!isFilterDropDownOpen)}>
               <span className="text-gray-800 text-sm sm:text-base md:text-lg">
@@ -582,14 +583,14 @@ const MasterPage = () => {
               </span>
               <span>
                 <IoIosArrowForward
-                  className={`text-xl p-0 text-[#005B97] transition-all duration-500 ease-in-out ${isFilterDropDownOpen ? 'rotate-90' : ''}`}
+                  className={`text-xl p-0 text-[#005B97] transition-all duration-500 ease-in ${isFilterDropDownOpen ? 'rotate-90' : ''}`}
                 />
               </span>
             </div>
           </div>
 
           <div
-            className={`overflow-hidden transition-all duration-500 ease-in-out w-auto ${isFilterDropDownOpen ? "max-h-[1000px] p-3" : "max-h-0"
+            className={`overflow-hidden transition-all duration-500 ease-in w-auto ${isFilterDropDownOpen ? "max-h-[1000px] p-3" : "max-h-0"
               } flex flex-wrap gap-4 mt-0 bg-gray-200 rounded-b-lg`}
           >
 
@@ -867,7 +868,7 @@ const MasterPage = () => {
 
           </div>
 
-          <div className="py-3 mx-auto ">
+          <div className="py-3 mx-auto">
 
             {loadingTable ? (
               <div className="flex justify-center items-end">
@@ -878,11 +879,14 @@ const MasterPage = () => {
                 <span className=" text-gray-800 text-xl shadow-xl p-4 rounded-lg">No data found</span>
               </div>
             ) : (
-              <div className="overflow-x-auto w-full relative">
+              <div className={`overflow-x-auto w-full relative  ${isFilterDropDownOpen ? "2xl:min-h-[770px] 2xl:min-h-auto md:h-[170px] h-[200px] sm:h-[150px]" : " h-[600px] sm:h-[450px] 2xl:min-h-[1050px] 2xl:max-h-auto md:h-[460px]"
+            }`}>
+              {/* <div className="overflow-x-auto w-full relative h-[200px] sm:h-[150px] md:h-[170px] 2xl:min-h-[770px] 2xl:min-h-auto"> */}
+
                 <table className="table-auto min-w-full w-full border-collapse">
-                  <thead>
+                  <thead className="sticky top-0 bg-white z-20 shadow-md">
                     <tr className="text-gray-800">
-                      <th className="py-2 px-4 border-b text-start min-w-44"><span className="mr-3"><input type="checkbox" checked={isAllSelected}
+                      <th className="py-2 px-4 border-b text-start min-w-44 sticky left-0 bg-white z-10"><span className="mr-3"><input type="checkbox" checked={isAllSelected}
                         onChange={handleSelectAll} /></span>BL Number</th>
                       <th className="py-2 px-4 border-b text-center min-w-32">Job Name</th>
                       <th className="py-2 px-4 border-b text-center min-w-32">POD Date</th>
@@ -903,10 +907,10 @@ const MasterPage = () => {
                       <th className="py-2 px-4 border-b text-center min-w-28">Action</th>
                     </tr>
                   </thead>
-                  <tbody >
+                  <tbody className="h-[200px] sm:h-[150px] md:h-[170px] 2xl:min-h-[770px] 2xl:min-h-auto">
                     {master.map((job) => (
                       <tr key={job._id} className="text-gray-500">
-                        <td className="py-2 px-4 border-b text-start m-0" ><span className="mr-3"><input type="checkbox" checked={selectedRows.includes(job._id)}
+                        <td className="py-2 px-4 border-b text-start m-0 sticky left-0 bg-white z-10" ><span className="mr-3"><input type="checkbox" checked={selectedRows.includes(job._id)}
                           onChange={() => handleRowSelection(job._id)} /></span>
                           <Link
                             href={`/extracted-data-monitoring/${job._id}`} onClick={() => { handleRouteChange(); localStorage.setItem("prev", "") }}
