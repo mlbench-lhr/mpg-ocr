@@ -72,13 +72,22 @@ const JobDetail = () => {
     // };
 
     const formatDateForInput = (dateStr: string | null) => {
-        if (!dateStr) return ""; 
-        
+        if (!dateStr) return "";
+    
         const parts = dateStr.split("/");
         if (parts.length < 2) return "";
-        const [month, day, year] = [...parts, "2024"].slice(0, 3); 
-        return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`; 
+    
+        let [month, day, year] = [...parts, "2024"].slice(0, 3);
+    
+        if (year.length === 2) {
+            const currentYear = new Date().getFullYear();
+            const century = Math.floor(currentYear / 100) * 100;
+            year = (parseInt(year, 10) + century).toString();
+        }
+    
+        return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
     };
+    
     
 
     const formatDateForDB = (dateStr: string) => {
