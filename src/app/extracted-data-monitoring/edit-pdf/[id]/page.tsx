@@ -77,8 +77,9 @@ const JobDetail = () => {
         const parts = dateStr.split("/");
         if (parts.length < 2) return "";
     
-        let [month, day, year] = [...parts, "2024"].slice(0, 3);
+        const [month, day, rawYear] = [...parts, "2024"].slice(0, 3);
     
+        let year = rawYear;
         if (year.length === 2) {
             const currentYear = new Date().getFullYear();
             const century = Math.floor(currentYear / 100) * 100;
@@ -87,6 +88,7 @@ const JobDetail = () => {
     
         return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
     };
+    
     
     
 
