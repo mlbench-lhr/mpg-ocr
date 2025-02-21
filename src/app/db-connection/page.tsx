@@ -310,7 +310,7 @@ export default function DBConnectionPage() {
                         </div>
 
                         <div className="mb-3">
-                            <label className="block text-black font-semibold">Select DB</label>
+                            <label className="block text-black font-semibold">DB Type</label>
                             <select
                                 value={dataBase}
                                 onChange={(e) => setDataBase(e.target.value)}
