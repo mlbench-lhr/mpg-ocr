@@ -36,7 +36,7 @@ export async function GET(req: Request) {
 
         const url = new URL(req.url);
         const page = parseInt(url.searchParams.get("page") || "1", 10);
-        const limit = parseInt(url.searchParams.get("limit") || "50", 10);
+        const limit = parseInt(url.searchParams.get("limit") || "100", 10);
         const skip = (page - 1) * limit;
 
         const recognitionStatus = url.searchParams.get("recognitionStatus") || "";

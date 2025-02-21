@@ -65,18 +65,16 @@ const JobDetail = () => {
         return newState;
     };
 
-    // Function to convert MM/DD/YY to YYYY-MM-DD
     const formatDateForInput = (dateStr: string | null) => {
-        if (!dateStr) return ""; // Handle null or empty values
+        if (!dateStr) return ""; 
         const [month, day, year] = dateStr.split("/");
-        return `20${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`; // Convert to YYYY-MM-DD
+        return `20${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`; 
     };
 
-    // Function to convert YYYY-MM-DD back to MM/DD/YY
     const formatDateForDB = (dateStr: string) => {
-        if (!dateStr) return ""; // Handle empty string
+        if (!dateStr) return ""; 
         const [year, month, day] = dateStr.split("-");
-        return `${month}/${day}/${year.slice(-2)}`; // Convert to MM/DD/YY
+        return `${month}/${day}/${year.slice(-2)}`;
     };
 
 
@@ -117,7 +115,6 @@ const JobDetail = () => {
                         setFormData({
                             blNumber: data.blNumber || "",
                             podDate: formatDateForInput(data.podDate || ""),
-                            // podDate: data.podDate || "",
                             totalQty: data.totalQty?.toString() ?? "",
                             received: data.received ?? "",
                             damaged: data.damaged ?? "",
@@ -149,21 +146,23 @@ const JobDetail = () => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
 
-        const numericFields = [
+        // const numericFields = [
+        //     "totalQty",
+        //     "received",
+        //     "damaged",
+        //     "short",
+        //     "over",
+        //     "refused",
+        // ];
+
+        const nonNumericFields = [
+            "blNumber",
             "totalQty",
             "received",
             "damaged",
             "short",
             "over",
             "refused",
-            "noOfPages",
-        ];
-
-        const nonNumericFields = [
-            "blNumber",
-            "carrier",
-            "podSignature",
-            "receiverSignature",
             "stampExists",
         ];
 
@@ -175,22 +174,23 @@ const JobDetail = () => {
             return;
         }
 
-        if (numericFields.includes(name)) {
+        // if (numericFields.includes(name)) {
 
-            const isValidNumeric = /^(0|[1-9][0-9]{0,4})$/.test(value) || value === "";
+        //     const isValidNumeric = /^(0|[1-9][0-9]{0,4})$/.test(value) || value === "";
 
-            if (isValidNumeric) {
-                setFormData((prev) => ({
-                    ...prev,
-                    [name]: value,
-                }));
-            }
-        } else if (nonNumericFields.includes(name)) {
+        //     if (isValidNumeric) {
+        //         setFormData((prev) => ({
+        //             ...prev,
+        //             [name]: value,
+        //         }));
+        //     }
+        // }
+        
+        if (nonNumericFields.includes(name)) {
 
             const isValidNonNumeric =
                 value === "" ||
                 (/^[a-zA-Z0-9_]+(\s[a-zA-Z0-9_]+)*$/.test(value) && !/^\s/.test(value) && !/^0+$/.test(value));
-
             if (isValidNonNumeric) {
                 setFormData((prev) => ({
                     ...prev,
@@ -246,6 +246,16 @@ const JobDetail = () => {
     const handleEditClick = () => {
         setIsEditMode(true);
     };
+
+    const keyMappings: Record<string, string> = {
+        totalQty: "Issued Qty",
+        received: "Received Qty",
+        damaged: "Damaged Qty",
+        short: "Short Qty",
+        over: "Over Qty",
+        refused: "Refused Qty",
+    };
+
 
     if (!job) return <>{error}</>;
 
@@ -317,8 +327,11 @@ const JobDetail = () => {
                                             key={key}
                                             className="flex items-center gap-3 bg-white px-2 border-l-8 border-[#005B97] rounded-lg py-[7px]"
                                         >
-                                            <label className="font-medium text-gray-500 capitalize min-w-28">
+                                            {/* <label className="font-medium text-gray-500 capitalize min-w-28">
                                                 {key.replace(/([A-Z])/g, " $1")} :
+                                            </label> */}
+                                            <label className="font-medium text-gray-500 capitalize min-w-28">
+                                                {keyMappings[key] || key.replace(/([A-Z])/g, " $1")} :
                                             </label>
                                             <input
                                                 type={key === "podDate" ? "date" : "text"}

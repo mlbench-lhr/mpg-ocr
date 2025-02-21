@@ -469,6 +469,7 @@ const MasterPage = () => {
 
 
   const handlePageChange = (newPage: number) => {
+    setFirstTime(true);
     setCurrentPage(newPage);
   }
 
