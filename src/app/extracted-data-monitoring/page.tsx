@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+// import { motion } from "framer-motion";
 import { useSidebar } from "../context/SidebarContext";
 import { useRouter } from "next/navigation";
 import Sidebar from "../components/Sidebar";
@@ -19,6 +20,7 @@ import Swal from 'sweetalert2';
 import Tippy from '@tippyjs/react';
 import { Instance } from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
+import TableSpinner from "../components/TableSpinner";
 
 
 type FinalStatus = "new" | "inProgress" | "valid" | "partiallyValid" | "failure" | "sent";
@@ -84,6 +86,11 @@ const MasterPage = () => {
   const parentRefRecognition = useRef<Instance | null>(null);
   const parentRefBreakdown = useRef<Instance | null>(null);
   const [firstTime, setFirstTime] = useState(false);
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  const [isOcrRunning, setIsOcrRunning] = useState(false);
+
   // const [carrierFilter, setCarrierFilter] = useState("");
   const router = useRouter();
 
@@ -126,7 +133,8 @@ const MasterPage = () => {
       sessionStorage.getItem("podDateFilter") ||
       sessionStorage.getItem("podDateSignatureFilter") ||
       sessionStorage.getItem("jobNameFilter") ||
-      sessionStorage.getItem("bolNumberFilter")
+      sessionStorage.getItem("bolNumberFilter") ||
+      sessionStorage.getItem("sortColumn")
     );
   };
 
@@ -142,6 +150,7 @@ const MasterPage = () => {
         setPodDateSignatureFilter(sessionStorage.getItem("podDateSignatureFilter") || "");
         setJobNameFilter(sessionStorage.getItem("jobNameFilter") || "");
         setBolNumberFilter(sessionStorage.getItem("bolNumberFilter") || "");
+        setBolNumberFilter(sessionStorage.getItem("sortColumn") || "");
       }
       else {
         sessionStorage.setItem("finalStatusFilter", "");
@@ -151,6 +160,7 @@ const MasterPage = () => {
         sessionStorage.setItem("podDateFilter", "");
         sessionStorage.setItem("podDateSignatureFilter", "");
         sessionStorage.setItem("jobNameFilter", "");
+        sessionStorage.setItem("sortColumn", "");
         sessionStorage.setItem("bolNumberFilter", "");
         setFinalStatusFilter("");
         setReviewStatusFilter("");
@@ -159,6 +169,7 @@ const MasterPage = () => {
         setPodDateFilter("");
         setPodDateSignatureFilter("");
         setJobNameFilter("");
+        setSortColumn("");
         setBolNumberFilter("");
         setFirstTime(false);
       }
@@ -235,6 +246,43 @@ const MasterPage = () => {
         : [...prevSelectedRows, id]
     );
   };
+
+  // Fetch OCR status on mount
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const response = await fetch("/api/jobs/ocr");
+        const data = await response.json();
+        setIsOcrRunning(data.status === "start");
+      } catch (error) {
+        console.error("Error fetching OCR status:", error);
+      }
+    };
+
+    fetchStatus();
+  }, []);
+
+  const handleOcrToggle = async () => {
+    const newStatus = isOcrRunning ? "stop" : "start";
+
+    try {
+      const response = await fetch("/api/jobs/ocr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setIsOcrRunning(!isOcrRunning); // Toggle state
+      } else {
+        console.error("Error:", data.message);
+      }
+    } catch (error) {
+      console.error("Request failed:", error);
+    }
+  };
+
 
   const handleSelectAll = () => {
     if (selectedRows.length === master.length) {
@@ -356,6 +404,9 @@ const MasterPage = () => {
         podDate: sessionStorage.getItem("podDateFilter") || "",
         podDateSignature: sessionStorage.getItem("podDateSignatureFilter") || "",
         jobName: sessionStorage.getItem("jobNameFilter") || "",
+
+        sortColumn: sessionStorage.getItem("sortColumn") || "",
+        sortOrder: sessionStorage.getItem("sortOrder") || "asc",
       };
 
       // Check if all filters are empty
@@ -376,6 +427,9 @@ const MasterPage = () => {
       if (filters.podDate) queryParams.set("podDate", filters.podDate);
       if (filters.podDateSignature) queryParams.set("podDateSignature", filters.podDateSignature.trim());
       if (filters.jobName) queryParams.set("jobName", filters.jobName.trim());
+
+      if (filters.sortColumn) queryParams.set("sortColumn", filters.sortColumn);
+      if (filters.sortOrder) queryParams.set("sortOrder", filters.sortOrder);
 
 
       // console.log("Query Params:", queryParams.toString());
@@ -407,6 +461,20 @@ const MasterPage = () => {
     // carrierFilter,
   ]);
 
+
+  // const toggleSort = (column: string) => {
+  //   if (sortColumn === column) {
+  //     setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+  //   } else {
+  //     setSortColumn(column);
+  //     setSortOrder("asc");
+  //   }
+  //   sessionStorage.setItem("sortColumn", column);
+  //   sessionStorage.setItem("sortOrder", sortOrder === "asc" ? "desc" : "asc");
+  //   fetchJobs();
+  // };
+
+
   useEffect(() => {
     if (firstTime) {
       fetchJobs();
@@ -424,6 +492,8 @@ const MasterPage = () => {
     sessionStorage.setItem("podDateSignatureFilter", podDateSignatureFilter);
     sessionStorage.setItem("jobNameFilter", jobNameFilter);
     sessionStorage.setItem("bolNumberFilter", bolNumberFilter);
+    sessionStorage.setItem("sortColumn", sortColumn || "");
+    sessionStorage.setItem("sortOrder", sortOrder);
     fetchJobs();
   };
 
@@ -435,6 +505,7 @@ const MasterPage = () => {
     sessionStorage.setItem("podDateFilter", "");
     sessionStorage.setItem("podDateSignatureFilter", "");
     sessionStorage.setItem("jobNameFilter", "");
+    sessionStorage.setItem("sortColumn", "");
     sessionStorage.setItem("bolNumberFilter", "");
     setFinalStatusFilter("");
     setReviewStatusFilter("");
@@ -443,6 +514,7 @@ const MasterPage = () => {
     setPodDateFilter("");
     setPodDateSignatureFilter("");
     setJobNameFilter("");
+    setSortColumn("");
     setBolNumberFilter("");
     setMaster([]);
     await fetchJobs();
@@ -459,6 +531,7 @@ const MasterPage = () => {
         podDateSignatureFilter,
         jobNameFilter,
         bolNumberFilter,
+        sortColumn: sortColumn ?? "",
       };
 
       Object.entries(filters).forEach(([key, value]) => {
@@ -598,6 +671,10 @@ const MasterPage = () => {
               onSubmit={handleFilterApply}
               className="w-full grid grid-cols-3 gap-4"
             >
+
+
+
+
 
               <div className="flex flex-col">
                 <label htmlFor="search" className="text-sm font-semibold text-gray-800">
@@ -753,7 +830,7 @@ const MasterPage = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col">
+              {/* <div className="flex flex-col">
                 <label htmlFor="search" className="text-sm font-semibold text-gray-800">
                   Signature Exists
                 </label>
@@ -771,7 +848,7 @@ const MasterPage = () => {
                   >
                   </button>
                 </div>
-              </div>
+              </div> */}
 
               <div className="flex flex-col">
                 <label htmlFor="finalStatusFilter" className="text-sm font-semibold text-gray-800">
@@ -845,7 +922,69 @@ const MasterPage = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end items-center gap-4 col-span-3">
+              <div className="flex flex-col">
+                <label htmlFor="sortColumn" className="text-sm font-semibold text-gray-800">
+                  Sort By
+                </label>
+                <div className="relative">
+                  <select
+                    id="sortColumn"
+                    className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none cursor-pointer"
+                    value={sortColumn ?? ""}
+                    onChange={(e) => setSortColumn(e.target.value)}
+                  >
+                    <option value="">Select Column</option>
+                    <option value="blNumber">BL Number</option>
+                    <option value="jobName">Job Name</option>
+                    <option value="podDate">POD Date</option>
+                    <option value="podSignature">Signature Exists </option>
+                    <option value="totalQty">Issued Qty</option>
+                    <option value="received">Received Qty</option>
+                    <option value="damaged">Damaged Qty</option>
+                    <option value="short">Short Qty</option>
+                    <option value="over">Over Qty</option>
+                    <option value="refused">Refused Qty</option>
+                    <option value="customerOrderNum">Customer Order Num</option>
+                    <option value="stampExists">Stamp Exists</option>
+                    <option value="finalStatus">Final Status</option>
+                    <option value="reviewStatus">Review Status</option>
+                    <option value="recognitionStatus">Recognition Status</option>
+                    <option value="breakdownReason">Breakdown Reason</option>
+                    <option value="reviewedBy">Reviewed By</option>
+                  </select>
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500 cursor-default"
+                  >
+                    <FaChevronDown size={16} className="text-[#005B97]" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col">
+                <label htmlFor="sortOrder" className="text-sm font-semibold text-gray-800">
+                  Order
+                </label>
+                <div className="relative">
+                  <select
+                    id="sortOrder"
+                    className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none cursor-pointer"
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+                  >
+                    <option value="asc">Ascending</option>
+                    <option value="desc">Descending</option>
+                  </select>
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500 cursor-default"
+                  >
+                    <FaChevronDown size={16} className="text-[#005B97]" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-end items-center gap-2 col-span-3">
                 <button
                   className={`text-[#005B97] underline ${!isAnyFilterApplied() ? "text-gray-400 underline cursor-not-allowed" : "cursor-pointer"
                     }`}
@@ -860,6 +999,19 @@ const MasterPage = () => {
                 >
                   Apply Filters
                 </button>
+                {/* <p
+                  className="px-4 py-2 rounded-lg bg-[#005B97] text-white hover:bg-[#2270a3]"
+                >
+                  Start OCR
+                </p> */}
+
+                <p
+                  onClick={handleOcrToggle}
+                  className={`cursor-pointer px-4 py-2 rounded-lg text-white transition ${isOcrRunning ? "bg-red-600 hover:bg-red-700" : "bg-[#005B97] hover:bg-[#2270a3]"
+                    }`}
+                >
+                  {isOcrRunning ? "Stop Processing" : "Start Processing"}
+                </p>
               </div>
             </form>
           </div>
@@ -870,7 +1022,7 @@ const MasterPage = () => {
 
           <div className="py-3 mx-auto">
 
-            {loadingTable ? (
+            {/* {loadingTable ? (
               <div className="flex justify-center items-end">
                 <Spinner />
               </div>
@@ -880,14 +1032,18 @@ const MasterPage = () => {
               </div>
             ) : (
               <div className={`overflow-x-auto w-full relative  ${isFilterDropDownOpen ? "2xl:min-h-[770px] 2xl:min-h-auto md:h-[170px] h-[200px] sm:h-[150px]" : " h-[600px] sm:h-[450px] 2xl:min-h-[1050px] 2xl:max-h-auto md:h-[460px]"
-            }`}>
-              {/* <div className="overflow-x-auto w-full relative h-[200px] sm:h-[150px] md:h-[170px] 2xl:min-h-[770px] 2xl:min-h-auto"> */}
-
+                }`}>
                 <table className="table-auto min-w-full w-full border-collapse">
                   <thead className="sticky top-0 bg-white z-20 shadow-md">
                     <tr className="text-gray-800">
-                      <th className="py-2 px-4 border-b text-start min-w-44 sticky left-0 bg-white z-10"><span className="mr-3"><input type="checkbox" checked={isAllSelected}
-                        onChange={handleSelectAll} /></span>BL Number</th>
+                      <th className="py-2 px-4 border-b text-start min-w-44 sticky left-0 bg-white z-10" onClick={() => toggleSort("blNumber")}><span className="mr-3" >
+                        <input type="checkbox" checked={isAllSelected}
+                          onChange={handleSelectAll} /></span>
+                        BL Number
+                        {sortColumn === "blNumber" && (
+                          <span>{sortOrder === "asc" ? " ▲" : " ▼"}</span>
+                        )}
+                      </th>
                       <th className="py-2 px-4 border-b text-center min-w-32">Job Name</th>
                       <th className="py-2 px-4 border-b text-center min-w-32">POD Date</th>
                       <th className="py-2 px-4 border-b text-center min-w-36">Stamp Exists</th>
@@ -907,6 +1063,7 @@ const MasterPage = () => {
                       <th className="py-2 px-4 border-b text-center min-w-28">Action</th>
                     </tr>
                   </thead>
+                  
                   <tbody className="h-[200px] sm:h-[150px] md:h-[170px] 2xl:min-h-[770px] 2xl:min-h-auto">
                     {master.map((job) => (
                       <tr key={job._id} className="text-gray-500">
@@ -1051,7 +1208,6 @@ const MasterPage = () => {
                             </div>
                           </Tippy>
                         </td>
-
                         <td className="py-2 px-4 border-b text-center">
                           <Tippy
                             onMount={(instance) => {
@@ -1251,9 +1407,437 @@ const MasterPage = () => {
                     ))}
                   </tbody>
                 </table>
+
               </div>
             )
-            }
+            } */}
+
+
+            {master.length === 0 && !loadingTable ? (
+              <div className="flex flex-col items-center mt-20">
+                <span className="text-gray-800 text-xl shadow-xl p-4 rounded-lg">No data found</span>
+              </div>
+            ) : (
+              <div className={`overflow-x-auto w-full relative ${isFilterDropDownOpen ? "2xl:min-h-[770px] 2xl:min-h-auto md:h-[170px] h-[200px] sm:h-[150px]" : " h-[600px] sm:h-[450px] 2xl:min-h-[1050px] 2xl:max-h-auto md:h-[460px]"}`}>
+                <table className="table-auto min-w-full w-full border-collapse">
+                  <thead className="sticky top-0 bg-white z-20 shadow-md">
+                    <tr className="text-gray-800">
+                      <th className="py-2 px-4 border-b text-start min-w-44 sticky left-0 bg-white z-10">
+                        <span className="mr-3">
+                          <input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} />
+                        </span>
+                        BL Number
+                      </th>
+                      {/* <th className="py-2 px-4 border-b text-start min-w-44 sticky left-0 bg-white  z-10 cursor-pointer" onClick={() => toggleSort("blNumber")}>
+                        <span className="mr-3">
+                          <input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} />
+                        </span>
+                        BL Number
+                        {sortColumn === "blNumber" && (
+                          <span>{sortOrder === "asc" ? " ▲" : " ▼"}</span>
+                        )}
+                      </th> */}
+                      {/* <th
+                        className="py-2 px-4 border-b text-start min-w-44 sticky left-0 bg-white z-10 cursor-pointer"
+                        onClick={() => toggleSort("blNumber")}
+                      >
+                        <span className="mr-3">
+                          <input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} />
+                        </span>
+                        BL Number
+                        {sortColumn === "blNumber" && (
+                          <motion.div
+                            className="inline-block ml-1"
+                            initial={{ rotate: 0 }}
+                            animate={{ rotate: sortOrder === "asc" ? 0 : 360 }}
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                          >
+                            <span className="block w-4 text-center">{sortOrder === "asc" ? "▲" : "▼"}</span>
+                          </motion.div>
+                        )}
+
+                      </th> */}
+                      <th className="py-2 px-4 border-b text-center min-w-32">Job Name</th>
+                      <th className="py-2 px-4 border-b text-center min-w-32">POD Date</th>
+                      <th className="py-2 px-4 border-b text-center min-w-36">Stamp Exists</th>
+                      <th className="py-2 px-4 border-b text-center min-w-40">Signature Exists</th>
+                      <th className="py-2 px-4 border-b text-center min-w-32">Issued Qty</th>
+                      <th className="py-2 px-4 border-b text-center min-w-36">Received Qty</th>
+                      <th className="py-2 px-4 border-b text-center min-w-36">Damaged Qty</th>
+                      <th className="py-2 px-4 border-b text-center min-w-28">Short Qty</th>
+                      <th className="py-2 px-4 border-b text-center min-w-28">Over Qty</th>
+                      <th className="py-2 px-4 border-b text-center min-w-32">Refused Qty</th>
+                      <th className="py-2 px-4 border-b text-center min-w-52">Customer Order Num</th>
+                      <th className="py-2 px-4 border-b text-center min-w-32">Final Status</th>
+                      <th className="py-2 px-4 border-b text-center min-w-36">Review Status</th>
+                      <th className="py-2 px-4 border-b text-center min-w-48">Recognition Status</th>
+                      <th className="py-2 px-4 border-b text-center min-w-48">Breakdown Reason</th>
+                      <th className="py-2 px-4 border-b text-center min-w-36">Reviewed By</th>
+                      <th className="py-2 px-4 border-b text-center min-w-28">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="relative">
+                    {loadingTable ? (
+                      <tr>
+                        <td colSpan={Object.keys(master[0] || {}).length} className="text-center">
+                          <div className="flex justify-center">
+                            <TableSpinner />
+                          </div>
+                        </td>
+                      </tr>
+                    ) : master.length === 0 ? (
+                      <tr>
+                        <td colSpan={9999} className="py-10 text-center text-gray-800 text-xl shadow-xl p-4 rounded-lg">
+                          No data found
+                        </td>
+                      </tr>
+                    ) : (
+                      master.map((job) => (
+                        <tr key={job._id} className="text-gray-500">
+                          <td className="py-2 px-4 border-b text-start m-0 sticky left-0 bg-white z-10" ><span className="mr-3"><input type="checkbox" checked={selectedRows.includes(job._id)}
+                            onChange={() => handleRowSelection(job._id)} /></span>
+                            <Link
+                              href={`/extracted-data-monitoring/${job._id}`} onClick={() => { handleRouteChange(); localStorage.setItem("prev", "") }}
+                              className="group"
+                            >
+                              <span className="text-[#005B97] underline group-hover:text-blue-500 transition-all duration-500 transform group-hover:scale-110">
+                                {job.blNumber}
+                              </span>
+                            </Link>
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.jobName}
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">{job.podDate}</td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.stampExists === null || job.stampExists === undefined ? (
+                              <span className="flex justify-center items-center">
+                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                              </span>
+                            ) : job.stampExists}
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.podSignature === "" || job.podSignature === null || job.podSignature === undefined ? (
+                              <span className="flex justify-center items-center">
+                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                              </span>
+                            ) : job.podSignature}
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.totalQty === null || job.totalQty === undefined ? (
+                              <span className="flex justify-center items-center">
+                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                              </span>
+                            ) : (
+                              job.totalQty
+                            )}
+
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.received === null || job.received === undefined ? (
+                              <span className="flex justify-center items-center">
+                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                              </span>
+                            ) : job.received}
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.damaged === null || job.damaged === undefined ? (
+                              <span className="flex justify-center items-center">
+                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                              </span>
+                            ) : job.damaged}
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.short === null || job.short === undefined ? (
+                              <span className="flex justify-center items-center">
+                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                              </span>
+                            ) : job.short}
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.over === null || job.over === undefined ? (
+                              <span className="flex justify-center items-center">
+                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                              </span>
+                            ) : job.over}
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.refused === null || job.refused === undefined ? (
+                              <span className="flex justify-center items-center">
+                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                              </span>
+                            ) : job.refused}
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {Array.isArray(job.customerOrderNum)
+                              ? job.customerOrderNum.join(", ")
+                              : job.customerOrderNum || ""}
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            <Tippy
+                              onMount={(instance) => {
+                                parentRefFinal.current = instance;
+                              }}
+                              onHide={() => {
+                                parentRefFinal.current = null;
+                                setDropdownStates(null);
+                              }}
+                              content={
+                                <ul className="bg-white border text-center rounded-md shadow-lg w-32">
+                                  {finalOptions.map(({ status, color, bgColor }) => (
+                                    <li
+                                      key={status}
+                                      className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${job.finalStatus === status ? `${color} ${bgColor}` : color
+                                        }`}
+                                      onClick={() => {
+                                        updateStatus(job._id, "finalStatus", status, name);
+                                        parentRefFinal.current?.hide();
+                                      }}
+                                    >
+                                      {status}
+                                    </li>
+                                  ))}
+                                </ul>
+                              }
+                              interactive={true}
+                              trigger="click"
+                              placement="bottom"
+                              arrow={false}
+                              zIndex={50}
+                              onShow={() => {
+                                if (userRole !== "standarduser") {
+                                  setDropdownStates(job._id);
+                                } else {
+                                  return false;
+                                }
+                              }}
+                              appendTo={() => document.body}>
+                              <div
+                                className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${userRole !== "standarduser" ? 'cursor-pointer' : ''} ${job.finalStatus === "new"
+                                  ? "bg-blue-100 text-blue-600"
+                                  : job.finalStatus === "inProgress"
+                                    ? "bg-yellow-100 text-yellow-600"
+                                    : job.finalStatus === "valid"
+                                      ? "bg-green-100 text-green-600"
+                                      : job.finalStatus === "partiallyValid"
+                                        ? "bg-[#faf1be] text-[#AF9918]"
+                                        : job.finalStatus === "failure"
+                                          ? "bg-red-100 text-red-600"
+                                          : job.finalStatus === "sent"
+                                            ? "bg-green-100 text-green-600"
+                                            : "bg-gray-100 text-gray-600"
+                                  }`}
+                              >
+                                <div>{job.finalStatus}</div>
+                                <RiArrowDropDownLine
+                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${dropdownStates === job._id ? "rotate-180" : ""}`}
+                                />
+                              </div>
+                            </Tippy>
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            <Tippy
+                              onMount={(instance) => {
+                                parentRefReview.current = instance;
+                              }}
+                              onHide={() => {
+                                parentRefReview.current = null;
+                                setDropdownStatesFirst(null);
+                              }}
+                              content={
+                                <ul className="bg-white border text-center rounded-md shadow-lg w-32">
+                                  {reviewOptions.map(({ status, color, bgColor }) => (
+                                    <li
+                                      key={status}
+                                      className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${job.reviewStatus === status ? `${color} ${bgColor}` : color
+                                        }`}
+                                      onClick={() => {
+                                        updateStatus(job._id, "reviewStatus", status, name);
+                                        parentRefReview.current?.hide();
+                                      }}
+                                    >
+                                      {status}
+                                    </li>
+                                  ))}
+                                </ul>
+                              }
+                              interactive={true}
+                              trigger="click"
+                              placement="bottom"
+                              arrow={false}
+                              zIndex={50}
+                              onShow={() => {
+                                if (userRole !== "standarduser") {
+                                  setDropdownStatesFirst(job._id);
+                                } else {
+                                  return false;
+                                }
+                              }}
+                              appendTo={() => document.body}>
+
+                              <div
+                                className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${userRole !== "standarduser" ? 'cursor-pointer' : ''} ${job.reviewStatus === "unConfirmed"
+                                  ? "bg-yellow-100 text-yellow-600"
+                                  : job.reviewStatus === "confirmed"
+                                    ? "bg-green-100 text-green-600"
+                                    : job.reviewStatus === "denied"
+                                      ? "bg-[#faf1be] text-[#AF9918]"
+                                      : job.reviewStatus === "deleted"
+                                        ? "bg-red-100 text-red-600"
+                                        : ""
+                                  }`}>
+                                <div>{job.reviewStatus}</div>
+                                <RiArrowDropDownLine
+                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${dropdownStatesFirst === job._id ? "rotate-180" : ""}`}
+                                />
+                              </div>
+                            </Tippy>
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            <Tippy
+                              onMount={(instance) => {
+                                parentRefRecognition.current = instance;
+                              }}
+                              onHide={() => {
+                                parentRefRecognition.current = null;
+                                setDropdownStatesSecond(null);
+                              }}
+                              content={
+                                <ul className="bg-white border text-center rounded-md shadow-lg w-32">
+                                  {recognitionOptions.map(({ status, color, bgColor }) => (
+                                    <li
+                                      key={status}
+                                      className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${job.recognitionStatus === status ? `${color} ${bgColor}` : color
+                                        }`}
+                                      onClick={() => {
+                                        updateStatus(job._id, "recognitionStatus", status, name);
+                                        parentRefRecognition.current?.hide();
+                                      }}
+                                    >
+                                      {status}
+                                    </li>
+                                  ))}
+                                </ul>
+                              }
+                              interactive={true}
+                              trigger="click"
+                              placement="bottom"
+                              arrow={false}
+                              zIndex={50}
+                              onShow={() => {
+                                if (userRole !== "standarduser") {
+                                  setDropdownStatesSecond(job._id);
+                                } else {
+                                  return false;
+                                }
+                              }}
+                              appendTo={() => document.body}>
+
+                              <div
+                                className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${userRole !== "standarduser" ? 'cursor-pointer' : ''} ${job.recognitionStatus === "new"
+                                  ? "bg-blue-100 text-blue-600"
+                                  : job.recognitionStatus === "inProgress"
+                                    ? "bg-yellow-100 text-yellow-600"
+                                    : job.recognitionStatus === "valid"
+                                      ? "bg-green-100 text-green-600"
+                                      : job.recognitionStatus === "partiallyValid"
+                                        ? "bg-[#faf1be] text-[#AF9918]"
+                                        : job.recognitionStatus === "failure"
+                                          ? "bg-red-100 text-red-600"
+                                          : job.recognitionStatus === "sent"
+                                            ? "bg-green-100 text-green-600"
+                                            : ""
+                                  }`}>
+                                <div>{job.recognitionStatus}</div>
+                                <RiArrowDropDownLine
+                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${dropdownStatesSecond === job._id ? "rotate-180" : ""}`}
+                                />
+                              </div>
+                            </Tippy>
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            <Tippy
+                              onMount={(instance) => {
+                                parentRefBreakdown.current = instance;
+                              }}
+                              onHide={() => {
+                                parentRefBreakdown.current = null;
+                                setDropdownStatesThird(null);
+                              }}
+                              content={
+                                <ul className="bg-white border text-center rounded-md shadow-lg w-32">
+                                  {breakdownOptions.map(({ status, color, bgColor }) => (
+                                    <li
+                                      key={status}
+                                      className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${job.breakdownReason === status ? `${color} ${bgColor}` : color
+                                        }`}
+                                      onClick={() => {
+                                        updateStatus(job._id, "breakdownReason", status, name);
+                                        parentRefBreakdown.current?.hide();
+                                      }}
+                                    >
+                                      {status}
+                                    </li>
+                                  ))}
+                                </ul>
+                              }
+                              interactive={true}
+                              trigger="click"
+                              placement="bottom"
+                              arrow={false}
+                              zIndex={50}
+                              onShow={() => {
+                                if (userRole !== "standarduser") {
+                                  setDropdownStatesThird(job._id);
+                                } else {
+                                  return false;
+                                }
+                              }}
+                              appendTo={() => document.body}>
+
+                              <div
+                                className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${userRole !== "standarduser" ? 'cursor-pointer' : ''} ${job.breakdownReason === "none"
+                                  ? "bg-blue-100 text-blue-600"
+                                  : job.breakdownReason === "damaged"
+                                    ? "bg-yellow-100 text-yellow-600"
+                                    : job.breakdownReason === "shortage"
+                                      ? "bg-green-100 text-green-600"
+                                      : job.breakdownReason === "overage"
+                                        ? "bg-[#faf1be] text-[#AF9918]"
+                                        : job.breakdownReason === "refused"
+                                          ? "bg-red-100 text-red-600"
+                                          : ""
+                                  }`}
+                              >
+                                <div>{job.breakdownReason}</div>
+                                <RiArrowDropDownLine
+                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${dropdownStatesThird === job._id ? "rotate-180" : ""}`}
+                                />
+                              </div>
+                            </Tippy>
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">{job.reviewedBy}</td>
+                          <td className="py-2 px-6 border-b text-center">
+                            <Link
+                              href={`/extracted-data-monitoring/edit-pdf/${job._id}`} onClick={() => { handleRouteChange(); localStorage.setItem("prev", "") }}
+                              className="underline text-[#005B97] flex items-center gap-1 transition-all duration-300 hover:text-blue-500 group"
+                            >
+                              Detail
+                              <span
+                                className="transform transition-transform duration-300 ease-in-out group-hover:translate-x-1"
+                              >
+                                <IoIosArrowForward className="text-xl p-0" />
+                              </span>
+                            </Link>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
 
             {
               master.length !== 0 && (
@@ -1273,9 +1857,11 @@ const MasterPage = () => {
                   >
                     Next
                   </button>
+
                 </div>
               )
             }
+
           </div >
         </div >
       </div >
