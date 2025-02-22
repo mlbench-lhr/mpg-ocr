@@ -2,19 +2,18 @@ import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 
-const documentId = new ObjectId("65d123456789abcd12345678"); // Replace with a valid ObjectId
+const documentId = new ObjectId("65d123456789abcd12345678");
 
-// **GET Request: Fetch OCR Status**
 export async function GET() {
   try {
     const client = await clientPromise;
-    const db = client.db("my-next-app"); // Replace with your DB name
+    const db = client.db("my-next-app");
     const collection = db.collection("ocr_status");
 
     const ocrStatus = await collection.findOne({ _id: documentId });
 
     return NextResponse.json(
-      { status: ocrStatus?.status || "stop" }, // Default to 'stop' if not found
+      { status: ocrStatus?.status || "stop" },
       { status: 200 }
     );
   } catch (error) {
@@ -26,7 +25,6 @@ export async function GET() {
   }
 }
 
-// **POST Request: Update OCR Status**
 export async function POST(req: Request) {
   try {
     const { status } = await req.json();

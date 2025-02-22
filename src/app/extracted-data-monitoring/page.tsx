@@ -672,10 +672,6 @@ const MasterPage = () => {
               className="w-full grid grid-cols-3 gap-4"
             >
 
-
-
-
-
               <div className="flex flex-col">
                 <label htmlFor="search" className="text-sm font-semibold text-gray-800">
                   BL Number
@@ -934,6 +930,7 @@ const MasterPage = () => {
                     onChange={(e) => setSortColumn(e.target.value)}
                   >
                     <option value="">Select Column</option>
+                    <option value="all">All</option>
                     <option value="blNumber">BL Number</option>
                     <option value="jobName">Job Name</option>
                     <option value="podDate">POD Date</option>

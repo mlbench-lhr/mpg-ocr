@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Filter, ObjectId } from "mongodb";
+
 import clientPromise from "@/lib/mongodb";
 import { format, parse } from "date-fns";
 
@@ -129,12 +130,27 @@ export async function GET(req: Request) {
         const sortOrder = url.searchParams.get("sortOrder") === "desc" ? -1 : 1;
 
         const filter: Filter<Job> = {};
+        let sortQuery: Record<string, 1 | -1> = {};
 
-         // Sorting logic
-         let sortQuery = {};
-         if (sortColumn) {
-             sortQuery = { [sortColumn]: sortOrder };
-         }
+        if (sortColumn === "all") {
+            const sortableFields = [
+                "blNumber", "podDate", "podSignature", "totalQty", "received",
+                "damaged", "short", "over", "refused", "customerOrderNum",
+                "stampExists", "finalStatus", "reviewStatus", "recognitionStatus",
+                "breakdownReason", "reviewedBy", "jobName"
+            ];
+
+            sortableFields.forEach((field) => {
+                sortQuery[field] = sortOrder;
+            });
+        } else if (sortColumn) {
+            sortQuery = { [sortColumn]: sortOrder };
+        }
+
+        //  let sortQuery = {};
+        //  if (sortColumn) {
+        //      sortQuery = { [sortColumn]: sortOrder };
+        //  }
 
         if (podDateSignature) {
             filter.podSignature = { $regex: podDateSignature.trim(), $options: "i" };
@@ -145,7 +161,6 @@ export async function GET(req: Request) {
         if (jobName) {
             filter.jobName = { $regex: jobName.trim(), $options: "i" };
         }
-
         if (searchQuery) {
             const searchRegex = { $regex: searchQuery, $options: "i" };
             filter.$or = [
@@ -169,7 +184,6 @@ export async function GET(req: Request) {
                 console.log("Invalid podDate format:", error);
             }
         }
-
 
         const jobs = await dataCollection.find(filter).sort(sortQuery).skip(skip).limit(limit).toArray();
         const totalJobs = await dataCollection.countDocuments(filter);
