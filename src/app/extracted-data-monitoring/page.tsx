@@ -1517,7 +1517,7 @@ const MasterPage = () => {
                             ) : job.stampExists}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.podSignature === "" || job.podSignature === null || job.podSignature === undefined ? (
+                            {job.podSignature === null || job.podSignature === undefined ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>
