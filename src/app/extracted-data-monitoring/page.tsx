@@ -1007,7 +1007,7 @@ const MasterPage = () => {
                   className={`cursor-pointer px-4 py-2 rounded-lg text-white transition ${isOcrRunning ? "bg-red-600 hover:bg-red-700" : "bg-[#005B97] hover:bg-[#2270a3]"
                     }`}
                 >
-                  {isOcrRunning ? "Stop Processing" : "Start Processing"}
+                  {isOcrRunning ? "Stop" : "Process"}
                 </p>
               </div>
             </form>
