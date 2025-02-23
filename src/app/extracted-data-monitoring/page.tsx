@@ -996,12 +996,6 @@ const MasterPage = () => {
                 >
                   Apply Filters
                 </button>
-                {/* <p
-                  className="px-4 py-2 rounded-lg bg-[#005B97] text-white hover:bg-[#2270a3]"
-                >
-                  Start OCR
-                </p> */}
-
                 <p
                   onClick={handleOcrToggle}
                   className={`cursor-pointer px-4 py-2 rounded-lg text-white transition ${isOcrRunning ? "bg-red-600 hover:bg-red-700" : "bg-[#005B97] hover:bg-[#2270a3]"
