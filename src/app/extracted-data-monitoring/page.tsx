@@ -32,6 +32,7 @@ type BreakdownReason = "none" | "damaged" | "shortage" | "overage" | "refused";
 interface Job {
   _id: string;
   blNumber: string;
+  pdfUrl?: string;
   jobName: string;
   podDate: string;
   deliveryDate: Date;
@@ -1448,6 +1449,7 @@ const MasterPage = () => {
                         )}
 
                       </th> */}
+                      <th className="py-2 px-4 border-b text-center min-w-36">Uploaded File</th>
                       <th className="py-2 px-4 border-b text-center min-w-32">Job Name</th>
                       <th className="py-2 px-4 border-b text-center min-w-32">POD Date</th>
                       <th className="py-2 px-4 border-b text-center min-w-36">Stamp Exists</th>
@@ -1494,8 +1496,13 @@ const MasterPage = () => {
                               <span className="text-[#005B97] underline group-hover:text-blue-500 transition-all duration-500 transform group-hover:scale-110">
                                 {job.blNumber}
                               </span>
+                              
                             </Link>
                           </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.pdfUrl ? job.pdfUrl.split('/').pop()?.replace('.pdf', '') || "No PDF Available" : "No PDF Available"}
+                          </td>
+
                           <td className="py-2 px-4 border-b text-center">
                             {job.jobName}
                           </td>
