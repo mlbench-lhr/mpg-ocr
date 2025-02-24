@@ -141,7 +141,8 @@ export async function POST(req: Request) {
         bulkOps.push({
           updateOne: {
             filter: { pdfUrl },
-            update: { $set: { ...data, updatedAt: new Date() } }
+            update: { $set: { ...data } }
+            // update: { $set: { ...data, updatedAt: new Date() } }
           }
         });
       } else {
