@@ -21,6 +21,7 @@ import Tippy from '@tippyjs/react';
 import { Instance } from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import TableSpinner from "../components/TableSpinner";
+import UploadModal from "../components/UploadModal";
 
 
 type FinalStatus = "new" | "inProgress" | "valid" | "partiallyValid" | "failure" | "sent";
@@ -89,6 +90,7 @@ const MasterPage = () => {
   const [firstTime, setFirstTime] = useState(false);
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [isOcrRunning, setIsOcrRunning] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -339,9 +341,7 @@ const MasterPage = () => {
     let interval: NodeJS.Timeout | null = null;
 
     try {
-      // **Start Polling Immediately (Runs in parallel)**
       interval = setInterval(async () => {
-        console.log("Checking OCR progress...");
         try {
           const progressResponse = await fetch("https://hanneskonzept.ml-bench.com/api/ocr-progress");
           if (!progressResponse.ok) throw new Error("Failed to fetch progress");
@@ -528,7 +528,7 @@ const MasterPage = () => {
       if (filters.sortOrder) queryParams.set("sortOrder", filters.sortOrder);
 
 
-      console.log("Query Params:", queryParams.toString());
+      // console.log("Query Params:", queryParams.toString());
       const response = await fetch(`/api/process-data/get-data/?${queryParams.toString()}`);
 
       if (response.ok) {
@@ -744,8 +744,15 @@ const MasterPage = () => {
             </div>
           </>
           }
-          buttonContent={''}
+          buttonContent={
+            <button className="hover:bg-[#005B97] hover:text-white border-[#005B97] border text-[#005B97] rounded-lg px-8 py-2 md:mt-0 w-44 md:w-44"  onClick={() => setIsModalOpen(true)}>
+              Upload PDF
+            </button>
+          }
         />
+
+        <UploadModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+
         <div className="flex-1 px-2 bg-white">
 
           {/* <Link
