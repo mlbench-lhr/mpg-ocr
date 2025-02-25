@@ -1206,7 +1206,6 @@ const MasterPage = () => {
                 </Link>
               </div>
               {/* <div>
-
                 <p
                   onClick={handleOcrToggle}
                   className={`cursor-pointer w-fit px-4 py-2 rounded-lg  text-white transition ${isOcrRunning ? "bg-red-600 hover:bg-red-700 border-red border" : "bg-[#005B97] hover:bg-[#2270a3] border-[#005B97] border"
@@ -1218,18 +1217,12 @@ const MasterPage = () => {
 
               <div>
                 <p
-                  onClick={selectedRows.length > 0 ? handleOcrToggle : undefined}
+                  onClick={selectedRows.length > 0 && !isOcrRunning ? handleOcrToggle : undefined}
                   className={`cursor-pointer w-fit px-4 py-2 rounded-lg text-white transition 
-                 placeholder: ${selectedRows.length === 0 ? "bg-gray-400 cursor-not-allowed" : isOcrRunning
-                      ? "bg-red-600 hover:bg-red-700 border-red border"
-                      : "bg-[#005B97] hover:bg-[#2270a3] border-[#005B97] border"
-                    }`}
-                >
-                  {isOcrRunning ? "Stop" : "OCR Processing"}
+                  ${selectedRows.length === 0 || isOcrRunning ? "bg-gray-400 cursor-not-allowed border-gray-400 border" : "bg-[#005B97] hover:bg-[#2270a3] border-[#005B97] border"}
+                `}>
+                  {isOcrRunning ? "Processing..." : "OCR Processing"}
                 </p>
-
-
-
               </div>
 
             </div>
@@ -1242,8 +1235,8 @@ const MasterPage = () => {
                 </div>
               </div>
               <div>
-                <p className="text-xl text-[#005B97]">
-                  {progress}/100
+                <p className="text-2xl text-[#005B97] font-semibold">
+                  {progress}/<span className="text-black">100</span>
                 </p>
               </div>
             </div>
