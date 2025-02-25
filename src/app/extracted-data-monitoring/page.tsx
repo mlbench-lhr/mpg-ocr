@@ -91,6 +91,8 @@ const MasterPage = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const [isOcrRunning, setIsOcrRunning] = useState(false);
+  const [progress, setProgress] = useState(0);
+
 
   // const [carrierFilter, setCarrierFilter] = useState("");
   const router = useRouter();
@@ -124,7 +126,6 @@ const MasterPage = () => {
     { status: "overage", color: "text-[#AF9918]", bgColor: "bg-[#faf1be]" },
     { status: "refused", color: "text-red-600", bgColor: "bg-red-100" },
   ];
-
   const isAnyFilterApplied = () => {
     return (
       sessionStorage.getItem("finalStatusFilter") ||
@@ -134,11 +135,10 @@ const MasterPage = () => {
       sessionStorage.getItem("podDateFilter") ||
       sessionStorage.getItem("podDateSignatureFilter") ||
       sessionStorage.getItem("jobNameFilter") ||
-      sessionStorage.getItem("bolNumberFilter") ||
-      sessionStorage.getItem("sortColumn")
+      sessionStorage.getItem("bolNumberFilter")
+      // sessionStorage.getItem("sortColumn")
     );
   };
-
   useEffect(() => {
     if (typeof window !== "undefined") {
       if (localStorage.getItem("prev") === "") {
@@ -178,7 +178,6 @@ const MasterPage = () => {
   }, []);
 
   // const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
-
   // const handleSidebarStateChange = (newState: boolean) => {
   //   setIsSidebarExpanded(newState);
   // };
@@ -190,8 +189,6 @@ const MasterPage = () => {
     // console.log("Sidebar state changed:", newState);
     // setIsSidebarExpanded(newState);
   };
-
-
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -263,26 +260,67 @@ const MasterPage = () => {
     fetchStatus();
   }, []);
 
+  // const handleOcrToggle = async () => {
+  //   const newStatus = isOcrRunning ? "stop" : "start";
+
+  //   try {
+  //     const response = await fetch("/api/jobs/ocr", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ status: newStatus }),
+  //     });
+
+  //     const data = await response.json();
+  //     if (response.ok) {
+  //       setIsOcrRunning(!isOcrRunning);
+  //     } else {
+  //       console.error("Error:", data.message);
+  //     }
+  //   } catch (error) {
+  //     console.error("Request failed:", error);
+  //   }
+  // };
+
   const handleOcrToggle = async () => {
-    const newStatus = isOcrRunning ? "stop" : "start";
+    if (selectedRows.length === 0) return;
+
+    setIsOcrRunning(true);
+    setProgress(0);
+
+
+    const pdfFiles = selectedRows.map((rowId) => {
+      const job = master.find((job) => job._id === rowId);
+      return job ? { file_url: job.pdfUrl } : null;
+    }).filter(Boolean);
+
 
     try {
-      const response = await fetch("/api/jobs/ocr", {
+
+      const response = await fetch("https://hanneskonzept.ml-bench.com/api/process-pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ pdfFiles }),
       });
 
-      const data = await response.json();
-      if (response.ok) {
-        setIsOcrRunning(!isOcrRunning); // Toggle state
-      } else {
-        console.error("Error:", data.message);
-      }
+      if (!response.ok) throw new Error("Failed to start OCR");
+
+      // Polling to track progress
+      const interval = setInterval(async () => {
+        const progressResponse = await fetch("https://hanneskonzept.ml-bench.com/api/ocr-progress");
+        const progressData = await progressResponse.json();
+        setProgress(progressData.progress);
+
+        if (progressData.progress >= 100) {
+          clearInterval(interval);
+          setIsOcrRunning(false);
+        }
+      }, 2000);
     } catch (error) {
-      console.error("Request failed:", error);
+      console.error("Error processing OCR:", error);
+      setIsOcrRunning(false);
     }
   };
+
 
 
   const handleSelectAll = () => {
@@ -433,7 +471,7 @@ const MasterPage = () => {
       if (filters.sortOrder) queryParams.set("sortOrder", filters.sortOrder);
 
 
-      // console.log("Query Params:", queryParams.toString());
+      console.log("Query Params:", queryParams.toString());
       const response = await fetch(`/api/process-data/get-data/?${queryParams.toString()}`);
 
       if (response.ok) {
@@ -479,9 +517,10 @@ const MasterPage = () => {
   useEffect(() => {
     if (firstTime) {
       fetchJobs();
+      setFirstTime(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, firstTime])
+  }, [currentPage, firstTime, sortColumn, sortOrder]);
 
   const handleFilterApply = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -546,6 +585,24 @@ const MasterPage = () => {
     setFirstTime(true);
     setCurrentPage(newPage);
   }
+
+  const handleSortColumnChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSortColumn(value);
+    if (value) {
+      sessionStorage.setItem("sortColumn", value);
+    } else {
+      sessionStorage.removeItem("sortColumn");
+    }
+    setFirstTime(true);
+  };
+
+  const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value as "asc" | "desc";
+    setSortOrder(value);
+    sessionStorage.setItem("sortOrder", value);
+    setFirstTime(true);
+  };
 
   const handleSend = () => {
     Swal.fire({
@@ -630,23 +687,22 @@ const MasterPage = () => {
             </div>
           </>
           }
-          buttonContent={
-            <Link
-              href={{
-                pathname: '/history',
-                query: selectedRows.length > 0
-                  ? { selectedRows: JSON.stringify(selectedRows) }
-                  : undefined,
-              }}
-            >
-              <button className="bg-[#005B97] rounded-lg py-2 px-10 text-white md:mt-0 w-60 md:w-auto">
-                History
-              </button>
-            </Link>
-
-          }
+          buttonContent={''}
         />
         <div className="flex-1 px-2 bg-white">
+
+          {/* <Link
+            href={{
+            pathname: '/history',
+            query: selectedRows.length > 0
+            ? { selectedRows: JSON.stringify(selectedRows) }
+            : undefined,
+            }}
+            >
+            <button className="bg-[#005B97] rounded-lg py-2 px-10 text-white md:mt-0 w-60 md:w-auto">
+            History
+            </button>
+            </Link> */}
 
           <div
             className={`bg-gray-200 p-3 mb-0 transition-all duration-500 ease-in w-full sm:w-auto ${isFilterDropDownOpen ? "rounded-t-lg" : "rounded-lg"}`}
@@ -827,7 +883,7 @@ const MasterPage = () => {
                 </div>
               </div>
 
-              {/* <div className="flex flex-col">
+              <div className="flex flex-col">
                 <label htmlFor="search" className="text-sm font-semibold text-gray-800">
                   Signature Exists
                 </label>
@@ -845,7 +901,7 @@ const MasterPage = () => {
                   >
                   </button>
                 </div>
-              </div> */}
+              </div>
 
               <div className="flex flex-col">
                 <label htmlFor="finalStatusFilter" className="text-sm font-semibold text-gray-800">
@@ -919,7 +975,7 @@ const MasterPage = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col">
+              {/* <div className="flex flex-col">
                 <label htmlFor="sortColumn" className="text-sm font-semibold text-gray-800">
                   Sort By
                 </label>
@@ -980,7 +1036,7 @@ const MasterPage = () => {
                     <FaChevronDown size={16} className="text-[#005B97]" />
                   </button>
                 </div>
-              </div>
+              </div> */}
 
               <div className="flex justify-end items-center gap-2 col-span-3">
                 <button
@@ -997,19 +1053,135 @@ const MasterPage = () => {
                 >
                   Apply Filters
                 </button>
-                <p
-                  onClick={handleOcrToggle}
-                  className={`cursor-pointer px-4 py-2 rounded-lg text-white transition ${isOcrRunning ? "bg-red-600 hover:bg-red-700" : "bg-[#005B97] hover:bg-[#2270a3]"
-                    }`}
-                >
-                  {isOcrRunning ? "Stop" : "Process"}
-                </p>
               </div>
             </form>
           </div>
 
-          <div className="mb-5">
+          <div className="my-5 flex justify-between items-start">
+            <div>
 
+              <form
+                onSubmit={handleFilterApply}
+                className="w-full grid grid-cols-3 gap-4"
+              >
+
+                <div className="flex items-center gap-3">
+                  <label htmlFor="sortColumn" className="text-sm font-semibold text-gray-800">
+                    Sort By:
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="sortColumn"
+                      className="w-44 px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none cursor-pointer"
+                      value={sortColumn ?? ""}
+                      // onChange={(e) => setSortColumn(e.target.value)}
+                      onChange={handleSortColumnChange}
+
+                    >
+                      <option value="">Select Column</option>
+                      <option value="all">All</option>
+                      <option value="blNumber">BL Number</option>
+                      <option value="jobName">Job Name</option>
+                      <option value="podDate">POD Date</option>
+                      <option value="podSignature">Signature Exists </option>
+                      <option value="totalQty">Issued Qty</option>
+                      <option value="received">Received Qty</option>
+                      <option value="damaged">Damaged Qty</option>
+                      <option value="short">Short Qty</option>
+                      <option value="over">Over Qty</option>
+                      <option value="refused">Refused Qty</option>
+                      <option value="customerOrderNum">Customer Order Num</option>
+                      <option value="stampExists">Stamp Exists</option>
+                      <option value="finalStatus">Final Status</option>
+                      <option value="reviewStatus">Review Status</option>
+                      <option value="recognitionStatus">Recognition Status</option>
+                      <option value="breakdownReason">Breakdown Reason</option>
+                      <option value="reviewedBy">Reviewed By</option>
+                    </select>
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500 cursor-default"
+                    >
+                      <FaChevronDown size={16} className="text-[#005B97]" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <label htmlFor="sortOrder" className="text-sm font-semibold text-gray-800">
+                    Sorting Order:
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="sortOrder"
+                      className="w-40 px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none cursor-pointer"
+                      value={sortOrder}
+                      // onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+                      onChange={handleSortOrderChange}
+                    >
+                      <option value="asc">Ascending</option>
+                      <option value="desc">Descending</option>
+                    </select>
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500 cursor-default"
+                    >
+                      <FaChevronDown size={16} className="text-[#005B97]" />
+                    </button>
+                  </div>
+                </div>
+
+              </form>
+            </div>
+
+            <div className="flex gap-3">
+              <div>
+
+                <Link
+                  href={{
+                    pathname: '/history',
+                    query: selectedRows.length > 0
+                      ? { selectedRows: JSON.stringify(selectedRows) }
+                      : undefined,
+                  }}
+                >
+                  <button className="hover:bg-[#005B97] hover:text-white border-[#005B97] border text-[#005B97] rounded-lg px-14 py-2 md:mt-0 w-60 md:w-auto">
+                    History
+                  </button>
+                </Link>
+              </div>
+              {/* <div>
+
+                <p
+                  onClick={handleOcrToggle}
+                  className={`cursor-pointer w-fit px-4 py-2 rounded-lg  text-white transition ${isOcrRunning ? "bg-red-600 hover:bg-red-700 border-red border" : "bg-[#005B97] hover:bg-[#2270a3] border-[#005B97] border"
+                    }`}
+                >
+                  {isOcrRunning ? "Stop" : "OCR Processing"}
+                </p>
+              </div> */}
+
+              <div>
+                <p
+                  onClick={selectedRows.length > 0 ? handleOcrToggle : undefined}
+                  className={`cursor-pointer w-fit px-4 py-2 rounded-lg text-white transition 
+                 placeholder: ${selectedRows.length === 0 ? "bg-gray-400 cursor-not-allowed" : isOcrRunning
+                      ? "bg-red-600 hover:bg-red-700 border-red border"
+                      : "bg-[#005B97] hover:bg-[#2270a3] border-[#005B97] border"
+                    }`}
+                >
+                  {isOcrRunning ? "Stop" : "OCR Processing"}
+                </p>
+
+
+                {isOcrRunning && (
+                  <div className="mt-2 w-full bg-gray-200 rounded-full h-2.5">
+                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${progress}%` }}></div>
+                  </div>
+                )}
+              </div>
+
+            </div>
           </div>
 
           <div className="py-3 mx-auto">
@@ -1496,7 +1668,7 @@ const MasterPage = () => {
                               <span className="text-[#005B97] underline group-hover:text-blue-500 transition-all duration-500 transform group-hover:scale-110">
                                 {job.blNumber}
                               </span>
-                              
+
                             </Link>
                           </td>
                           <td className="py-2 px-4 border-b text-center">
