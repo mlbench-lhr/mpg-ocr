@@ -1245,7 +1245,7 @@ const MasterPage = () => {
               </div>
               <div>
                 <p className="text-2xl text-[#005B97] font-semibold">
-                  {progress}/<span className="text-black">100</span>
+                  {progress}%/<span className="text-black">100%</span>
                 </p>
               </div>
             </div>
