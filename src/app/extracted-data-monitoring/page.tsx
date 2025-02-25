@@ -281,20 +281,84 @@ const MasterPage = () => {
   //   }
   // };
 
+  // const handleOcrToggle = async () => {
+  //   if (selectedRows.length === 0) return;
+
+  //   setIsOcrRunning(true);
+  //   setProgress(0);
+
+
+  //   const pdfFiles = selectedRows.map((rowId) => {
+  //     const job = master.find((job) => job._id === rowId);
+  //     return job ? { file_url: job.pdfUrl } : null;
+  //   }).filter(Boolean);
+
+
+  //   try {
+
+  //     const response = await fetch("https://hanneskonzept.ml-bench.com/api/process-pdf", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ pdfFiles }),
+  //     });
+
+  //     if (!response.ok) throw new Error("Failed to start OCR");
+
+  //     // Polling to track progress
+  //     const interval = setInterval(async () => {
+  //       console.log("good");
+  //       const progressResponse = await fetch("https://hanneskonzept.ml-bench.com/api/ocr-progress");
+  //       const progressData = await progressResponse.json();
+  //       setProgress(progressData.progress);
+
+  //       if (progressData.progress >= 100) {
+  //         clearInterval(interval);
+  //         setIsOcrRunning(false);
+  //       }
+  //     }, 500);
+
+  //   } catch (error) {
+  //     console.error("Error processing OCR:", error);
+  //     setIsOcrRunning(false);
+  //   }
+  // };
+
   const handleOcrToggle = async () => {
     if (selectedRows.length === 0) return;
 
     setIsOcrRunning(true);
     setProgress(0);
 
+    const pdfFiles = selectedRows
+      .map((rowId) => {
+        const job = master.find((job) => job._id === rowId);
+        return job ? { file_url: job.pdfUrl } : null;
+      })
+      .filter(Boolean);
 
-    const pdfFiles = selectedRows.map((rowId) => {
-      const job = master.find((job) => job._id === rowId);
-      return job ? { file_url: job.pdfUrl } : null;
-    }).filter(Boolean);
-
+    let interval: NodeJS.Timeout | null = null;
 
     try {
+      // **Start Polling Immediately (Runs in parallel)**
+      interval = setInterval(async () => {
+        console.log("Checking OCR progress...");
+        try {
+          const progressResponse = await fetch("https://hanneskonzept.ml-bench.com/api/ocr-progress");
+          if (!progressResponse.ok) throw new Error("Failed to fetch progress");
+
+          const progressData = await progressResponse.json();
+          console.log(progressData);
+          setProgress(progressData.progress);
+
+          if (progressData.progress >= 100) {
+            clearInterval(interval!);
+            setIsOcrRunning(false);
+            setSelectedRows([]);
+          }
+        } catch (error) {
+          console.error("Error fetching progress:", error);
+        }
+      }, 100000);
 
       const response = await fetch("https://hanneskonzept.ml-bench.com/api/process-pdf", {
         method: "POST",
@@ -304,22 +368,13 @@ const MasterPage = () => {
 
       if (!response.ok) throw new Error("Failed to start OCR");
 
-      // Polling to track progress
-      const interval = setInterval(async () => {
-        const progressResponse = await fetch("https://hanneskonzept.ml-bench.com/api/ocr-progress");
-        const progressData = await progressResponse.json();
-        setProgress(progressData.progress);
-
-        if (progressData.progress >= 100) {
-          clearInterval(interval);
-          setIsOcrRunning(false);
-        }
-      }, 2000);
     } catch (error) {
       console.error("Error processing OCR:", error);
       setIsOcrRunning(false);
+      if (interval) clearInterval(interval);
     }
   };
+
 
 
 
@@ -1174,15 +1229,26 @@ const MasterPage = () => {
                 </p>
 
 
-                {isOcrRunning && (
-                  <div className="mt-2 w-full bg-gray-200 rounded-full h-2.5">
-                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${progress}%` }}></div>
-                  </div>
-                )}
+
               </div>
 
             </div>
           </div>
+          {isOcrRunning && (
+            <div className="flex items-center justify-between gap-5">
+              <div className="w-full">
+                <div className="w-full bg-gray-200 rounded-full h-4">
+                  <div className="bg-[#005B97] h-4 rounded-full" style={{ width: `${progress}%` }}></div>
+                </div>
+              </div>
+              <div>
+                <p className="text-xl text-[#005B97]">
+                  {progress}/100
+                </p>
+              </div>
+            </div>
+          )}
+
 
           <div className="py-3 mx-auto">
 
