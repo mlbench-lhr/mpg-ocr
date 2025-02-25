@@ -354,6 +354,8 @@ const MasterPage = () => {
             clearInterval(interval!);
             setIsOcrRunning(false);
             setSelectedRows([]);
+            setProgress(0);
+            fetchJobs();
           }
         } catch (error) {
           console.error("Error fetching progress:", error);
