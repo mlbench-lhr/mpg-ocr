@@ -358,7 +358,7 @@ const MasterPage = () => {
         } catch (error) {
           console.error("Error fetching progress:", error);
         }
-      }, 100000);
+      }, 30000);
 
       const response = await fetch("https://hanneskonzept.ml-bench.com/api/process-pdf", {
         method: "POST",
