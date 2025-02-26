@@ -424,6 +424,15 @@ const MasterPage = () => {
           fetchJobs();
           setSelectedRows([]);
           setIsProcessModalOpen(false);
+
+          const newStatus = "stop";
+
+          await fetch("/api/jobs/ocr", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: newStatus }),
+          });
+          
         }
       } catch (error) {
         console.error("Error fetching progress:", error);
@@ -1216,16 +1225,7 @@ const MasterPage = () => {
             </div>
 
             <div className="flex gap-3">
-              <div>
-                <button
-                  className="hover:bg-[#005B97] hover:text-white border-[#005B97] border text-[#005B97] 
-                  rounded-lg px-6 py-2 w-fit flex items-center justify-center gap-2 transition"
-                  onClick={() => setIsModalOpen(true)}
-                >
-                  <FiUpload className="text-xl" />
-                  <span>Upload PDF</span>
-                </button>
-              </div>
+              
 
               <div>
 
@@ -1241,6 +1241,16 @@ const MasterPage = () => {
                     History
                   </button>
                 </Link>
+              </div>
+              <div>
+                <button
+                  className="hover:bg-[#005B97] hover:text-white border-[#005B97] border text-[#005B97] 
+                  rounded-lg px-6 py-2 w-fit flex items-center justify-center gap-2 transition"
+                  onClick={() => setIsModalOpen(true)}
+                >
+                  <FiUpload className="text-xl" />
+                  <span>Upload PDF</span>
+                </button>
               </div>
               <div>
 
