@@ -1,3 +1,33 @@
+// import { NextResponse } from 'next/server';
+// import clientPromise from "@/lib/mongodb";
+// import { ObjectId } from "mongodb";
+
+// export async function POST(req: Request) {
+//   try {
+//     const { ids } = await req.json();
+
+//     if (!Array.isArray(ids) || ids.length === 0) {
+//       return NextResponse.json({ error: 'No valid IDs provided for deletion' }, { status: 400 });
+//     }
+
+//     const objectIds = ids.map((id) => new ObjectId(id));
+
+//     const client = await clientPromise;
+//     const db = client.db('my-next-app');
+
+//     const result = await db.collection('mockData').deleteMany({ _id: { $in: objectIds } });
+
+//     return NextResponse.json({
+//       message: 'Rows deleted successfully',
+//       deletedCount: result.deletedCount,
+//     }, { status: 200 });
+//   } catch (error) {
+//     console.log('Error deleting rows:', error);
+//     return NextResponse.json({ error: 'Failed to delete rows' }, { status: 500 });
+//   }
+// }
+
+
 import { NextResponse } from 'next/server';
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
@@ -15,14 +45,26 @@ export async function POST(req: Request) {
     const client = await clientPromise;
     const db = client.db('my-next-app');
 
-    const result = await db.collection('mockData').deleteMany({ _id: { $in: objectIds } });
+    const jobCollection = db.collection('mockData');
+    const historyCollection = db.collection('jobHistory');
 
-    return NextResponse.json({
-      message: 'Rows deleted successfully',
-      deletedCount: result.deletedCount,
-    }, { status: 200 });
+    const jobDeleteResult = await jobCollection.deleteMany({ _id: { $in: objectIds } });
+
+    if (jobDeleteResult.deletedCount > 0) {
+      const historyDeleteResult = await historyCollection.deleteMany({ jobId: { $in: objectIds } });
+
+      return NextResponse.json({
+        message: 'Jobs and related history deleted successfully',
+        deletedJobs: jobDeleteResult.deletedCount,
+        deletedHistory: historyDeleteResult.deletedCount,
+      }, { status: 200 });
+    }
+
+    return NextResponse.json({ message: 'No jobs found for deletion' }, { status: 404 });
+
   } catch (error) {
-    console.log('Error deleting rows:', error);
-    return NextResponse.json({ error: 'Failed to delete rows' }, { status: 500 });
+    console.error('Error deleting jobs and history:', error);
+    return NextResponse.json({ error: 'Failed to delete jobs and history' }, { status: 500 });
   }
 }
+

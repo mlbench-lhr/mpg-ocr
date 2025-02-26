@@ -28,9 +28,8 @@ div.rdtPicker div.rdtTime td.active {
   @apply bg-blue-500 text-gray-800;
 }
 
-
-div.rdtPicker input.form-control{
-  @apply  w-full border px-4 py-2 mt-1 pr-10;
+div.rdtPicker input.form-control {
+  @apply w-full border px-4 py-2 mt-1 pr-10;
 }
 
 /* CSS to hide the default date picker icon */
@@ -45,7 +44,7 @@ div.rdtPicker input.form-control{
 }
 
 .custom-date-input[type="date"] {
-  -moz-appearance: textfield; 
+  -moz-appearance: textfield;
   appearance: none;
 }
 
@@ -54,12 +53,12 @@ div.rdtPicker input.form-control{
 }
 
 .custom-time-input[type="time"] {
-  -moz-appearance: textfield; 
+  -moz-appearance: textfield;
   appearance: none;
 }
 
 .rs-picker-popup.rs-picker-popup-date {
- z-index: 1050 !important;
+  z-index: 1050 !important;
 }
 
 .rs-input-group.rs-input-group-inside {
@@ -70,7 +69,7 @@ div.rdtPicker input.form-control{
   outline: none !important;
   border-color: none !important;
 }
-.rs-input-group-focus{
+.rs-input-group-focus {
   border-color: none !important;
   outline: none !important;
 }
@@ -78,12 +77,32 @@ div.rdtPicker input.form-control{
   border-color: none !important;
 }
 .tippy-box {
-  background: none !important; 
-  box-shadow: none !important; 
-  border: none !important; 
+  background: none !important;
+  box-shadow: none !important;
+  border: none !important;
   padding: 0 !important;
 }
 
 .tippy-content {
-  padding: 0 !important
+  padding: 0 !important;
+}
+@keyframes dots {
+  0% {
+    content: ".";
+  }
+  45% {
+    content: "...";
+  }
+  55% {
+    content: "...";
+  }
+  86% {
+    content: "....";
+  }
+}
+
+.dot-animation::after {
+  display: inline-block;
+  animation: dots 1.5s infinite steps(4);
+  content: "";
 }

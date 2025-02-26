@@ -19,16 +19,45 @@ export async function PATCH(req: Request) {
     const client = await clientPromise;
     const db = client.db("my-next-app");
     const dataCollection = db.collection("mockData");
+    const historyCollection = db.collection("jobHistory");
+
+    // Fetch existing job to get old value
+    const existingJob = await dataCollection.findOne({ _id: new ObjectId(id) });
+
+    if (!existingJob) {
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    }
+
+    const oldValue = existingJob[field];
+
+    const updatedAt = new Date();
+
 
     const result = await dataCollection.updateOne(
       { _id: new ObjectId(id) },
       {
         $set: {
           [field]: value,
-          "reviewedBy": reviewedBy
+          "reviewedBy": reviewedBy,
+          updatedAt: updatedAt
         }
       }
     );
+
+
+
+
+    // Store the change in job history
+    const historyEntry = {
+      jobId: new ObjectId(id),
+      field: field,
+      oldValue: oldValue,
+      newValue: value,
+      changedBy: reviewedBy,
+      changedOn: new Date(),
+    };
+
+    await historyCollection.insertOne(historyEntry);
 
     if (result.matchedCount === 0) {
       return NextResponse.json(

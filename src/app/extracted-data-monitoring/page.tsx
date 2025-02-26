@@ -22,7 +22,7 @@ import { Instance } from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import TableSpinner from "../components/TableSpinner";
 import UploadModal from "../components/UploadModal";
-
+import { FiUpload } from "react-icons/fi";
 
 type FinalStatus = "new" | "inProgress" | "valid" | "partiallyValid" | "failure" | "sent";
 type ReviewStatus = "unConfirmed" | "confirmed" | "denied" | "deleted";
@@ -57,7 +57,6 @@ interface Job {
   customerOrderNum?: string | string[] | null;
 }
 
-
 const MasterPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -91,10 +90,10 @@ const MasterPage = () => {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const [isOcrRunning, setIsOcrRunning] = useState(false);
-  const [progress, setProgress] = useState(0);
-
+  // const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState<Record<string, number>>({});
+  const [isProcessModalOpen, setIsProcessModalOpen] = useState(false); // Modal state
 
   // const [carrierFilter, setCarrierFilter] = useState("");
   const router = useRouter();
@@ -191,6 +190,7 @@ const MasterPage = () => {
     // console.log("Sidebar state changed:", newState);
     // setIsSidebarExpanded(newState);
   };
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -247,7 +247,6 @@ const MasterPage = () => {
     );
   };
 
-  // Fetch OCR status on mount
   useEffect(() => {
     const fetchStatus = async () => {
       try {
@@ -262,41 +261,87 @@ const MasterPage = () => {
     fetchStatus();
   }, []);
 
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
   // const handleOcrToggle = async () => {
+  //   // if (selectedRows.length === 0) return;
+  //   if (selectedRows.length === 0 && !isOcrRunning) return;
+
   //   const newStatus = isOcrRunning ? "stop" : "start";
 
-  //   try {
-  //     const response = await fetch("/api/jobs/ocr", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ status: newStatus }),
-  //     });
 
-  //     const data = await response.json();
-  //     if (response.ok) {
-  //       setIsOcrRunning(!isOcrRunning);
-  //     } else {
-  //       console.error("Error:", data.message);
-  //     }
-  //   } catch (error) {
-  //     console.error("Request failed:", error);
+  //   const statusResponse = await fetch("/api/jobs/ocr", {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify({ status: newStatus }),
+  //   });
+
+  //   const statusData = await statusResponse.json();
+  //   if (!statusResponse.ok) {
+  //     console.error("Error:", statusData.message);
+  //     return;
   //   }
-  // };
 
-  // const handleOcrToggle = async () => {
-  //   if (selectedRows.length === 0) return;
+  //   if (newStatus === "stop") {
+  //     if (intervalRef.current) {
+  //       clearInterval(intervalRef.current);
+  //       intervalRef.current = null;
+  //     }
+  //     setIsOcrRunning(false);
+  //     setSelectedRows([]);
+  //     setProgress(0);
+  //     fetchJobs();
+  //     return;
+  //   }
+
 
   //   setIsOcrRunning(true);
   //   setProgress(0);
 
+  //   const pdfFiles = selectedRows
+  //     .map((rowId) => {
+  //       const job = master.find((job) => job._id === rowId);
+  //       return job ? { file_url: job.pdfUrl } : null;
+  //     })
+  //     .filter(Boolean);
 
-  //   const pdfFiles = selectedRows.map((rowId) => {
-  //     const job = master.find((job) => job._id === rowId);
-  //     return job ? { file_url: job.pdfUrl } : null;
-  //   }).filter(Boolean);
-
+  //   let interval: NodeJS.Timeout | null = null;
 
   //   try {
+  //     // interval = setInterval(async () => {
+  //     intervalRef.current = setInterval(async () => {
+  //       try {
+  //         const progressResponse = await fetch("https://hanneskonzept.ml-bench.com/api/ocr-progress");
+  //         if (!progressResponse.ok) throw new Error("Failed to fetch progress");
+
+  //         const progressData = await progressResponse.json();
+  //         console.log(progressData);
+  //         setProgress(progressData.progress);
+
+  //         if (progressData.progress >= 100) {
+
+  //           const newStatus = "stop";
+
+  //           await fetch("/api/jobs/ocr", {
+  //             method: "POST",
+  //             headers: { "Content-Type": "application/json" },
+  //             body: JSON.stringify({ status: newStatus }),
+  //           });
+
+  //           if (intervalRef.current) {
+  //             clearInterval(intervalRef.current);
+  //             intervalRef.current = null;
+  //           }
+
+  //           setIsOcrRunning(false);
+  //           setSelectedRows([]);
+  //           setProgress(0);
+  //           fetchJobs();
+  //         }
+  //       } catch (error) {
+  //         console.error("Error fetching progress:", error);
+  //       }
+  //     }, 30000);
 
   //     const response = await fetch("https://hanneskonzept.ml-bench.com/api/process-pdf", {
   //       method: "POST",
@@ -306,30 +351,47 @@ const MasterPage = () => {
 
   //     if (!response.ok) throw new Error("Failed to start OCR");
 
-  //     // Polling to track progress
-  //     const interval = setInterval(async () => {
-  //       console.log("good");
-  //       const progressResponse = await fetch("https://hanneskonzept.ml-bench.com/api/ocr-progress");
-  //       const progressData = await progressResponse.json();
-  //       setProgress(progressData.progress);
-
-  //       if (progressData.progress >= 100) {
-  //         clearInterval(interval);
-  //         setIsOcrRunning(false);
-  //       }
-  //     }, 500);
-
   //   } catch (error) {
   //     console.error("Error processing OCR:", error);
   //     setIsOcrRunning(false);
+  //     if (interval) clearInterval(interval);
   //   }
   // };
 
+
   const handleOcrToggle = async () => {
-    if (selectedRows.length === 0) return;
+    if (selectedRows.length === 0 && !isOcrRunning) return;
+
+    const newStatus = isOcrRunning ? "stop" : "start";
+
+    const statusResponse = await fetch("/api/jobs/ocr", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus }),
+    });
+
+    const statusData = await statusResponse.json();
+    if (!statusResponse.ok) {
+      console.error("Error:", statusData.message);
+      return;
+    }
+
+    if (newStatus === "stop") {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      setIsOcrRunning(false);
+      setSelectedRows([]);
+      setProgress({});
+      fetchJobs();
+      setIsProcessModalOpen(false);
+      return;
+    }
 
     setIsOcrRunning(true);
-    setProgress(0);
+    setIsProcessModalOpen(true);
+    setProgress({});
 
     const pdfFiles = selectedRows
       .map((rowId) => {
@@ -338,30 +400,37 @@ const MasterPage = () => {
       })
       .filter(Boolean);
 
-    let interval: NodeJS.Timeout | null = null;
+    intervalRef.current = setInterval(async () => {
+      try {
+
+        const progressResponse = await fetch("https://hanneskonzept.ml-bench.com/api/ocr-progress", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pdfFiles }),
+        });
+
+        if (!progressResponse.ok) throw new Error("Failed to fetch progress");
+
+        const progressData = await progressResponse.json();
+        console.log(progressData);
+        setProgress(progressData.progress);
+
+        if (Object.values(progressData.progress).every((p) => Number(p) >= 100)) {
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+          setIsOcrRunning(false);
+          fetchJobs();
+          setSelectedRows([]);
+          setIsProcessModalOpen(false);
+        }
+      } catch (error) {
+        console.error("Error fetching progress:", error);
+      }
+    }, 3000);
 
     try {
-      interval = setInterval(async () => {
-        try {
-          const progressResponse = await fetch("https://hanneskonzept.ml-bench.com/api/ocr-progress");
-          if (!progressResponse.ok) throw new Error("Failed to fetch progress");
-
-          const progressData = await progressResponse.json();
-          console.log(progressData);
-          setProgress(progressData.progress);
-
-          if (progressData.progress >= 100) {
-            clearInterval(interval!);
-            setIsOcrRunning(false);
-            setSelectedRows([]);
-            setProgress(0);
-            fetchJobs();
-          }
-        } catch (error) {
-          console.error("Error fetching progress:", error);
-        }
-      }, 30000);
-
       const response = await fetch("https://hanneskonzept.ml-bench.com/api/process-pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -369,16 +438,12 @@ const MasterPage = () => {
       });
 
       if (!response.ok) throw new Error("Failed to start OCR");
-
     } catch (error) {
       console.error("Error processing OCR:", error);
       setIsOcrRunning(false);
-      if (interval) clearInterval(interval);
+      if (intervalRef.current) clearInterval(intervalRef.current);
     }
   };
-
-
-
 
   const handleSelectAll = () => {
     if (selectedRows.length === master.length) {
@@ -557,7 +622,6 @@ const MasterPage = () => {
     // carrierFilter,
   ]);
 
-
   // const toggleSort = (column: string) => {
   //   if (sortColumn === column) {
   //     setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -569,7 +633,6 @@ const MasterPage = () => {
   //   sessionStorage.setItem("sortOrder", sortOrder === "asc" ? "desc" : "asc");
   //   fetchJobs();
   // };
-
 
   useEffect(() => {
     if (firstTime) {
@@ -637,7 +700,6 @@ const MasterPage = () => {
     }
   };
 
-
   const handlePageChange = (newPage: number) => {
     setFirstTime(true);
     setCurrentPage(newPage);
@@ -688,6 +750,8 @@ const MasterPage = () => {
   useEffect(() => {
     setShowButton(selectedRows.length > 0);
   }, [selectedRows]);
+
+  const buttonColor = isOcrRunning ? "bg-red-600 border border-red-600" : "bg-[#005B97]";
 
   if (loading) return <Spinner />;
   if (!isAuthenticated) return <p>Access Denied. Redirecting...</p>;
@@ -740,34 +804,15 @@ const MasterPage = () => {
 
               )
               }
-
             </div>
           </>
           }
-          buttonContent={
-            <button className="hover:bg-[#005B97] hover:text-white border-[#005B97] border text-[#005B97] rounded-lg px-8 py-2 md:mt-0 w-44 md:w-44"  onClick={() => setIsModalOpen(true)}>
-              Upload PDF
-            </button>
-          }
+          buttonContent={''}
         />
 
         <UploadModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
 
         <div className="flex-1 px-2 bg-white">
-
-          {/* <Link
-            href={{
-            pathname: '/history',
-            query: selectedRows.length > 0
-            ? { selectedRows: JSON.stringify(selectedRows) }
-            : undefined,
-            }}
-            >
-            <button className="bg-[#005B97] rounded-lg py-2 px-10 text-white md:mt-0 w-60 md:w-auto">
-            History
-            </button>
-            </Link> */}
-
           <div
             className={`bg-gray-200 p-3 mb-0 transition-all duration-500 ease-in w-full sm:w-auto ${isFilterDropDownOpen ? "rounded-t-lg" : "rounded-lg"}`}
           >
@@ -886,34 +931,6 @@ const MasterPage = () => {
                     className="absolute inset-y-0 right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
                   >
                     <IoCopyOutline size={20} className="text-[#005B97]" />
-                  </button>
-                </div>
-              </div> */}
-
-              {/* <div className="flex flex-col">
-                <label htmlFor="search" className="text-sm font-semibold text-gray-800">
-                  POD Date
-                </label>
-                <div className="relative">
-                  <input
-                    id="dateInput"
-                    type="date"
-                    placeholder="Date"
-                    value={podDateFilter}
-                    onChange={(e) => setPodDateFilter(e.target.value)}
-                    className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] custom-date-input"
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                    onClick={() => {
-                      const dateInput = document.getElementById('dateInput') as HTMLInputElement;
-                      if (dateInput) {
-                        dateInput.showPicker();
-                      }
-                    }}
-                  >
-                    <IoCalendar size={20} className="text-[#005B97]" />
                   </button>
                 </div>
               </div> */}
@@ -1200,6 +1217,17 @@ const MasterPage = () => {
 
             <div className="flex gap-3">
               <div>
+                <button
+                  className="hover:bg-[#005B97] hover:text-white border-[#005B97] border text-[#005B97] 
+                  rounded-lg px-6 py-2 w-fit flex items-center justify-center gap-2 transition"
+                  onClick={() => setIsModalOpen(true)}
+                >
+                  <FiUpload className="text-xl" />
+                  <span>Upload PDF</span>
+                </button>
+              </div>
+
+              <div>
 
                 <Link
                   href={{
@@ -1209,34 +1237,213 @@ const MasterPage = () => {
                       : undefined,
                   }}
                 >
-                  <button className="hover:bg-[#005B97] hover:text-white border-[#005B97] border text-[#005B97] rounded-lg px-14 py-2 md:mt-0 w-60 md:w-auto">
+                  <button className={`rounded-lg px-6 py-2 md:mt-0 w-fit md:w-auto  ${selectedRows.length === 0 ? "cursor-not-allowed bg-gray-400 border border-gray-400" : "bg-[#005B971A] text-[#005B97] border border-[#005B971A]"}`}>
                     History
                   </button>
                 </Link>
               </div>
-              {/* <div>
-                <p
-                  onClick={handleOcrToggle}
-                  className={`cursor-pointer w-fit px-4 py-2 rounded-lg  text-white transition ${isOcrRunning ? "bg-red-600 hover:bg-red-700 border-red border" : "bg-[#005B97] hover:bg-[#2270a3] border-[#005B97] border"
-                    }`}
-                >
-                  {isOcrRunning ? "Stop" : "OCR Processing"}
-                </p>
-              </div> */}
-
               <div>
+
                 <p
-                  onClick={selectedRows.length > 0 && !isOcrRunning ? handleOcrToggle : undefined}
-                  className={`cursor-pointer w-fit px-4 py-2 rounded-lg text-white transition 
-                  ${selectedRows.length === 0 || isOcrRunning ? "bg-gray-400 cursor-not-allowed border-gray-400 border" : "bg-[#005B97] hover:bg-[#2270a3] border-[#005B97] border"}
-                `}>
-                  {isOcrRunning ? "Processing..." : "OCR Processing"}
+                  onClick={selectedRows.length > 0 || isOcrRunning ? handleOcrToggle : undefined}
+                  className={` ${buttonColor} flex justify-center items-center w-fit px-4 py-2 rounded-lg text-white transition 
+                    ${selectedRows.length === 0 && !isOcrRunning ? "bg-gray-400 cursor-not-allowed border border-gray-400" : "cursor-pointer border border-[#005B97]"}
+                  `}>
+                  {isOcrRunning ? "Stop" : "Process"}
                 </p>
               </div>
 
+
             </div>
           </div>
-          {isOcrRunning && (
+
+
+          {isProcessModalOpen && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+              <div className="bg-white p-5 rounded-lg">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    {/* <h2 className="text-xl font-semibold text-black">Processing...</h2> */}
+                    <h2 className="text-xl font-semibold text-black">
+                      Processing<span className="dot-animation"></span>
+                    </h2>
+                    <p className="text-[#7B849A]">Please wait we are Processing your files will take just few moments</p>
+                  </div>
+                  <div>
+                    <p
+                      onClick={selectedRows.length > 0 || isOcrRunning ? handleOcrToggle : undefined}
+                      className={` ${buttonColor} flex justify-center items-center w-fit px-4 py-2 rounded-lg text-white transition 
+                    ${selectedRows.length === 0 && !isOcrRunning ? "bg-gray-400 cursor-not-allowed border border-gray-400" : "cursor-pointer border border-[#005B97]"}
+                  `}>
+                      {isOcrRunning ? "Stop Processing" : "Process"}
+                    </p>
+                  </div>
+
+                </div>
+
+                <div>
+                  <table className="min-w-full border-separate border-spacing-y-3">
+                    <thead>
+                      <tr className="border-b border-gray-400">
+                        <th className=" px-4 py-2 text-left text-black border-b border-gray-400">File Name</th>
+                        <th className=" px-4 py-2 text-left text-black min-w-72 text-center border-b border-gray-400">Progress</th>
+                        <th className=" px-4 py-2 text-left text-black text-center border-b border-gray-400">Recognition Status</th>
+                      </tr>
+                    </thead>
+                      <tbody className="">
+                        {selectedRows.map((rowId) => {
+                          const job = master.find((job) => job._id === rowId);
+                          if (!job || !job.pdfUrl) return null;
+
+                          return (
+                            <tr key={job._id} className="">
+                              <td className=" px-4 py-2 text-black">
+                                {job.pdfUrl ? job.pdfUrl.split('/').pop()?.replace('.pdf', '') || "No PDF Available" : "No PDF Available"}
+                              </td>
+                              <td className=" px-4 py-2">
+
+                                <div className="w-full bg-gray-200 rounded-full h-4 relative">
+                                  <div
+                                    className="bg-[#005B97] h-4 rounded-full relative transition-all duration-500 ease-in-out"
+                                    style={{ width: `${progress[job.pdfUrl] ?? 0}%` }}
+                                  >
+                                    <span
+                                      className="absolute top-1/2 right-[-1.01rem] transform -translate-y-1/2 translate-x-1/2 flex items-center px-2 h-6 text-[#005B97] font-medium bg-gray-300 font-semibold text-sm"
+                                    >
+                                      {progress[job.pdfUrl] ?? 0}%
+                                    </span>
+                                  </div>
+                                </div>
+
+                              </td>
+                              <td className=" px-4 py-2 text-center">
+                                <span
+                                  className={`px-3 py-2 rounded-full text-base font-medium ${progress[job.pdfUrl] === 100
+                                    ? "bg-[#28A4AD1A] text-[#28A4AD]"
+                                    : progress[job.pdfUrl] > 0
+                                      ? "bg-[#FCB0401A] text-[#FCB040]"
+                                      : "bg-[#005B971A] text-[#005B97]"
+                                    }`}
+                                >
+                                  {progress[job.pdfUrl] === 100
+                                    ? "Valid"
+                                    : progress[job.pdfUrl] > 0
+                                      ? "InProgress"
+                                      : "New"}
+                                </span>
+
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                  </table>
+                </div>
+
+                {/* <span className="absolute top-0 left-1/2 transform -translate-x-1/2 text-xs text-white">
+                                  {progress[job.pdfUrl] ?? 0}%
+                                </span> */}
+
+
+                {/* <div className="w-full">
+                  <table className="min-w-full border-separate border-spacing-y-3">
+                    <thead className="bg-white sticky top-0 shadow-md">
+                      <tr className="border-b border-gray-400">
+                        <th className="px-4 py-2 text-left text-black border-b border-gray-400">File Name</th>
+                        <th className="px-4 py-2 text-left text-black min-w-72 text-center border-b border-gray-400">
+                          Progress
+                        </th>
+                        <th className="px-4 py-2 text-left text-black text-center border-b border-gray-400">
+                          Recognition Status
+                        </th>
+                      </tr>
+                    </thead>
+                  </table>
+
+                  <div className="max-h-[400px] overflow-y-auto">
+                    <table className="min-w-full border-separate border-spacing-y-3">
+                      <tbody>
+                        {selectedRows.map((rowId) => {
+                          const job = master.find((job) => job._id === rowId);
+                          if (!job || !job.pdfUrl) return null;
+
+                          return (
+                            <tr key={job._id}>
+                              <td className="px-4 py-2 text-black">
+                                {job.pdfUrl ? job.pdfUrl.split('/').pop()?.replace('.pdf', '') || "No PDF Available" : "No PDF Available"}
+                              </td>
+                              <td className=" px-4 py-2">
+
+                                <div className="w-full bg-gray-200 rounded-full h-4 relative">
+                                  <div
+                                    className="bg-[#005B97] h-4 rounded-full relative transition-all duration-500 ease-in-out"
+                                    style={{ width: `${progress[job.pdfUrl] ?? 0}%` }}
+                                  >
+                                    <span
+                                      className="absolute top-1/2 right-[-1.01rem] transform -translate-y-1/2 translate-x-1/2 flex items-center px-2 h-6 text-[#005B97] font-medium bg-gray-300 font-semibold text-sm"
+                                    >
+                                      {progress[job.pdfUrl] ?? 0}%
+                                    </span>
+                                  </div>
+                                </div>
+
+                              </td>
+                              <td className="px-4 py-2 text-center">
+                                <span
+                                  className={`px-3 py-2 rounded-full text-base font-medium ${progress[job.pdfUrl] === 100
+                                    ? "bg-[#28A4AD1A] text-[#28A4AD]"
+                                    : progress[job.pdfUrl] > 0
+                                      ? "bg-[#FCB0401A] text-[#FCB040]"
+                                      : "bg-[#005B971A] text-[#005B97]"
+                                    }`}
+                                >
+                                  {progress[job.pdfUrl] === 100
+                                    ? "Valid"
+                                    : progress[job.pdfUrl] > 0
+                                      ? "InProgress"
+                                      : "New"}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div> */}
+
+
+                {/* <div className="space-y-3">
+                  {selectedRows.map((rowId) => {
+                    const job = master.find((job) => job._id === rowId);
+                    if (!job || !job.pdfUrl) return null;
+                    return (
+                      <div key={job._id}>
+                        <p className="text-sm font-medium text-gray-700">{job.pdfUrl}</p>
+                        <div className="w-full bg-gray-200 rounded-full h-4">
+                          <div
+                            className="bg-blue-500 h-4 rounded-full"
+                            style={{ width: `${progress[job.pdfUrl] ?? 0}%` }}
+                          ></div>
+                        </div>
+                        <p className="text-xs text-gray-600">{progress[job.pdfUrl] ?? 0}%</p>
+                      </div>
+                    );
+                  })}
+                </div> */}
+
+                {/* <button
+                  className="mt-4 w-full bg-red-500 text-white py-2 rounded"
+                  onClick={() => setIsProcessModalOpen(false)}
+                >
+                  Close
+                </button> */}
+
+              </div>
+            </div>
+          )}
+
+          {/* {isOcrRunning && (
             <div className="flex items-center justify-between gap-5">
               <div className="w-full">
                 <div className="w-full bg-gray-200 rounded-full h-4">
@@ -1245,11 +1452,11 @@ const MasterPage = () => {
               </div>
               <div>
                 <p className="text-2xl text-[#005B97] font-semibold">
-                  {progress}%/<span className="text-black">100%</span>
+                  {progress}/<span className="text-black">100(%)</span>
                 </p>
               </div>
             </div>
-          )}
+          )} */}
 
 
           <div className="py-3 mx-auto">
@@ -2076,7 +2283,6 @@ const MasterPage = () => {
               </div>
             )}
 
-
             {
               master.length !== 0 && (
                 <div className="mt-5 flex justify-end gap-5 items-center text-gray-800">
@@ -2106,5 +2312,4 @@ const MasterPage = () => {
     </div >
   );
 };
-
 export default MasterPage;

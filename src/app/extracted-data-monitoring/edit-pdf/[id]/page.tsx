@@ -119,7 +119,9 @@ const JobDetail = () => {
         };
         const decodedToken = decodeJwt(token);
         setUserRole(decodedToken.role);
+        
         setName(decodedToken.username);
+
     }, [router]);
 
     useEffect(() => {
