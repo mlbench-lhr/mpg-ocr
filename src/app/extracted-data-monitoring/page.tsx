@@ -412,7 +412,7 @@ const MasterPage = () => {
         if (!progressResponse.ok) throw new Error("Failed to fetch progress");
 
         const progressData = await progressResponse.json();
-        console.log(progressData);
+        console.log(progressData.progress);
         setProgress(progressData.progress);
 
         if (Object.values(progressData.progress).every((p) => Number(p) >= 100)) {
@@ -432,12 +432,12 @@ const MasterPage = () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ status: newStatus }),
           });
-          
+
         }
       } catch (error) {
         console.error("Error fetching progress:", error);
       }
-    }, 3000);
+    }, 5000);
 
     try {
       const response = await fetch("https://hanneskonzept.ml-bench.com/api/process-pdf", {
@@ -759,6 +759,40 @@ const MasterPage = () => {
   useEffect(() => {
     setShowButton(selectedRows.length > 0);
   }, [selectedRows]);
+
+
+  useEffect(() => {
+    if (!isProcessModalOpen) return; 
+  
+    const preventRefresh = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+  
+    window.addEventListener("beforeunload", preventRefresh);
+  
+    return () => {
+      window.removeEventListener("beforeunload", preventRefresh);
+  
+      // Only update status if modal was open
+      const updateStatus = async () => {
+        try {
+          await fetch("/api/jobs/ocr", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "stop" }),
+          });
+        } catch (error) {
+          console.error("Error updating OCR status:", error);
+        }
+      };
+  
+      updateStatus();
+    };
+  }, [isProcessModalOpen]);
+  
+
+
 
   const buttonColor = isOcrRunning ? "bg-red-600 border border-red-600" : "bg-[#005B97]";
 
@@ -1225,7 +1259,7 @@ const MasterPage = () => {
             </div>
 
             <div className="flex gap-3">
-              
+
 
               <div>
 
@@ -1269,8 +1303,8 @@ const MasterPage = () => {
 
 
           {isProcessModalOpen && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-              <div className="bg-white p-5 rounded-lg">
+            <div className="fixed inset-0 flex items-start justify-center bg-black bg-opacity-50 z-50">
+              <div className="bg-white p-5 rounded-lg mt-5">
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     {/* <h2 className="text-xl font-semibold text-black">Processing...</h2> */}
@@ -1300,53 +1334,53 @@ const MasterPage = () => {
                         <th className=" px-4 py-2 text-left text-black text-center border-b border-gray-400">Recognition Status</th>
                       </tr>
                     </thead>
-                      <tbody className="">
-                        {selectedRows.map((rowId) => {
-                          const job = master.find((job) => job._id === rowId);
-                          if (!job || !job.pdfUrl) return null;
+                    <tbody className="">
+                      {selectedRows.map((rowId) => {
+                        const job = master.find((job) => job._id === rowId);
+                        if (!job || !job.pdfUrl) return null;
 
-                          return (
-                            <tr key={job._id} className="">
-                              <td className=" px-4 py-2 text-black">
-                                {job.pdfUrl ? job.pdfUrl.split('/').pop()?.replace('.pdf', '') || "No PDF Available" : "No PDF Available"}
-                              </td>
-                              <td className=" px-4 py-2">
+                        return (
+                          <tr key={job._id} className="">
+                            <td className=" px-4 py-2 text-black">
+                              {job.pdfUrl ? job.pdfUrl.split('/').pop()?.replace('.pdf', '') || "No PDF Available" : "No PDF Available"}
+                            </td>
+                            <td className=" px-4 py-2">
 
-                                <div className="w-full bg-gray-200 rounded-full h-4 relative">
-                                  <div
-                                    className="bg-[#005B97] h-4 rounded-full relative transition-all duration-500 ease-in-out"
-                                    style={{ width: `${progress[job.pdfUrl] ?? 0}%` }}
-                                  >
-                                    <span
-                                      className="absolute top-1/2 right-[-1.01rem] transform -translate-y-1/2 translate-x-1/2 flex items-center px-2 h-6 text-[#005B97] font-medium bg-gray-300 font-semibold text-sm"
-                                    >
-                                      {progress[job.pdfUrl] ?? 0}%
-                                    </span>
-                                  </div>
-                                </div>
-
-                              </td>
-                              <td className=" px-4 py-2 text-center">
-                                <span
-                                  className={`px-3 py-2 rounded-full text-base font-medium ${progress[job.pdfUrl] === 100
-                                    ? "bg-[#28A4AD1A] text-[#28A4AD]"
-                                    : progress[job.pdfUrl] > 0
-                                      ? "bg-[#FCB0401A] text-[#FCB040]"
-                                      : "bg-[#005B971A] text-[#005B97]"
-                                    }`}
+                              <div className="w-full bg-gray-200 rounded-full h-4 relative">
+                                <div
+                                  className="bg-[#005B97] h-4 rounded-full relative transition-all duration-500 ease-in-out"
+                                  style={{ width: `${progress[job.pdfUrl] ?? 0}%` }}
                                 >
-                                  {progress[job.pdfUrl] === 100
-                                    ? "Valid"
-                                    : progress[job.pdfUrl] > 0
-                                      ? "InProgress"
-                                      : "New"}
-                                </span>
+                                  <span
+                                    className="absolute top-1/2 right-[-1.01rem] transform -translate-y-1/2 translate-x-1/2 flex items-center px-2 h-6 text-[#005B97] font-medium bg-gray-300 font-semibold text-sm"
+                                  >
+                                    {progress[job.pdfUrl] ?? 0}%
+                                  </span>
+                                </div>
+                              </div>
 
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
+                            </td>
+                            <td className=" px-4 py-2 text-center">
+                              <span
+                                className={`px-3 py-2 rounded-full text-base font-medium ${progress[job.pdfUrl] === 100
+                                  ? "bg-[#28A4AD1A] text-[#28A4AD]"
+                                  : progress[job.pdfUrl] > 0
+                                    ? "bg-[#FCB0401A] text-[#FCB040]"
+                                    : "bg-[#005B971A] text-[#005B97]"
+                                  }`}
+                              >
+                                {progress[job.pdfUrl] === 100
+                                  ? "Valid"
+                                  : progress[job.pdfUrl] > 0
+                                    ? "InProgress"
+                                    : "New"}
+                              </span>
+
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
                   </table>
                 </div>
 

@@ -169,9 +169,9 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
     return isOpen ? (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                <h2 className="text-xl font-semibold mb-4 text-black">Upload PDFs</h2>
+                <h2 className="text-xl font-semibold mb-5 text-black text-center">Upload PDFs</h2>
                 <p className="mb-2 text-black">Select multiple PDFs</p>
-                <input type="file" multiple onChange={handleFileChange} className="mb-4 text-black" />
+                <input type="file" multiple onChange={handleFileChange} className="mb-4 text-black" disabled={uploading} />
 
                 {files.length > 0 && (
                     <div className=" h-80 overflow-y-scroll">
@@ -204,13 +204,13 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
                             Clear All
                         </button>
                     )} */}
-                    <div className="flex gap-2">
-                        <button onClick={onClose} className="px-4 py-2 bg-gray-400 text-white rounded-lg">
+                    <div className="flex justify-center items-center w-full">
+                        {/* <button onClick={onClose} className="px-4 py-2 bg-gray-400 text-white rounded-lg">
                             Close
-                        </button>
+                        </button> */}
                         <button
                             onClick={uploadFiles}
-                            className="px-4 py-2 bg-[#005B97] text-white rounded-lg disabled:opacity-50 cursor-pointer"
+                            className="px-4 py-2 bg-[#005B97] text-white rounded-lg disabled:opacity-50 cursor-pointer w-full"
                             disabled={uploading}
                         >
                             {uploading ? "Uploading..." : "Upload"}
