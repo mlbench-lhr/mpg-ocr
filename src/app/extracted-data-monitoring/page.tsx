@@ -751,40 +751,36 @@ const MasterPage = () => {
 
   useEffect(() => {
     if (!isProcessModalOpen) return;
-
+  
     const preventRefresh = (e: BeforeUnloadEvent) => {
       e.preventDefault();
       e.returnValue = "";
     };
-
+  
+    const updateStatus = () => {
+      const newStatus = "stop";
+      const data = JSON.stringify({ status: newStatus });
+      navigator.sendBeacon("/api/jobs/ocr", data);
+    };
+  
     window.addEventListener("beforeunload", preventRefresh);
-
+    window.addEventListener("unload", updateStatus); // Ensures status update on reload
+  
     return () => {
       window.removeEventListener("beforeunload", preventRefresh);
-
+      window.removeEventListener("unload", updateStatus);
+  
       // Only update status if modal was open
-      const updateStatus = async () => {
-        try {
-          const newStatus = "stop";
-          await fetch("/api/jobs/ocr", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: newStatus }),
-          });
-
-          setIsOcrRunning(false);
-          setIsProcessModalOpen(false);
-          setSelectedRows([]);
-          setProgress({});
-          fetchJobs();
-        } catch (error) {
-          console.error("Error updating OCR status:", error);
-        }
-      };
-
       updateStatus();
+  
+      setIsOcrRunning(false);
+      setIsProcessModalOpen(false);
+      setSelectedRows([]);
+      setProgress({});
+      fetchJobs();
     };
   }, [isProcessModalOpen]);
+  
 
 
 
