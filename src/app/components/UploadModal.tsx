@@ -195,7 +195,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
                     </div>
                 )}
 
-                <div className="mt-4 flex justify-between">
+                <div className="mt-4 flex justify-between mb-2">
                     {/* {files.length > 0 && (
                         <button
                             onClick={clearAll}
@@ -205,9 +205,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
                         </button>
                     )} */}
                     <div className="flex justify-center items-center w-full">
-                        {/* <button onClick={onClose} className="px-4 py-2 bg-gray-400 text-white rounded-lg">
-                            Close
-                        </button> */}
+
                         <button
                             onClick={uploadFiles}
                             className="px-4 py-2 bg-[#005B97] text-white rounded-lg disabled:opacity-50 cursor-pointer w-full"
@@ -216,7 +214,15 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
                             {uploading ? "Uploading..." : "Upload"}
                         </button>
                     </div>
+
+
                 </div>
+                <div className="flex justify-center items-center w-full">
+                    <button onClick={onClose} className="px-4 py-2 bg-gray-400 text-white rounded-lg w-full" disabled={uploading}>
+                        Close
+                    </button>
+                </div>
+
             </div>
         </div>
     ) : null;

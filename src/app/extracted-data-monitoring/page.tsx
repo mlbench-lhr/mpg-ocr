@@ -90,10 +90,13 @@ const MasterPage = () => {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isOcrRunning, setIsOcrRunning] = useState(false);
   // const [progress, setProgress] = useState(0);
+
+  const [isOcrRunning, setIsOcrRunning] = useState(false);
   const [progress, setProgress] = useState<Record<string, number>>({});
-  const [isProcessModalOpen, setIsProcessModalOpen] = useState(false); // Modal state
+  const [isProcessModalOpen, setIsProcessModalOpen] = useState(false);
+
+
 
   // const [carrierFilter, setCarrierFilter] = useState("");
   const router = useRouter();
@@ -261,105 +264,11 @@ const MasterPage = () => {
     fetchStatus();
   }, []);
 
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // const handleOcrToggle = async () => {
-  //   // if (selectedRows.length === 0) return;
-  //   if (selectedRows.length === 0 && !isOcrRunning) return;
-
-  //   const newStatus = isOcrRunning ? "stop" : "start";
-
-
-  //   const statusResponse = await fetch("/api/jobs/ocr", {
-  //     method: "POST",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify({ status: newStatus }),
-  //   });
-
-  //   const statusData = await statusResponse.json();
-  //   if (!statusResponse.ok) {
-  //     console.error("Error:", statusData.message);
-  //     return;
-  //   }
-
-  //   if (newStatus === "stop") {
-  //     if (intervalRef.current) {
-  //       clearInterval(intervalRef.current);
-  //       intervalRef.current = null;
-  //     }
-  //     setIsOcrRunning(false);
-  //     setSelectedRows([]);
-  //     setProgress(0);
-  //     fetchJobs();
-  //     return;
-  //   }
-
-
-  //   setIsOcrRunning(true);
-  //   setProgress(0);
-
-  //   const pdfFiles = selectedRows
-  //     .map((rowId) => {
-  //       const job = master.find((job) => job._id === rowId);
-  //       return job ? { file_url: job.pdfUrl } : null;
-  //     })
-  //     .filter(Boolean);
-
-  //   let interval: NodeJS.Timeout | null = null;
-
-  //   try {
-  //     // interval = setInterval(async () => {
-  //     intervalRef.current = setInterval(async () => {
-  //       try {
-  //         const progressResponse = await fetch("https://hanneskonzept.ml-bench.com/api/ocr-progress");
-  //         if (!progressResponse.ok) throw new Error("Failed to fetch progress");
-
-  //         const progressData = await progressResponse.json();
-  //         console.log(progressData);
-  //         setProgress(progressData.progress);
-
-  //         if (progressData.progress >= 100) {
-
-  //           const newStatus = "stop";
-
-  //           await fetch("/api/jobs/ocr", {
-  //             method: "POST",
-  //             headers: { "Content-Type": "application/json" },
-  //             body: JSON.stringify({ status: newStatus }),
-  //           });
-
-  //           if (intervalRef.current) {
-  //             clearInterval(intervalRef.current);
-  //             intervalRef.current = null;
-  //           }
-
-  //           setIsOcrRunning(false);
-  //           setSelectedRows([]);
-  //           setProgress(0);
-  //           fetchJobs();
-  //         }
-  //       } catch (error) {
-  //         console.error("Error fetching progress:", error);
-  //       }
-  //     }, 30000);
-
-  //     const response = await fetch("https://hanneskonzept.ml-bench.com/api/process-pdf", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ pdfFiles }),
-  //     });
-
-  //     if (!response.ok) throw new Error("Failed to start OCR");
-
-  //   } catch (error) {
-  //     console.error("Error processing OCR:", error);
-  //     setIsOcrRunning(false);
-  //     if (interval) clearInterval(interval);
-  //   }
-  // };
-
+  const abortController = new AbortController();
 
   const handleOcrToggle = async () => {
+
     if (selectedRows.length === 0 && !isOcrRunning) return;
 
     const newStatus = isOcrRunning ? "stop" : "start";
@@ -377,10 +286,7 @@ const MasterPage = () => {
     }
 
     if (newStatus === "stop") {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+      abortController.abort();
       setIsOcrRunning(false);
       setSelectedRows([]);
       setProgress({});
@@ -396,89 +302,138 @@ const MasterPage = () => {
     const pdfFiles = selectedRows
       .map((rowId) => {
         const job = master.find((job) => job._id === rowId);
-        return job ? { file_url: job.pdfUrl } : null;
+        return job ? { file_url_or_path: job.pdfUrl } : null;
       })
-      .filter(Boolean);
+      .filter((file) => file !== null);
 
-    intervalRef.current = setInterval(async () => {
-      try {
+    async function processPdfsSequentially() {
+      for (const pdfFile of pdfFiles) {
+        if (!pdfFile?.file_url_or_path) continue;
 
-        const progressResponse = await fetch("https://hanneskonzept.ml-bench.com/api/ocr-progress", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pdfFiles }),
-        });
+        const filePath = pdfFile.file_url_or_path;
 
-        if (!progressResponse.ok) throw new Error("Failed to fetch progress");
+        setProgress((prev) => ({
+          ...prev,
+          [filePath]: 10,
+        }));
 
-        const progressData = await progressResponse.json();
-        console.log(progressData.progress);
-        setProgress(progressData.progress);
+        try {
+          const ocrResponse = await fetch(
+            "https://d4ad-194-68-245-48.ngrok-free.app/run-ocr",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ file_url_or_path: filePath }),
+            }
+          );
 
-        if (Object.values(progressData.progress).every((p) => Number(p) >= 100)) {
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
+          if (!ocrResponse.ok) {
+            const errorData = await ocrResponse.json().catch(() => null);
+            throw new Error(errorData?.error || "Failed to process OCR");
           }
-          setIsOcrRunning(false);
-          fetchJobs();
-          setSelectedRows([]);
-          setIsProcessModalOpen(false);
 
-          const newStatus = "stop";
+          const ocrData = await ocrResponse.json();
 
-          await fetch("/api/jobs/ocr", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: newStatus }),
-          });
+          if (ocrData && Array.isArray(ocrData)) {
+            const processedDataArray = ocrData.map((data) => {
+              const recognitionStatusMap: Record<"failed" | "partially valid" | "valid" | "null", string> = {
+                failed: "failure",
+                "partially valid": "partiallyValid",
+                valid: "valid",
+                null: "null",
+              };
 
+              const status = (data?.Status as keyof typeof recognitionStatusMap) || "null";
+              const recognitionStatus = recognitionStatusMap[status] || "null";
+
+
+              return {
+                jobId: null,
+                pdfUrl: filePath,
+                deliveryDate: new Date().toISOString().split("T")[0],
+                noOfPages: 1,
+                blNumber: data?.B_L_Number || "",
+                podDate: data?.POD_Date || "",
+                podSignature:
+                  data?.Signature_Exists === "yes"
+                    ? "yes"
+                    : data?.Signature_Exists === "no"
+                      ? "no"
+                      : data?.Signature_Exists,
+                totalQty: isNaN(data?.Issued_Qty) ? data?.Issued_Qty : Number(data?.Issued_Qty),
+                received: data?.Received_Qty,
+                damaged: data?.Damage_Qty,
+                short: data?.Short_Qty,
+                over: data?.Over_Qty,
+                refused: data?.Refused_Qty,
+                customerOrderNum: data?.Customer_Order_Num,
+                stampExists:
+                  data?.Stamp_Exists === "yes"
+                    ? "yes"
+                    : data?.Stamp_Exists === "no"
+                      ? "no"
+                      : data?.Stamp_Exists,
+                finalStatus: "valid",
+                reviewStatus: "unConfirmed",
+                recognitionStatus: recognitionStatus,
+                breakdownReason: "none",
+                reviewedBy: "OCR Engine",
+                cargoDescription: "Processed from OCR API.",
+              };
+            });
+
+            console.log("Saving OCR processed data:", processedDataArray);
+
+            const saveResponse = await fetch("/api/process-data/save-data", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(processedDataArray),
+            });
+
+            if (!saveResponse.ok) {
+              console.error("Error saving data:", await saveResponse.json());
+            } else {
+              console.log("OCR data saved successfully.");
+            }
+          } 
+
+          let progressValue = 0;
+
+          while (progressValue < 100) {
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            progressValue += 25;
+            setProgress((prev) => ({
+              ...prev,
+              [filePath]: progressValue,
+            }));
+          }
+
+          console.log(`OCR Success for: ${filePath}`);
+
+          setProgress((prev) => ({ ...prev, [filePath]: 100 }));
+
+        } catch (error) {
+          console.error(`Error processing ${filePath}:`, error);
         }
-      } catch (error) {
-        console.error("Error fetching progress:", error);
       }
-    }, 5000);
 
-    // try {
-    //   const response = await fetch("https://hanneskonzept.ml-bench.com/api/process-pdf", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({ pdfFiles }),
-    //   });
 
-    //   if (!response.ok) throw new Error("Failed to start OCR");
-    // } catch (error) {
-    //   console.error("Error processing OCR:", error);
-    //   setIsOcrRunning(false);
-    //   if (intervalRef.current) clearInterval(intervalRef.current);
-    // }
-
-    try {
-      const response = await fetch("https://hanneskonzept.ml-bench.com/api/process-pdf", {
+      const newStatus = "stop";
+      await fetch("/api/jobs/ocr", {
         method: "POST",
-        mode: "cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ pdfFiles }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.error || "Failed to start OCR");
-      }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Error processing OCR:", error.message);
-      } else {
-        console.error("Unexpected error:", error);
-      }
-
       setIsOcrRunning(false);
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      setIsProcessModalOpen(false);
+      setSelectedRows([]);
+      setProgress({});
+      fetchJobs();
+
     }
 
-
+    await processPdfsSequentially();
   };
 
   const handleSelectAll = () => {
@@ -1371,7 +1326,7 @@ const MasterPage = () => {
                             <td className=" px-4 py-2 text-black">
                               {job.pdfUrl ? job.pdfUrl.split('/').pop()?.replace('.pdf', '') || "No PDF Available" : "No PDF Available"}
                             </td>
-                            <td className=" px-4 py-2">
+                            {/* <td className=" px-4 py-2">
 
                               <div className="w-full bg-gray-200 rounded-full h-4 relative">
                                 <div
@@ -1386,7 +1341,24 @@ const MasterPage = () => {
                                 </div>
                               </div>
 
+                            </td> */}
+
+                            <td className="px-4 py-2">
+                              <div className="w-full bg-gray-200 rounded-full h-4 relative">
+                                <div
+                                  className="bg-[#005B97] h-4 rounded-full relative transition-all duration-500 ease-in-out"
+                                  style={{ width: `${progress[job.pdfUrl] ?? 0}%` }}
+                                >
+                                  <span
+                                    className="absolute top-1/2 right-[-1.01rem] transform -translate-y-1/2 translate-x-1/2 flex items-center px-2 h-6 text-[#005B97] font-medium bg-gray-300 font-semibold text-sm"
+                                  >
+                                    {progress[job.pdfUrl] ?? 0}%
+                                  </span>
+                                </div>
+                              </div>
                             </td>
+
+
                             <td className=" px-4 py-2 text-center">
                               <span
                                 className={`px-3 py-2 rounded-full text-base font-medium ${progress[job.pdfUrl] === 100
