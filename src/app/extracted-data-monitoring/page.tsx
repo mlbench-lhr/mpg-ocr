@@ -395,9 +395,9 @@ const MasterPage = () => {
             } else {
               console.log("OCR data saved successfully.");
             }
-          } 
+          }
 
-          let progressValue = 0;
+          let progressValue = 1;
 
           while (progressValue < 100) {
             await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -414,6 +414,12 @@ const MasterPage = () => {
 
         } catch (error) {
           console.error(`Error processing ${filePath}:`, error);
+
+          // Set progress to zero for failed PDFs
+          setProgress((prev) => ({
+            ...prev,
+            [filePath]: 0,
+          }));
         }
       }
 
@@ -1359,7 +1365,7 @@ const MasterPage = () => {
                             </td>
 
 
-                            <td className=" px-4 py-2 text-center">
+                            {/* <td className=" px-4 py-2 text-center">
                               <span
                                 className={`px-3 py-2 rounded-full text-base font-medium ${progress[job.pdfUrl] === 100
                                   ? "bg-[#28A4AD1A] text-[#28A4AD]"
@@ -1375,7 +1381,29 @@ const MasterPage = () => {
                                     : "New"}
                               </span>
 
+                            </td> */}
+
+                            <td className="px-4 py-2 text-center">
+                              <span
+                                className={`px-3 py-2 rounded-full text-base font-medium ${progress[job.pdfUrl] === 100
+                                    ? "bg-[#28A4AD1A] text-[#28A4AD]"
+                                    : progress[job.pdfUrl] > 0
+                                      ? "bg-[#FCB0401A] text-[#FCB040]"
+                                      : progress[job.pdfUrl] === 0
+                                        ? "bg-[#FF4D4D1A] text-[#FF4D4D]"
+                                        : "bg-[#005B971A] text-[#005B97]"
+                                  }`}
+                              >
+                                {progress[job.pdfUrl] === 100
+                                  ? "Valid"
+                                  : progress[job.pdfUrl] > 0
+                                    ? "In Progress"
+                                    : progress[job.pdfUrl] === 0
+                                      ? "Failed"
+                                      : "New"}
+                              </span>
                             </td>
+
                           </tr>
                         );
                       })}
