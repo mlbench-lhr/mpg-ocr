@@ -439,19 +439,46 @@ const MasterPage = () => {
       }
     }, 5000);
 
+    // try {
+    //   const response = await fetch("https://hanneskonzept.ml-bench.com/api/process-pdf", {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({ pdfFiles }),
+    //   });
+
+    //   if (!response.ok) throw new Error("Failed to start OCR");
+    // } catch (error) {
+    //   console.error("Error processing OCR:", error);
+    //   setIsOcrRunning(false);
+    //   if (intervalRef.current) clearInterval(intervalRef.current);
+    // }
+
     try {
       const response = await fetch("https://hanneskonzept.ml-bench.com/api/process-pdf", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ pdfFiles }),
       });
 
-      if (!response.ok) throw new Error("Failed to start OCR");
-    } catch (error) {
-      console.error("Error processing OCR:", error);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || "Failed to start OCR");
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error processing OCR:", error.message);
+      } else {
+        console.error("Unexpected error:", error);
+      }
+
       setIsOcrRunning(false);
       if (intervalRef.current) clearInterval(intervalRef.current);
     }
+
+
   };
 
   const handleSelectAll = () => {
@@ -762,18 +789,18 @@ const MasterPage = () => {
 
 
   useEffect(() => {
-    if (!isProcessModalOpen) return; 
-  
+    if (!isProcessModalOpen) return;
+
     const preventRefresh = (e: BeforeUnloadEvent) => {
       e.preventDefault();
       e.returnValue = "";
     };
-  
+
     window.addEventListener("beforeunload", preventRefresh);
-  
+
     return () => {
       window.removeEventListener("beforeunload", preventRefresh);
-  
+
       // Only update status if modal was open
       const updateStatus = async () => {
         try {
@@ -786,11 +813,11 @@ const MasterPage = () => {
           console.error("Error updating OCR status:", error);
         }
       };
-  
+
       updateStatus();
     };
   }, [isProcessModalOpen]);
-  
+
 
 
 
