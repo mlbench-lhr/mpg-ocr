@@ -1294,7 +1294,7 @@ const MasterPage = () => {
 
 
           {isProcessModalOpen && (
-            <div className="fixed inset-0 flex items-start justify-center bg-black bg-opacity-50 z-50">
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
               <div className="bg-white p-5 rounded-lg mt-5">
                 <div className="flex justify-between items-start mb-4">
                   <div>
@@ -1316,13 +1316,13 @@ const MasterPage = () => {
 
                 </div>
 
-                <div>
+                <div className="h-96 overflow-scroll">
                   <table className="min-w-full border-separate border-spacing-y-3">
                     <thead>
                       <tr className="border-b border-gray-400">
                         <th className=" px-4 py-2 text-left text-black border-b border-gray-400">File Name</th>
                         <th className=" px-4 py-2 text-left text-black min-w-72 text-center border-b border-gray-400">Progress</th>
-                        <th className=" px-4 py-2 text-left text-black text-center border-b border-gray-400">Recognition Status</th>
+                        <th className=" px-4 py-2 text-left text-black text-center border-b border-gray-400">Status</th>
                       </tr>
                     </thead>
                     <tbody className="">
