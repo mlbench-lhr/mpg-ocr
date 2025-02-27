@@ -765,11 +765,18 @@ const MasterPage = () => {
       // Only update status if modal was open
       const updateStatus = async () => {
         try {
+          const newStatus = "stop";
           await fetch("/api/jobs/ocr", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: "stop" }),
+            body: JSON.stringify({ status: newStatus }),
           });
+
+          setIsOcrRunning(false);
+          setIsProcessModalOpen(false);
+          setSelectedRows([]);
+          setProgress({});
+          fetchJobs();
         } catch (error) {
           console.error("Error updating OCR status:", error);
         }
@@ -1386,12 +1393,12 @@ const MasterPage = () => {
                             <td className="px-4 py-2 text-center">
                               <span
                                 className={`px-3 py-2 rounded-full text-base font-medium ${progress[job.pdfUrl] === 100
-                                    ? "bg-[#28A4AD1A] text-[#28A4AD]"
-                                    : progress[job.pdfUrl] > 0
-                                      ? "bg-[#FCB0401A] text-[#FCB040]"
-                                      : progress[job.pdfUrl] === 0
-                                        ? "bg-[#FF4D4D1A] text-[#FF4D4D]"
-                                        : "bg-[#005B971A] text-[#005B97]"
+                                  ? "bg-[#28A4AD1A] text-[#28A4AD]"
+                                  : progress[job.pdfUrl] > 0
+                                    ? "bg-[#FCB0401A] text-[#FCB040]"
+                                    : progress[job.pdfUrl] === 0
+                                      ? "bg-[#FF4D4D1A] text-[#FF4D4D]"
+                                      : "bg-[#005B971A] text-[#005B97]"
                                   }`}
                               >
                                 {progress[job.pdfUrl] === 100
