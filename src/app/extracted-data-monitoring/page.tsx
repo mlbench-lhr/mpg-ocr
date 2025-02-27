@@ -1316,7 +1316,7 @@ const MasterPage = () => {
 
                 </div>
 
-                <div className="max-h-96 overflow-scroll">
+                <div className="h-auto max-h-96 overflow-scroll">
                   <table className="min-w-full border-separate border-spacing-y-3">
                     <thead>
                       <tr className="border-b border-gray-400">
