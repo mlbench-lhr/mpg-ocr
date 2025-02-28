@@ -25,11 +25,12 @@ interface OCRData {
     Customer_Order_Num: string | string[] | null;
 }
 
+const DB_NAME = process.env.DB_NAME || "my-next-app";
 
 export async function GET() {
     try {
         const client = await clientPromise;
-        const db = client.db("my-next-app");
+        const db = client.db(DB_NAME);
 
         const jobsCollection = db.collection("jobs");
 

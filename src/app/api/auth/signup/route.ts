@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import clientPromise from "@/lib/mongodb";
 
+const DB_NAME = process.env.DB_NAME || "my-next-app";
+
 export async function POST(req: Request) {
   try {
     const { name, email, password, role } = await req.json();
@@ -31,7 +33,7 @@ export async function POST(req: Request) {
     const formattedRole = role.replace(/\s+/g, '').toLowerCase();
 
     const client = await clientPromise;
-    const db = client.db("my-next-app");
+    const db = client.db(DB_NAME);
 
     const existingUser = await db.collection("users").findOne({ email: normalizedEmail });
     if (existingUser) {

@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import clientPromise from "@/lib/mongodb";
 
 const SECRET_KEY = process.env.NEXT_PUBLIC_JWT_SECRET as string;
+const DB_NAME = process.env.DB_NAME || "my-next-app";
 
 export async function POST(req: Request) {
     try {
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
         }
 
         const client = await clientPromise;
-        const db = client.db("my-next-app");
+        const db = client.db(DB_NAME);
         const normalizedEmail = email.toLowerCase();
 
         const user = await db.collection("users").findOne({

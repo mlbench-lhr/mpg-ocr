@@ -27,6 +27,9 @@ interface Job {
   updatedAt?: string;
 }
 
+const DB_NAME = process.env.DB_NAME || "my-next-app";
+
+
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
@@ -37,7 +40,7 @@ export async function GET(req: Request) {
     }
 
     const client = await clientPromise;
-    const db = client.db("my-next-app");
+    const db = client.db(DB_NAME);
 
     const dataCollection = db.collection<Job>("mockData");
 
@@ -69,7 +72,7 @@ export async function PATCH(req: Request) {
     const changedBy = headers.get("x-user-name") || "Unknown User";
 
     const client = await clientPromise;
-    const db = client.db("my-next-app");
+    const db = client.db(DB_NAME);
 
     const dataCollection = db.collection("mockData");
     const historyCollection = db.collection("jobHistory");

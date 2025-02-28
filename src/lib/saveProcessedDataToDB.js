@@ -3,10 +3,13 @@
 // import { Document } from "bson";
 import clientPromise from "@/lib/mongodb";
 
+const DB_NAME = process.env.DB_NAME || "my-next-app";
+
+
 export async function saveProcessedDataToDB(processedDataArray) {
     try {
         const client = await clientPromise;
-        const db = client.db("my-next-app");
+        const db = client.db(DB_NAME);
 
         // Bulk insert data into MongoDB
         const bulkOps = [];

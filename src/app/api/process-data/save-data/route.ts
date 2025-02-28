@@ -19,7 +19,7 @@
 //         ];
 
 //         const client = await clientPromise;
-//         const db = client.db("my-next-app");
+//         const db = client.db(DB_NAME);
 
 //         const bulkOps = [];
 //         const jobIds = Array.from(new Set(dataArray.map(data => data.jobId).filter(jobId => !!jobId))).map(id => new ObjectId(id));
@@ -83,6 +83,8 @@
 //     }
 // }
 
+const DB_NAME = process.env.DB_NAME || "my-next-app";
+
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
@@ -102,7 +104,7 @@ export async function POST(req: Request) {
     ];
 
     const client = await clientPromise;
-    const db = client.db("my-next-app");
+    const db = client.db(DB_NAME);
 
     // Fetch existing documents with the same pdfUrl to avoid duplicate entries
     const existingRecords = await db.collection("mockData").find(

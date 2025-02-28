@@ -6,13 +6,15 @@ interface PDFCriteria {
   toTime: Date;
 }
 
+const DB_NAME = process.env.DB_NAME || "my-next-app";
+
 const client = await clientPromise; 
 
 export async function GET(req: NextRequest) {
   try {
     const id = new URL(req.url).pathname.split("/").pop(); 
 
-    const db = client.db("my-next-app");
+    const db = client.db(DB_NAME);
     const jobsCollection = db.collection("jobs");
 
     const job = await jobsCollection.findOne({ _id: new ObjectId(id) });
@@ -57,7 +59,7 @@ export async function PATCH(req: NextRequest) {
       toTime: parseTime(toTime),
     };
 
-    const db = client.db("my-next-app");
+    const db = client.db(DB_NAME);
     const jobsCollection = db.collection("jobs");
 
     const result = await jobsCollection.updateOne(

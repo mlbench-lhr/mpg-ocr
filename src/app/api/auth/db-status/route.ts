@@ -4,6 +4,8 @@ import { MongoClient, ObjectId } from "mongodb";
 
 const client = new MongoClient(process.env.MONGODB_URI || "mongodb://localhost:27017");
 const SECRET_KEY = process.env.NEXT_PUBLIC_JWT_SECRET as string;
+const DB_NAME = process.env.DB_NAME || "my-next-app";
+
 
 // import oracledb from "oracledb";
 // Define the interface for Oracle DB credentials
@@ -71,7 +73,7 @@ export async function POST(req: NextRequest) {
     // }
 
     await client.connect();
-    const db = client.db("my-next-app");
+    const db = client.db(DB_NAME);
     const connectionsCollection = db.collection("db_connections");
 
     const existingConnection = await connectionsCollection.findOne({
@@ -132,7 +134,7 @@ export async function GET(req: NextRequest) {
     const userId = decoded.id;
 
     await client.connect();
-    const db = client.db("my-next-app");
+    const db = client.db(DB_NAME);
     const connectionsCollection = db.collection("db_connections");
 
     const connection = await connectionsCollection.findOne({ userId: new ObjectId(userId) });

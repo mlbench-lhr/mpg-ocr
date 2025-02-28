@@ -3,11 +3,12 @@ import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 
 const documentId = new ObjectId("65d123456789abcd12345678");
+const DB_NAME = process.env.DB_NAME || "my-next-app";
 
 export async function GET() {
   try {
     const client = await clientPromise;
-    const db = client.db("my-next-app");
+    const db = client.db(DB_NAME);
     const collection = db.collection("ocr_status");
 
     const ocrStatus = await collection.findOne({ _id: documentId });
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
     }
 
     const client = await clientPromise;
-    const db = client.db("my-next-app");
+    const db = client.db(DB_NAME);
     const collection = db.collection("ocr_status");
 
     await collection.updateOne(

@@ -5,6 +5,8 @@ import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 
 const SECRET_KEY = process.env.NEXT_PUBLIC_JWT_SECRET as string;
+const DB_NAME = process.env.DB_NAME || "my-next-app";
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,7 +23,7 @@ export async function POST(req: NextRequest) {
     }
 
     const client = await clientPromise;
-    const db = client.db("my-next-app");
+    const db = client.db(DB_NAME);
     const connectionsCollection = db.collection("db_connections");
 
     const userObjId = new ObjectId(userId);
@@ -72,7 +74,7 @@ export async function GET(req: NextRequest) {
     const { id: userId } = jwt.verify(token, SECRET_KEY) as { id: string };
 
     const client = await clientPromise;
-    const db = client.db("my-next-app");
+    const db = client.db(DB_NAME);
     const connectionsCollection = db.collection("db_connections");
 
     const connection = await connectionsCollection.findOne(

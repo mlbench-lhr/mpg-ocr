@@ -3,8 +3,7 @@ import bcrypt from "bcryptjs";
 import clientPromise from "@/lib/mongodb";
 import { Db } from "mongodb";
 
-
-const DB_NAME = "my-next-app";
+const DB_NAME = process.env.DB_NAME || "my-next-app";
 const USER_COLLECTION = "users";
 
 export async function POST(req: Request) {

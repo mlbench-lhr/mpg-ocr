@@ -104,9 +104,11 @@ import axios from "axios";
 interface UploadModalProps {
     isOpen: boolean;
     onClose: () => void;
+    fetchJobs: () => void;
+
 }
 
-const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
+const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, fetchJobs }) => {
     const [files, setFiles] = useState<File[]>([]);
     const [progress, setProgress] = useState<Record<string, number>>({});
     const [uploading, setUploading] = useState<boolean>(false);
@@ -154,13 +156,13 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
                 console.error(`Error uploading ${file.name}:`, error);
             }
         }
-
+        
+        fetchJobs();
         setUploading(false);
-        clearAll(); // Clear files & progress after upload
-        onClose(); // Close modal
+        clearAll();
+        onClose();
     };
 
-    // Clear all selected files
     const clearAll = () => {
         setFiles([]);
         setProgress({});
@@ -214,15 +216,12 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
                             {uploading ? "Uploading..." : "Upload"}
                         </button>
                     </div>
-
-
                 </div>
                 <div className="flex justify-center items-center w-full">
                     <button onClick={onClose} className="px-4 py-2 bg-gray-400 text-white rounded-lg w-full" disabled={uploading}>
                         Close
                     </button>
                 </div>
-
             </div>
         </div>
     ) : null;

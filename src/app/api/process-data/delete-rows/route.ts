@@ -13,7 +13,7 @@
 //     const objectIds = ids.map((id) => new ObjectId(id));
 
 //     const client = await clientPromise;
-//     const db = client.db('my-next-app');
+//     const db = client.db(DB_NAME);
 
 //     const result = await db.collection('mockData').deleteMany({ _id: { $in: objectIds } });
 
@@ -32,6 +32,10 @@ import { NextResponse } from 'next/server';
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
+
+const DB_NAME = process.env.DB_NAME || "my-next-app";
+
+
 export async function POST(req: Request) {
   try {
     const { ids } = await req.json();
@@ -43,7 +47,7 @@ export async function POST(req: Request) {
     const objectIds = ids.map((id) => new ObjectId(id));
 
     const client = await clientPromise;
-    const db = client.db('my-next-app');
+    const db = client.db(DB_NAME);
 
     const jobCollection = db.collection('mockData');
     const historyCollection = db.collection('jobHistory');
