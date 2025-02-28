@@ -1327,7 +1327,7 @@ const MasterPage = () => {
                 <table className="table-auto min-w-full w-full border-collapse">
                   <thead className="sticky top-0 bg-white z-20 shadow-md">
                     <tr className="text-gray-800">
-                      <th className="py-2 px-4 border-b text-start min-w-44 sticky left-0 bg-white z-20">
+                      <th className="py-2 px-4 border-b text-start min-w-44 max-w-44 sticky left-0 bg-white z-20">
                         <span className="mr-3">
                           <input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} />
                         </span>
@@ -1362,8 +1362,8 @@ const MasterPage = () => {
                         )}
 
                       </th> */}
-                      <th className="py-2 px-4 border-b text-center min-w-36 sticky left-44 bg-white z-10">Uploaded File</th>
-                      <th className="py-2 px-4 border-b text-center min-w-36 sticky left-[600px] bg-white z-10">Job Name</th>
+                      <th className="py-2 px-4 border-b text-center min-w-44 max-w-44 sticky left-44 bg-white z-10">Uploaded File</th>
+                      <th className="py-2 px-4 border-b text-center min-w-36 max-w-36 sticky left-[31.3rem] bg-white z-10">Job Name</th>
                       <th className="py-2 px-4 border-b text-center min-w-32">POD Date</th>
                       <th className="py-2 px-4 border-b text-center min-w-36">Stamp Exists</th>
                       <th className="py-2 px-4 border-b text-center min-w-40">Signature Exists</th>
@@ -1416,7 +1416,7 @@ const MasterPage = () => {
                             {job.pdfUrl ? job.pdfUrl.split('/').pop()?.replace('.pdf', '') || "No PDF Available" : "No PDF Available"}
                           </td>
 
-                          <td className="py-2 px-4 border-b text-center sticky left-[600px] bg-white z-10">
+                          <td className="py-2 px-4 border-b text-center sticky left-[31.3rem] bg-white z-10">
                             {job.jobName}
                           </td>
                           <td className="py-2 px-4 border-b text-center">{job.podDate}</td>
