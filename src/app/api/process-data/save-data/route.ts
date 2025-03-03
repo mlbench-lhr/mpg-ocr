@@ -83,11 +83,12 @@
 //     }
 // }
 
-const DB_NAME = process.env.DB_NAME || "my-next-app";
 
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+
+const DB_NAME = process.env.DB_NAME || "my-next-app";
 
 export async function POST(req: Request) {
   try {

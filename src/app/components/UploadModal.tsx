@@ -128,40 +128,94 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, fetchJobs })
         }
     };
 
+    // await axios.post("https://hanneskonzept.ml-bench.com/api/upload-pdf", formData, {
     // Upload files
+    // const uploadFiles = async () => {
+    //     if (files.length === 0) return;
+    //     setUploading(true);
+
+    //     for (const file of files) {
+    //         const formData = new FormData();
+    //         formData.append("pdf_file", file);
+
+    //         try {
+    //             await axios.post("/api/file/upload-pdf", formData, {
+    //                 headers: {
+    //                     "Content-Type": "multipart/form-data",
+    //                 },
+    //                 onUploadProgress: (progressEvent) => {
+    //                     const percentCompleted = Math.round(
+    //                         (progressEvent.loaded * 100) / (progressEvent.total || 1)
+    //                     );
+    //                     setProgress((prev) => ({
+    //                         ...prev,
+    //                         [file.name]: percentCompleted,
+    //                     }));
+    //                 },
+    //             });
+    //         } catch (error) {
+    //             console.error(`Error uploading ${file.name}:`, error);
+    //         }
+    //     }
+
+    //     fetchJobs();
+    //     setUploading(false);
+    //     clearAll();
+    //     onClose();
+    // };
+
     const uploadFiles = async () => {
         if (files.length === 0) return;
         setUploading(true);
-
+        setProgress({});
+    
         for (const file of files) {
             const formData = new FormData();
             formData.append("pdf_file", file);
-
+    
+            setProgress((prev) => ({
+                ...prev,
+                [file.name]: 0,
+            }));
+    
             try {
-                await axios.post("https://hanneskonzept.ml-bench.com/api/upload-pdf", formData, {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
+                await axios.post("/api/file/upload-pdf", formData, {
+                    headers: { "Content-Type": "multipart/form-data" },
                     onUploadProgress: (progressEvent) => {
                         const percentCompleted = Math.round(
                             (progressEvent.loaded * 100) / (progressEvent.total || 1)
                         );
+    
                         setProgress((prev) => ({
                             ...prev,
-                            [file.name]: percentCompleted,
+                            [file.name]: Math.min(percentCompleted, 100),
                         }));
                     },
                 });
+    
+                setProgress((prev) => ({
+                    ...prev,
+                    [file.name]: 100,
+                }));
+    
             } catch (error) {
                 console.error(`Error uploading ${file.name}:`, error);
+                setProgress((prev) => ({
+                    ...prev,
+                    [file.name]: -1,
+                }));
             }
         }
-        
+    
         fetchJobs();
         setUploading(false);
         clearAll();
         onClose();
     };
+    
+    
+    
+    
 
     const clearAll = () => {
         setFiles([]);
@@ -173,7 +227,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, fetchJobs })
             <div className="bg-white p-6 rounded-lg shadow-lg w-96">
                 <h2 className="text-xl font-semibold mb-5 text-black text-center">Upload PDFs</h2>
                 <p className="mb-2 text-black">Select multiple PDFs</p>
-                <input type="file" multiple onChange={handleFileChange} className="mb-4 text-black" disabled={uploading} />
+                <input type="file" multiple onChange={handleFileChange} accept="application/pdf" className="mb-4 text-black" disabled={uploading} />
 
                 {files.length > 0 && (
                     <div className=" h-80 overflow-y-scroll">

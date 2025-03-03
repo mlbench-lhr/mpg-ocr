@@ -31,7 +31,8 @@
 import { NextResponse } from 'next/server';
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
-
+import fs from "fs/promises";
+import path from "path";
 
 const DB_NAME = process.env.DB_NAME || "my-next-app";
 
@@ -52,10 +53,23 @@ export async function POST(req: Request) {
     const jobCollection = db.collection('mockData');
     const historyCollection = db.collection('jobHistory');
 
+    const jobsToDelete = await jobCollection.find({ _id: { $in: objectIds } }).toArray();
+    const filePaths = jobsToDelete.map(job => job.pdfUrl ? path.join(process.cwd(), "public", job.pdfUrl) : null);
+
     const jobDeleteResult = await jobCollection.deleteMany({ _id: { $in: objectIds } });
 
     if (jobDeleteResult.deletedCount > 0) {
       const historyDeleteResult = await historyCollection.deleteMany({ jobId: { $in: objectIds } });
+
+      for (const filePath of filePaths) {
+        if (filePath) {
+          try {
+            await fs.unlink(filePath);
+          } catch (error) {
+            console.warn(`Failed to delete file: ${filePath}`, error);
+          }
+        }
+      }
 
       return NextResponse.json({
         message: 'Jobs and related history deleted successfully',
