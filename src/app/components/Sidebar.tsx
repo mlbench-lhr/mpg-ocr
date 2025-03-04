@@ -408,7 +408,7 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                                 </ul>
                                             </div>
                                         </li>
-                                        <li className="p-2 hover:bg-gray-200 cursor-pointer border-b">
+                                        {/* <li className="p-2 hover:bg-gray-200 cursor-pointer border-b">
                                             <p className="flex justify-between items-center">
                                                 <span>IP Address</span>
                                                 <span>
@@ -423,7 +423,6 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                                         }}
                                                         onFocus={() => setIsEditing(true)}
                                                         onBlur={(e) => {
-                                                            // Delay hiding to allow clicking the checkbox
                                                             if (!e.relatedTarget || e.relatedTarget.id !== "remember-ip") {
                                                                 setTimeout(() => setIsEditing(false), 200);
                                                             }
@@ -431,14 +430,13 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                                     />
                                                 </span>
 
-                                                {/* Remember IP Checkbox */}
                                                 <span className="flex items-center">
                                                     <input
                                                         type="checkbox"
                                                         id="remember-ip"
                                                         className="mr-2"
                                                         checked={remember}
-                                                        disabled={!isEditing} // Disable unless input is active
+                                                        disabled={!isEditing}
                                                         onChange={() => {
                                                             setRemember(!remember);
                                                             setIsEditing(true);
@@ -454,7 +452,61 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                                     Save IP
                                                 </button>
                                             )}
+                                        </li> */}
+                                        <li className="p-2 hover:bg-gray-200 cursor-pointer border-b w-full">
+                                            <p className="flex flex-wrap md:flex-nowrap justify-between items-center gap-2">
+                                                {/* Label */}
+                                                <span className="text-sm md:text-base">IP Address</span>
+
+                                                {/* Input Field */}
+                                                <span className="flex-1">
+                                                    <input
+                                                        type="text"
+                                                        className="w-full bg-gray-100 py-1 px-2 rounded-lg border-0 outline-none text-sm md:text-base"
+                                                        value={ip}
+                                                        placeholder="192.158.1.38"
+                                                        onChange={(e) => {
+                                                            setIp(e.target.value);
+                                                            setIsEditing(true);
+                                                        }}
+                                                        onFocus={() => setIsEditing(true)}
+                                                        onBlur={(e) => {
+                                                            if (!e.relatedTarget || e.relatedTarget.id !== "remember-ip") {
+                                                                setTimeout(() => setIsEditing(false), 200);
+                                                            }
+                                                        }}
+                                                    />
+                                                </span>
+
+                                                {/* Checkbox */}
+                                                <span className="flex items-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="remember-ip"
+                                                        className="mr-2"
+                                                        checked={remember}
+                                                        disabled={!isEditing}
+                                                        onChange={() => {
+                                                            setRemember(!remember);
+                                                            setIsEditing(true);
+                                                        }}
+                                                    />
+                                                </span>
+                                            </p>
+
+                                            {/* Save Button */}
+                                            {isEditing && (
+                                                <div className="w-full flex justify-end mt-2">
+                                                    <button
+                                                        onClick={handleSaveIP}
+                                                        className="bg-[#005B97] text-white px-4 py-1 rounded-lg text-sm md:text-base"
+                                                    >
+                                                        Save IP
+                                                    </button>
+                                                </div>
+                                            )}
                                         </li>
+
                                         <li className="p-2 hover:bg-gray-200 cursor-pointer border-b">
                                             <Link href="/db-connection" className="flex justify-between items-center">
                                                 <span>DB Connection</span>
