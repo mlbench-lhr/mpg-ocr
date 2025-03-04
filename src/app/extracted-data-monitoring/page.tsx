@@ -94,6 +94,8 @@ const MasterPage = () => {
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [isProcessModalOpen, setIsProcessModalOpen] = useState(false);
   const [abortController, setAbortController] = useState(new AbortController());
+  const [ocrApiUrl, setOcrApiUrl] = useState("");
+
   const router = useRouter();
 
   const finalOptions = [
@@ -313,9 +315,18 @@ const MasterPage = () => {
         }));
 
         try {
-          const OCR_API_URL = process.env.NEXT_PUBLIC_OCR_API_URL ?? "";
+          // const OCR_API_URL = process.env.NEXT_PUBLIC_OCR_API_URL ?? "";
 
-          const ocrResponse = await fetch(OCR_API_URL, {
+          const res = await fetch("/api/ipAddress/ip-address");
+          const data = await res.json();
+          if (data.ip) {
+            setOcrApiUrl(`http://${data.ip}:8080/run-ocr`);
+          }
+          // else{
+          //   setOcrApiUrl(process.env.NEXT_PUBLIC_OCR_API_URL ?? "");
+          // }
+
+          const ocrResponse = await fetch(ocrApiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ file_url_or_path: filePath }),

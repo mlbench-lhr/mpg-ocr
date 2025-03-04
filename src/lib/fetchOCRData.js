@@ -1,7 +1,14 @@
 // lib/fetchOCRData.js
 
 export async function fetchOCRData(pdfUrl) {
-    const ocrApiUrl = process.env.NEXT_PUBLIC_OCR_API_URL;
+    // const ocrApiUrl = process.env.NEXT_PUBLIC_OCR_API_URL;
+    const ocrApiUrl = "";
+
+    const res = await fetch("/api/ipAddress/ip-address");
+    const data = await res.json();
+    if (data.ip) {
+        ocrApiUrl = `http://${data.ip}:8080/run-ocr`;
+    }
 
     if (!ocrApiUrl) {
         throw new Error("OCR API URL is not defined in the environment variables");
@@ -17,7 +24,7 @@ export async function fetchOCRData(pdfUrl) {
             )
         ]);
     };
-    
+
     try {
         const response = await fetchWithTimeout(ocrApiUrl, {
             method: "POST",
