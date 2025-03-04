@@ -778,6 +778,7 @@ const MasterPage = () => {
       setProgress({});
       fetchJobs();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isProcessModalOpen]);
 
 
@@ -1194,7 +1195,7 @@ const MasterPage = () => {
 
 
           {isProcessModalOpen && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="2xl:fixed fixed md:fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
               <div className="bg-white p-5 rounded-lg mt-5">
                 <div className="flex justify-between items-start mb-4">
                   <div>
@@ -1215,7 +1216,7 @@ const MasterPage = () => {
 
                 </div>
 
-                <div className="h-auto max-h-96 overflow-scroll">
+                <div className="overflow-scroll">
                   <table className="min-w-full border-separate border-spacing-y-3">
                     <thead>
                       <tr className="border-b border-gray-400">
@@ -1294,8 +1295,8 @@ const MasterPage = () => {
                   </table>
                 </div>
                 {/* <span className="absolute top-0 left-1/2 transform -translate-x-1/2 text-xs text-white">
-{progress[job.pdfUrl] ?? 0}%
-</span> */}
+                  {progress[job.pdfUrl] ?? 0}%
+                  </span> */}
               </div>
             </div>
           )}
@@ -1315,7 +1316,6 @@ const MasterPage = () => {
             </div>
           )} */}
 
-
           <div className="py-3 mx-auto">
 
             {master.length === 0 && !loadingTable ? (
@@ -1323,7 +1323,7 @@ const MasterPage = () => {
                 <span className="text-gray-800 text-xl shadow-xl p-4 rounded-lg">No data found</span>
               </div>
             ) : (
-              <div className={`overflow-x-auto w-full relative ${isFilterDropDownOpen ? "2xl:min-h-[770px] 2xl:min-h-auto md:h-[170px] h-[200px] sm:h-[150px]" : " h-[600px] sm:h-[450px] 2xl:min-h-[1050px] 2xl:max-h-auto md:h-[460px]"}`}>
+              <div className={`overflow-x-auto w-full relative ${isFilterDropDownOpen ? "md:h-[170px] sm:h-[150px]" : "md:h-[460px] sm:h-[450px]"}`}>
                 <table className="table-auto min-w-full w-full border-collapse">
                   <thead className="sticky top-0 bg-white z-20 shadow-md">
                     <tr className="text-gray-800">

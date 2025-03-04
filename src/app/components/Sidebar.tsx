@@ -31,6 +31,9 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     const router = useRouter();
     const { isExpanded, toggleSidebar } = useSidebar();
     const [isImageLoaded, setIsImageLoaded] = useState(true);
+    const [ip, setIp] = useState("");
+    const [remember, setRemember] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
         const preloadImage = new window.Image();
@@ -56,6 +59,32 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     //     localStorage.setItem("sidebar", JSON.stringify(newState));
     //     onStateChange(newState);
     // };
+
+    useEffect(() => {
+        // Fetch the stored IP from MongoDB
+        fetch("/api/ipAddress/ip-address")
+            .then(res => res.json())
+            .then(data => {
+                if (data.ip) {
+                    setIp(data.ip);
+                    setRemember(data.remember);
+                }
+            })
+            .catch(err => console.error("Failed to fetch IP:", err));
+    }, []);
+
+    const handleSaveIP = async () => {
+        if (!ip) return alert("Please enter an IP address");
+
+        await fetch("/api/ipAddress/ip-address", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ip, remember }),
+        });
+
+        setIsEditing(false);
+    };
+
 
     const toggleExpand = () => {
         toggleSidebar();
@@ -378,6 +407,53 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                                     ))}
                                                 </ul>
                                             </div>
+                                        </li>
+                                        <li className="p-2 hover:bg-gray-200 cursor-pointer border-b">
+                                            <p className="flex justify-between items-center">
+                                                <span>IP Address</span>
+                                                <span>
+                                                    <input
+                                                        type="text"
+                                                        className="bg-gray-100 py-1 px-2 rounded-lg border-0 outline-none"
+                                                        value={ip}
+                                                        placeholder="192.158.1.38"
+                                                        onChange={(e) => {
+                                                            setIp(e.target.value);
+                                                            setIsEditing(true);
+                                                        }}
+                                                        onFocus={() => setIsEditing(true)}
+                                                        onBlur={(e) => {
+                                                            // Delay hiding to allow clicking the checkbox
+                                                            if (!e.relatedTarget || e.relatedTarget.id !== "remember-ip") {
+                                                                setTimeout(() => setIsEditing(false), 200);
+                                                            }
+                                                        }}
+                                                    />
+                                                </span>
+
+                                                {/* Remember IP Checkbox */}
+                                                <span className="flex items-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="remember-ip"
+                                                        className="mr-2"
+                                                        checked={remember}
+                                                        disabled={!isEditing} // Disable unless input is active
+                                                        onChange={() => {
+                                                            setRemember(!remember);
+                                                            setIsEditing(true);
+                                                        }}
+                                                    />
+                                                </span>
+                                            </p>
+                                            {isEditing && (
+                                                <button
+                                                    onClick={handleSaveIP}
+                                                    className="mt-2 text-end bg-[#005B97] text-white px-3 py-1 rounded-lg"
+                                                >
+                                                    Save IP
+                                                </button>
+                                            )}
                                         </li>
                                         <li className="p-2 hover:bg-gray-200 cursor-pointer border-b">
                                             <Link href="/db-connection" className="flex justify-between items-center">
