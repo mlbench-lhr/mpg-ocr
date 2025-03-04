@@ -261,6 +261,20 @@ const MasterPage = () => {
     fetchStatus();
   }, []);
 
+  useEffect(() => {
+    async function fetchOcrApiUrl() {
+      const res = await fetch("/api/ipAddress/ip-address");
+      const data = await res.json();
+
+      if (data.ip) {
+        setOcrApiUrl(`http://${data.ip}:8080/run-ocr`);
+      }
+    }
+
+    fetchOcrApiUrl();
+  }, []);
+
+
 
 
   const handleOcrToggle = async () => {
@@ -316,15 +330,6 @@ const MasterPage = () => {
 
         try {
           // const OCR_API_URL = process.env.NEXT_PUBLIC_OCR_API_URL ?? "";
-
-          const res = await fetch("/api/ipAddress/ip-address");
-          const data = await res.json();
-          if (data.ip) {
-            setOcrApiUrl(`http://${data.ip}:8080/run-ocr`);
-          }
-          // else{
-          //   setOcrApiUrl(process.env.NEXT_PUBLIC_OCR_API_URL ?? "");
-          // }
 
           const ocrResponse = await fetch(ocrApiUrl, {
             method: "POST",
