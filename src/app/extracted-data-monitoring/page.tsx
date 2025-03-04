@@ -275,11 +275,32 @@ const MasterPage = () => {
   }, []);
 
 
+  const pdfFiles = selectedRows
+    .map((rowId) => {
+      const job = master.find((job) => job._id === rowId);
+      return job && (!job.blNumber?.trim() || !job.podSignature?.trim())
+        ? { file_url_or_path: job.pdfUrl }
+        : null;
+    })
+    .filter(Boolean);
 
 
   const handleOcrToggle = async () => {
 
-    if (selectedRows.length === 0 && !isOcrRunning) return;
+    // if (selectedRows.length === 0 && !isOcrRunning) return;
+
+    if (!ocrApiUrl) {
+      Swal.fire({
+        icon: "warning",
+        title: "IP Address Missing",
+        text: "Please provide the IP Address in the settings before starting the process.",
+        confirmButtonColor: "#005B97",
+      });
+      return;
+    }
+
+    if (pdfFiles.length === 0 && !isOcrRunning) return;
+
 
     const newStatus = isOcrRunning ? "stop" : "start";
 
@@ -310,14 +331,17 @@ const MasterPage = () => {
     setIsProcessModalOpen(true);
     setProgress({});
 
-    const pdfFiles = selectedRows
-      .map((rowId) => {
-        const job = master.find((job) => job._id === rowId);
-        return job ? { file_url_or_path: job.pdfUrl } : null;
-      })
-      .filter((file) => file !== null);
+    // const pdfFiles = selectedRows
+    //   .map((rowId) => {
+    //     const job = master.find((job) => job._id === rowId);
+    //     return job ? { file_url_or_path: job.pdfUrl } : null;
+    //   })
+    //   .filter((file) => file !== null);
+
+
 
     async function processPdfsSequentially() {
+      console.log(pdfFiles);
       for (const pdfFile of pdfFiles) {
         if (!pdfFile?.file_url_or_path) continue;
 
@@ -357,7 +381,6 @@ const MasterPage = () => {
 
               const status = (data?.Status as keyof typeof recognitionStatusMap) || "null";
               const recognitionStatus = recognitionStatusMap[status] || "null";
-
 
               return {
                 jobId: null,
@@ -799,8 +822,6 @@ const MasterPage = () => {
 
 
 
-
-
   const buttonColor = isOcrRunning ? "bg-red-600 border border-red-600" : "bg-[#005B97]";
 
   if (loading) return <Spinner />;
@@ -864,7 +885,7 @@ const MasterPage = () => {
 
         <div className="flex-1 px-2 bg-white">
           <div
-            className={`bg-gray-200 p-3 mb-0 transition-all duration-500 ease-in w-full sm:w-auto ${isFilterDropDownOpen ? "rounded-t-lg" : "rounded-lg"}`}
+            className={`bg-gray-200 p-3 mb-0 transition-all duration-500 ease-in w-full sm:w-auto sticky top-0 z-10 ${isFilterDropDownOpen ? "rounded-t-lg" : "rounded-lg"}`}
           >
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setIsFilterDropDownOpen(!isFilterDropDownOpen)}>
               <span className="text-gray-800 text-sm sm:text-base md:text-lg">
@@ -879,7 +900,7 @@ const MasterPage = () => {
           </div>
 
           <div
-            className={`overflow-hidden transition-all duration-500 ease-in w-auto ${isFilterDropDownOpen ? "max-h-[1000px] p-3" : "max-h-0"
+            className={`overflow-hidden transition-all duration-500 ease-in w-auto sticky top-0 z-40 ${isFilterDropDownOpen ? "max-h-[1000px] p-3" : "max-h-0"
               } flex flex-wrap gap-4 mt-0 bg-gray-200 rounded-b-lg`}
           >
 
@@ -1211,7 +1232,7 @@ const MasterPage = () => {
 
 
           {isProcessModalOpen && (
-            <div className="2xl:fixed fixed md:fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
               <div className="bg-white p-5 rounded-lg mt-5">
                 <div className="flex justify-between items-start mb-4">
                   <div>
@@ -1242,16 +1263,23 @@ const MasterPage = () => {
                       </tr>
                     </thead>
                     <tbody className="">
-                      {selectedRows.map((rowId) => {
+                      {/* {selectedRows.map((rowId) => {
                         const job = master.find((job) => job._id === rowId);
-                        if (!job || !job.pdfUrl) return null;
-
-                        return (
-                          <tr key={job._id} className="">
-                            <td className=" px-4 py-2 text-black">
-                              {job.pdfUrl ? job.pdfUrl.split('/').pop()?.replace('.pdf', '') || "No PDF Available" : "No PDF Available"}
-                            </td>
-                            {/* <td className=" px-4 py-2">
+                        if (!job || !job.pdfUrl) return null; */}
+                      {selectedRows
+                        .filter((rowId) => {
+                          const job = master.find((job) => job._id === rowId);
+                          return job && (!job.blNumber?.trim() || !job.podSignature?.trim());
+                        })
+                        .map((rowId) => {
+                          const job = master.find((job) => job._id === rowId);
+                          if (!job || !job.pdfUrl) return null;
+                          return (
+                            <tr key={job._id} className="">
+                              <td className=" px-4 py-2 text-black">
+                                {job.pdfUrl ? job.pdfUrl.split('/').pop()?.replace('.pdf', '') || "No PDF Available" : "No PDF Available"}
+                              </td>
+                              {/* <td className=" px-4 py-2">
 
                               <div className="w-full bg-gray-200 rounded-full h-4 relative">
                                 <div
@@ -1268,45 +1296,45 @@ const MasterPage = () => {
 
                             </td> */}
 
-                            <td className="px-4 py-2">
-                              <div className="w-full bg-gray-200 rounded-full h-4 relative">
-                                <div
-                                  className="bg-[#005B97] h-4 rounded-full relative transition-all duration-500 ease-in-out"
-                                  style={{ width: `${progress[job.pdfUrl] ?? 0}%` }}
-                                >
-                                  <span
-                                    className="absolute top-1/2 right-[-1.01rem] transform -translate-y-1/2 translate-x-1/2 flex items-center px-2 h-6 text-[#005B97] bg-gray-300 font-semibold text-sm"
+                              <td className="px-4 py-2">
+                                <div className="w-full bg-gray-200 rounded-full h-4 relative">
+                                  <div
+                                    className="bg-[#005B97] h-4 rounded-full relative transition-all duration-500 ease-in-out"
+                                    style={{ width: `${progress[job.pdfUrl] ?? 0}%` }}
                                   >
-                                    {progress[job.pdfUrl] ?? 0}%
-                                  </span>
+                                    <span
+                                      className="absolute top-1/2 right-[-1.01rem] transform -translate-y-1/2 translate-x-1/2 flex items-center px-2 h-6 text-[#005B97] bg-gray-300 font-semibold text-sm"
+                                    >
+                                      {progress[job.pdfUrl] ?? 0}%
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
-                            </td>
+                              </td>
 
-                            <td className="px-4 py-2 text-center">
-                              <span
-                                className={`px-3 py-2 rounded-full text-base font-medium ${progress[job.pdfUrl] === 100
-                                  ? "bg-[#28A4AD1A] text-[#28A4AD]"
-                                  : progress[job.pdfUrl] > 0
-                                    ? "bg-[#FCB0401A] text-[#FCB040]"
-                                    : progress[job.pdfUrl] === 0
-                                      ? "bg-[#FF4D4D1A] text-[#FF4D4D]"
-                                      : "bg-[#005B971A] text-[#005B97]"
-                                  }`}
-                              >
-                                {progress[job.pdfUrl] === 100
-                                  ? "Valid"
-                                  : progress[job.pdfUrl] > 0
-                                    ? "In Progress"
-                                    : progress[job.pdfUrl] === 0
-                                      ? "Failed"
-                                      : "New"}
-                              </span>
-                            </td>
+                              <td className="px-4 py-2 text-center">
+                                <span
+                                  className={`px-3 py-2 rounded-full text-base font-medium ${progress[job.pdfUrl] === 100
+                                    ? "bg-[#28A4AD1A] text-[#28A4AD]"
+                                    : progress[job.pdfUrl] > 0
+                                      ? "bg-[#FCB0401A] text-[#FCB040]"
+                                      : progress[job.pdfUrl] === 0
+                                        ? "bg-[#FF4D4D1A] text-[#FF4D4D]"
+                                        : "bg-[#005B971A] text-[#005B97]"
+                                    }`}
+                                >
+                                  {progress[job.pdfUrl] === 100
+                                    ? "Valid"
+                                    : progress[job.pdfUrl] > 0
+                                      ? "In Progress"
+                                      : progress[job.pdfUrl] === 0
+                                        ? "Failed"
+                                        : "New"}
+                                </span>
+                              </td>
 
-                          </tr>
-                        );
-                      })}
+                            </tr>
+                          );
+                        })}
                     </tbody>
                   </table>
                 </div>
@@ -1332,14 +1360,15 @@ const MasterPage = () => {
             </div>
           )} */}
 
-          <div className="py-3 mx-auto">
+          <div className="py-3 mx-auto z-10">
 
             {master.length === 0 && !loadingTable ? (
               <div className="flex flex-col items-center mt-20">
                 <span className="text-gray-800 text-xl shadow-xl p-4 rounded-lg">No data found</span>
               </div>
             ) : (
-              <div className={`overflow-x-auto w-full relative ${isFilterDropDownOpen ? "md:h-[170px] sm:h-[150px]" : "md:h-[460px] sm:h-[450px]"}`}>
+              // <div className={`overflow-x-auto w-full relative ${isFilterDropDownOpen ? "md:h-[170px] sm:h-[150px]" : "md:h-[460px] sm:h-[450px]"}`}>
+              <div className={`overflow-x-auto w-full relative`}>
                 <table className="table-auto min-w-full w-full border-collapse">
                   <thead className="sticky top-0 bg-white z-20 shadow-md">
                     <tr className="text-gray-800">

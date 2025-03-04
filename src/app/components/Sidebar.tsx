@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import sideBarLogo from "../../../public/images/sidbar.svg";
@@ -84,6 +84,21 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
 
         setIsEditing(false);
     };
+
+    const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
 
     const toggleExpand = () => {
@@ -351,7 +366,7 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                     {isDropdownOpen && (
                         <>
                             {userRole !== 'admin' && (
-                                <div className={`absolute ${isExpanded ? 'left-56 bottom-18' : 'left-16 bottom-16'
+                                <div ref={dropdownRef} className={`absolute ${isExpanded ? 'left-56 bottom-18' : 'left-16 bottom-16'
                                     }  w-32 bg-white rounded-lg shadow-xl`}>
                                     <ul className="text-gray-600">
                                         <li className="p-2 cursor-pointer">
@@ -365,7 +380,7 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                             )}
 
                             {userRole === 'admin' && (
-                                <div className={`absolute  ${isExpanded ? 'left-60 bottom-24' : 'left-16 bottom-24'
+                                <div ref={dropdownRef} className={`absolute  ${isExpanded ? 'left-60 bottom-24' : 'left-16 bottom-24'
                                     }  w-80 bg-white rounded-lg shadow-xl`}>
                                     <h1 className="mt-1 p-2 text-xl font-medium">Settings</h1>
                                     <ul className="text-gray-600 mt-2">
