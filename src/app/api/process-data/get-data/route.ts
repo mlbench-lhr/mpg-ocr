@@ -115,7 +115,7 @@ export async function GET(req: Request) {
 
         const url = new URL(req.url);
         const page = parseInt(url.searchParams.get("page") || "1", 10);
-        const limit = parseInt(url.searchParams.get("limit") || "20", 10);
+        const limit = parseInt(url.searchParams.get("limit") || "30", 10);
         const skip = (page - 1) * limit;
 
         const recognitionStatus = url.searchParams.get("recognitionStatus") || "";
@@ -128,27 +128,44 @@ export async function GET(req: Request) {
         const bolNumber = url.searchParams.get("bolNumber") || "";
         const jobName = url.searchParams.get("jobName") || "";
         const searchQuery = url.searchParams.get("search") || "";
-
-        const sortColumn = url.searchParams.get("sortColumn") || "";
-        const sortOrder = url.searchParams.get("sortOrder") === "desc" ? -1 : 1;
-
         const filter: Filter<Job> = {};
-        let sortQuery: Record<string, 1 | -1> = {};
 
-        if (sortColumn === "all") {
-            const sortableFields = [
-                "blNumber", "podDate", "podSignature", "totalQty", "received",
-                "damaged", "short", "over", "refused", "customerOrderNum",
-                "stampExists", "finalStatus", "reviewStatus", "recognitionStatus",
-                "breakdownReason", "reviewedBy", "jobName"
-            ];
+        const sortColumnsString = url.searchParams.get("sortColumn");
+        const sortColumns = sortColumnsString ? sortColumnsString.split(",") : [];
 
-            sortableFields.forEach((field) => {
-                sortQuery[field] = sortOrder;
-            });
-        } else if (sortColumn) {
-            sortQuery = { [sortColumn]: sortOrder };
+        const sortOrderString = url.searchParams.get("sortOrder") || "asc";
+        const sortOrders = sortOrderString.split(",");
+
+        const sortQuery: Record<string, 1 | -1> = {};
+
+        sortColumns.forEach((column, index) => {
+            const order = sortOrders[index] === "desc" ? -1 : 1;
+            sortQuery[column] = order;
+        });
+
+        if (sortOrders.length < sortColumns.length) {
+            for (let i = sortOrders.length; i < sortColumns.length; i++) {
+                sortQuery[sortColumns[i]] = 1;
+            }
         }
+
+        console.log("Final Sort Query:", sortQuery);
+
+
+        // if (sortColumn === "all") {
+        //     const sortableFields = [
+        //         "blNumber", "podDate", "podSignature", "totalQty", "received",
+        //         "damaged", "short", "over", "refused", "customerOrderNum",
+        //         "stampExists", "finalStatus", "reviewStatus", "recognitionStatus",
+        //         "breakdownReason", "reviewedBy", "jobName"
+        //     ];
+
+        //     sortableFields.forEach((field) => {
+        //         sortQuery[field] = sortOrder;
+        //     });
+        // } else if (sortColumn) {
+        //     sortQuery = { [sortColumn]: sortOrder };
+        // }
 
         //  let sortQuery = {};
         //  if (sortColumn) {

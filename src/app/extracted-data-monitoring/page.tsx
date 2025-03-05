@@ -57,6 +57,28 @@ interface Job {
   customerOrderNum?: string | string[] | null;
 }
 
+
+
+const options = [
+  { value: "blNumber", label: "BL Number" },
+  { value: "jobName", label: "Job Name" },
+  { value: "podDate", label: "POD Date" },
+  { value: "podSignature", label: "Signature Exists" },
+  { value: "totalQty", label: "Issued Qty" },
+  { value: "received", label: "Received Qty" },
+  { value: "damaged", label: "Damaged Qty" },
+  { value: "short", label: "Short Qty" },
+  { value: "over", label: "Over Qty" },
+  { value: "refused", label: "Refused Qty" },
+  { value: "customerOrderNum", label: "Customer Order Num" },
+  { value: "stampExists", label: "Stamp Exists" },
+  { value: "finalStatus", label: "Final Status" },
+  { value: "reviewStatus", label: "Review Status" },
+  { value: "recognitionStatus", label: "Recognition Status" },
+  { value: "breakdownReason", label: "Breakdown Reason" },
+  { value: "reviewedBy", label: "Reviewed By" },
+];
+
 const MasterPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -87,7 +109,8 @@ const MasterPage = () => {
   const parentRefRecognition = useRef<Instance | null>(null);
   const parentRefBreakdown = useRef<Instance | null>(null);
   const [firstTime, setFirstTime] = useState(false);
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  // const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortColumn, setSortColumn] = useState<string[]>([]);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOcrRunning, setIsOcrRunning] = useState(false);
@@ -95,8 +118,10 @@ const MasterPage = () => {
   const [isProcessModalOpen, setIsProcessModalOpen] = useState(false);
   const [abortController, setAbortController] = useState(new AbortController());
   const [ocrApiUrl, setOcrApiUrl] = useState("");
-
+  const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
 
   const finalOptions = [
     { status: "new", color: "text-blue-600", bgColor: "bg-blue-100" },
@@ -137,7 +162,6 @@ const MasterPage = () => {
       sessionStorage.getItem("podDateSignatureFilter") ||
       sessionStorage.getItem("jobNameFilter") ||
       sessionStorage.getItem("bolNumberFilter")
-      // sessionStorage.getItem("sortColumn")
     );
   };
   useEffect(() => {
@@ -152,7 +176,6 @@ const MasterPage = () => {
         setPodDateSignatureFilter(sessionStorage.getItem("podDateSignatureFilter") || "");
         setJobNameFilter(sessionStorage.getItem("jobNameFilter") || "");
         setBolNumberFilter(sessionStorage.getItem("bolNumberFilter") || "");
-        setBolNumberFilter(sessionStorage.getItem("sortColumn") || "");
       }
       else {
         sessionStorage.setItem("finalStatusFilter", "");
@@ -162,7 +185,6 @@ const MasterPage = () => {
         sessionStorage.setItem("podDateFilter", "");
         sessionStorage.setItem("podDateSignatureFilter", "");
         sessionStorage.setItem("jobNameFilter", "");
-        sessionStorage.setItem("sortColumn", "");
         sessionStorage.setItem("bolNumberFilter", "");
         setFinalStatusFilter("");
         setReviewStatusFilter("");
@@ -171,7 +193,6 @@ const MasterPage = () => {
         setPodDateFilter("");
         setPodDateSignatureFilter("");
         setJobNameFilter("");
-        setSortColumn("");
         setBolNumberFilter("");
         setFirstTime(false);
       }
@@ -190,6 +211,19 @@ const MasterPage = () => {
     // console.log("Sidebar state changed:", newState);
     // setIsSidebarExpanded(newState);
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -341,7 +375,6 @@ const MasterPage = () => {
 
 
     async function processPdfsSequentially() {
-      console.log(pdfFiles);
       for (const pdfFile of pdfFiles) {
         if (!pdfFile?.file_url_or_path) continue;
 
@@ -589,6 +622,28 @@ const MasterPage = () => {
     });
   };
 
+  const handleSortColumnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { value, checked } = event.target;
+
+    setFirstTime(true);
+
+    setSortColumn((prevSortColumns) => {
+      const updatedSortColumns = checked
+        ? [...prevSortColumns, value]
+        : prevSortColumns.filter((col) => col !== value);
+
+      return updatedSortColumns;
+    });
+  };
+
+  useEffect(() => {
+    if (firstTime) {
+      fetchJobs();
+      setFirstTime(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortColumn, sortOrder]);
+
   const fetchJobs = useCallback(async () => {
     try {
       setLoadingTable(true);
@@ -601,16 +656,10 @@ const MasterPage = () => {
         podDate: sessionStorage.getItem("podDateFilter") || "",
         podDateSignature: sessionStorage.getItem("podDateSignatureFilter") || "",
         jobName: sessionStorage.getItem("jobNameFilter") || "",
-        sortColumn: sessionStorage.getItem("sortColumn") || "",
-        sortOrder: sessionStorage.getItem("sortOrder") || "asc",
+        sortColumn,
+        sortOrder,
       };
 
-      // Check if all filters are empty
-      // const hasFilters = Object.values(filters).some((filter) => filter.trim() !== "");
-      // if (!hasFilters) {
-      //   setLoadingTable(false);
-      //   return;
-      // }
 
       const queryParams = new URLSearchParams();
       queryParams.set("page", currentPage.toString());
@@ -624,11 +673,23 @@ const MasterPage = () => {
       if (filters.podDateSignature) queryParams.set("podDateSignature", filters.podDateSignature.trim());
       if (filters.jobName) queryParams.set("jobName", filters.jobName.trim());
 
-      if (filters.sortColumn) queryParams.set("sortColumn", filters.sortColumn);
-      if (filters.sortOrder) queryParams.set("sortOrder", filters.sortOrder);
+      if (filters.sortColumn.length) {
+        queryParams.set("sortColumn", filters.sortColumn.join(","));
+      }
+
+      if (filters.sortOrder) {
+        let sortOrders = Array.isArray(filters.sortOrder) ? filters.sortOrder : [filters.sortOrder];
+
+        if (sortOrders.length === 1 && filters.sortColumn.length > 1) {
+          sortOrders = new Array(filters.sortColumn.length).fill(sortOrders[0]);
+        }
+
+        queryParams.set("sortOrder", sortOrders.join(","));
+      }
+
+      console.log("Query Params:", queryParams.toString());
 
 
-      // console.log("Query Params:", queryParams.toString());
       const response = await fetch(`/api/process-data/get-data/?${queryParams.toString()}`);
 
       if (response.ok) {
@@ -645,7 +706,7 @@ const MasterPage = () => {
       setLoadingTable(false);
     }
   }, [
-    currentPage,
+    currentPage, sortColumn, sortOrder
     // bolNumberFilter,
     // finalStatusFilter,
     // reviewStatusFilter,
@@ -687,8 +748,6 @@ const MasterPage = () => {
     sessionStorage.setItem("podDateSignatureFilter", podDateSignatureFilter);
     sessionStorage.setItem("jobNameFilter", jobNameFilter);
     sessionStorage.setItem("bolNumberFilter", bolNumberFilter);
-    sessionStorage.setItem("sortColumn", sortColumn || "");
-    sessionStorage.setItem("sortOrder", sortOrder);
     fetchJobs();
   };
 
@@ -700,7 +759,6 @@ const MasterPage = () => {
     sessionStorage.setItem("podDateFilter", "");
     sessionStorage.setItem("podDateSignatureFilter", "");
     sessionStorage.setItem("jobNameFilter", "");
-    sessionStorage.setItem("sortColumn", "");
     sessionStorage.setItem("bolNumberFilter", "");
     setFinalStatusFilter("");
     setReviewStatusFilter("");
@@ -709,7 +767,6 @@ const MasterPage = () => {
     setPodDateFilter("");
     setPodDateSignatureFilter("");
     setJobNameFilter("");
-    setSortColumn("");
     setBolNumberFilter("");
     setMaster([]);
     await fetchJobs();
@@ -726,35 +783,23 @@ const MasterPage = () => {
         podDateSignatureFilter,
         jobNameFilter,
         bolNumberFilter,
-        sortColumn: sortColumn ?? "",
       };
-
       Object.entries(filters).forEach(([key, value]) => {
         sessionStorage.setItem(key, value);
       });
     }
   };
 
+
+
   const handlePageChange = (newPage: number) => {
     setFirstTime(true);
     setCurrentPage(newPage);
   }
 
-  const handleSortColumnChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setSortColumn(value);
-    if (value) {
-      sessionStorage.setItem("sortColumn", value);
-    } else {
-      sessionStorage.removeItem("sortColumn");
-    }
-    setFirstTime(true);
-  };
-
   const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value as "asc" | "desc";
     setSortOrder(value);
-    sessionStorage.setItem("sortOrder", value);
     setFirstTime(true);
   };
 
@@ -884,8 +929,9 @@ const MasterPage = () => {
         <UploadModal fetchJobs={fetchJobs} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
 
         <div className="flex-1 px-2 bg-white">
+        {/* sticky top-0 z-10 */}
           <div
-            className={`bg-gray-200 p-3 mb-0 transition-all duration-500 ease-in w-full sm:w-auto sticky top-0 z-10 ${isFilterDropDownOpen ? "rounded-t-lg" : "rounded-lg"}`}
+            className={`bg-gray-200 p-3 mb-0 transition-all duration-500 ease-in w-full sm:w-auto  ${isFilterDropDownOpen ? "rounded-t-lg" : "rounded-lg"}`}
           >
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setIsFilterDropDownOpen(!isFilterDropDownOpen)}>
               <span className="text-gray-800 text-sm sm:text-base md:text-lg">
@@ -898,9 +944,9 @@ const MasterPage = () => {
               </span>
             </div>
           </div>
-
+          {/* sticky top-0 z-40 */}
           <div
-            className={`overflow-hidden transition-all duration-500 ease-in w-auto sticky top-0 z-40 ${isFilterDropDownOpen ? "max-h-[1000px] p-3" : "max-h-0"
+            className={`overflow-hidden transition-all duration-500 ease-in w-auto  ${isFilterDropDownOpen ? "max-h-[1000px] p-3" : "max-h-0"
               } flex flex-wrap gap-4 mt-0 bg-gray-200 rounded-b-lg`}
           >
 
@@ -1128,46 +1174,45 @@ const MasterPage = () => {
           <div className="my-5 flex flex-wrap md:flex-nowrap justify-between items-center gap-4">
             <div className="w-full md:w-auto">
               <form
-                onSubmit={handleFilterApply}
+                // onSubmit={handleFilterApply}
                 className="w-full flex flex-wrap md:flex-nowrap gap-4 items-center"
               >
-                <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-3 min-w-0 relative" ref={dropdownRef}>
                   <label htmlFor="sortColumn" className="text-sm font-semibold text-gray-800 whitespace-nowrap">
                     Sort By:
                   </label>
+
                   <div className="relative w-full sm:w-44">
-                    <select
-                      id="sortColumn"
-                      className="w-full px-4 py-2 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none cursor-pointer"
-                      value={sortColumn ?? ""}
-                      onChange={handleSortColumnChange}
-                    >
-                      <option value="">Select Column</option>
-                      <option value="all">All</option>
-                      <option value="blNumber">BL Number</option>
-                      <option value="jobName">Job Name</option>
-                      <option value="podDate">POD Date</option>
-                      <option value="podSignature">Signature Exists</option>
-                      <option value="totalQty">Issued Qty</option>
-                      <option value="received">Received Qty</option>
-                      <option value="damaged">Damaged Qty</option>
-                      <option value="short">Short Qty</option>
-                      <option value="over">Over Qty</option>
-                      <option value="refused">Refused Qty</option>
-                      <option value="customerOrderNum">Customer Order Num</option>
-                      <option value="stampExists">Stamp Exists</option>
-                      <option value="finalStatus">Final Status</option>
-                      <option value="reviewStatus">Review Status</option>
-                      <option value="recognitionStatus">Recognition Status</option>
-                      <option value="breakdownReason">Breakdown Reason</option>
-                      <option value="reviewedBy">Reviewed By</option>
-                    </select>
                     <button
                       type="button"
-                      className="absolute inset-y-0 right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-default"
+                      className="w-full px-4 py-2 border rounded-md text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#005B97] text-left flex justify-between items-center"
+                      onClick={() => setIsOpen(!isOpen)}
                     >
+                      {/* {sortColumn.length > 0 ? sortColumn.join(", ") : "Select columns"} */}
+                      {"Select columns"}
+
                       <FaChevronDown size={16} className="text-[#005B97]" />
                     </button>
+
+                    {isOpen && (
+                      <div className="absolute z-30 mt-1 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        {options.map((option) => (
+                          <label
+                            key={option.value}
+                            className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 text-[#005B97] cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              value={option.value}
+                              checked={sortColumn.includes(option.value)}
+                              onChange={handleSortColumnChange}
+                              className="form-checkbox h-4 w-4 text-[#005B97] cursor-pointer"
+                            />
+                            <span className="flex-1 truncate">{option.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1367,8 +1412,8 @@ const MasterPage = () => {
                 <span className="text-gray-800 text-xl shadow-xl p-4 rounded-lg">No data found</span>
               </div>
             ) : (
-              // <div className={`overflow-x-auto w-full relative ${isFilterDropDownOpen ? "md:h-[170px] sm:h-[150px]" : "md:h-[460px] sm:h-[450px]"}`}>
-              <div className={`overflow-x-auto w-full relative`}>
+              <div className={`overflow-x-auto w-full relative ${isFilterDropDownOpen ? "2xl:h-[700px] md:h-[170px] sm:h-[150px]" : "2xl:h-[700px] md:h-[460px] sm:h-[450px]"}`}>
+              {/* <div className={`overflow-x-auto w-full relative`}> */}
                 <table className="table-auto min-w-full w-full border-collapse">
                   <thead className="sticky top-0 bg-white z-20 shadow-md">
                     <tr className="text-gray-800">
