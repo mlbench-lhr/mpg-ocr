@@ -929,7 +929,7 @@ const MasterPage = () => {
         <UploadModal fetchJobs={fetchJobs} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
 
         <div className="flex-1 px-2 bg-white">
-        {/* sticky top-0 z-10 */}
+          {/* sticky top-0 z-10 */}
           <div
             className={`bg-gray-200 p-3 mb-0 transition-all duration-500 ease-in w-full sm:w-auto  ${isFilterDropDownOpen ? "rounded-t-lg" : "rounded-lg"}`}
           >
@@ -1298,7 +1298,7 @@ const MasterPage = () => {
 
                 </div>
 
-                <div className="overflow-scroll">
+                <div className="overflow-scroll min-h-auto max-h-96">
                   <table className="min-w-full border-separate border-spacing-y-3">
                     <thead>
                       <tr className="border-b border-gray-400">
@@ -1413,7 +1413,7 @@ const MasterPage = () => {
               </div>
             ) : (
               <div className={`overflow-x-auto w-full relative ${isFilterDropDownOpen ? "2xl:h-[700px] md:h-[170px] sm:h-[150px]" : "2xl:h-[900px] md:h-[460px] sm:h-[450px]"}`}>
-              {/* <div className={`overflow-x-auto w-full relative`}> */}
+                {/* <div className={`overflow-x-auto w-full relative`}> */}
                 <table className="table-auto min-w-full w-full border-collapse">
                   <thead className="sticky top-0 bg-white z-20 shadow-md">
                     <tr className="text-gray-800">
