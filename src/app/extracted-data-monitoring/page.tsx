@@ -1412,7 +1412,7 @@ const MasterPage = () => {
                 <span className="text-gray-800 text-xl shadow-xl p-4 rounded-lg">No data found</span>
               </div>
             ) : (
-              <div className={`overflow-x-auto w-full relative ${isFilterDropDownOpen ? "2xl:h-[700px] md:h-[170px] sm:h-[150px]" : "2xl:h-[850px] md:h-[460px] sm:h-[450px]"}`}>
+              <div className={`overflow-x-auto w-full relative ${isFilterDropDownOpen ? "2xl:h-[700px] md:h-[170px] sm:h-[150px]" : "2xl:h-[900px] md:h-[460px] sm:h-[450px]"}`}>
               {/* <div className={`overflow-x-auto w-full relative`}> */}
                 <table className="table-auto min-w-full w-full border-collapse">
                   <thead className="sticky top-0 bg-white z-20 shadow-md">
