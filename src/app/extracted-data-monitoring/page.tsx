@@ -318,7 +318,6 @@ const MasterPage = () => {
     })
     .filter(Boolean);
 
-
   const handleOcrToggle = async () => {
 
     // if (selectedRows.length === 0 && !isOcrRunning) return;
