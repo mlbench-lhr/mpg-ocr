@@ -34,14 +34,15 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message);
-      }
+      const data = await res.json();
 
-      const { token, name } = await res.json();
-      localStorage.setItem("token", token);
-      localStorage.setItem("username", name);
+      if (!res.ok) {
+          throw new Error(data.message);
+      }
+  
+      localStorage.removeItem("token");
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("username", data.name);
 
       router.push("/extracted-data-monitoring");
     } catch (err: unknown) {

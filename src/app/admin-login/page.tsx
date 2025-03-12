@@ -34,14 +34,17 @@ export default function LoginPage() {
                 body: JSON.stringify({ email, password, role }),
             });
 
+            const data = await res.json();
+
             if (!res.ok) {
-                const data = await res.json();
                 throw new Error(data.message);
             }
-
-            const { token } = await res.json();
-            localStorage.setItem("token", token);
+        
+            localStorage.removeItem("token");
+            localStorage.setItem("token", data.token);
+        
             router.push("/db-connection");
+
         } catch (err: unknown) {
             if (err instanceof Error) {
                 setError(err.message);
