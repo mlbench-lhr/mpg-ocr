@@ -281,27 +281,73 @@ const MasterPage = () => {
     );
   };
 
+  // useEffect(() => {
+  //   const fetchStatus = async () => {
+  //     try {
+  //       const response = await fetch("/api/jobs/ocr");
+  //       const data = await response.json();
+  //       setIsOcrRunning(data.status === "start");
+  //     } catch (error) {
+  //       console.error("Error fetching OCR status:", error);
+  //     }
+  //   };
+
+  //   fetchStatus();
+  // }, []);
+
+  // useEffect(() => {
+  //   async function fetchOcrApiUrl() {
+  //     const res = await fetch("/api/ipAddress/ip-address");
+  //     const data = await res.json();
+
+  //     if (data.ip) {
+  //       setOcrApiUrl(`http://${data.ip}:8080/run-ocr`);
+  //     }
+  //   }
+
+  //   fetchOcrApiUrl();
+  // }, []);
+
   useEffect(() => {
     const fetchStatus = async () => {
-      try {
-        const response = await fetch("/api/jobs/ocr");
-        const data = await response.json();
-        setIsOcrRunning(data.status === "start");
-      } catch (error) {
-        console.error("Error fetching OCR status:", error);
-      }
+        try {
+            const response = await fetch("/api/jobs/ocr", { cache: "no-store" });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            setIsOcrRunning(data.status === "start");
+        } catch (error) {
+            console.error("Error fetching OCR status:", error);
+        }
     };
 
     fetchStatus();
-  }, []);
+
+    const interval = setInterval(fetchStatus, 50000); 
+
+    return () => clearInterval(interval);
+}, []);
+
 
   useEffect(() => {
     async function fetchOcrApiUrl() {
-      const res = await fetch("/api/ipAddress/ip-address");
-      const data = await res.json();
+      try {
+        const res = await fetch("/api/ipAddress/ip-address", { cache: "no-store" });
 
-      if (data.ip) {
-        setOcrApiUrl(`http://${data.ip}:8080/run-ocr`);
+        if (!res.ok) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        if (data.ip) {
+          setOcrApiUrl(`http://${data.ip}:8080/run-ocr`);
+        }
+      } catch (error) {
+        console.error("Failed to fetch OCR API URL:", error);
       }
     }
 
@@ -309,12 +355,29 @@ const MasterPage = () => {
   }, []);
 
 
+  // const pdfFiles = selectedRows
+  //   .map((rowId) => {
+  //     const job = master.find((job) => job._id === rowId);
+  //     return job && (!job.blNumber?.trim() || !job.podSignature?.trim())
+  //       ? { file_url_or_path: job.pdfUrl }
+  //       : null;
+  //   })
+  //   .filter(Boolean);
+
   const pdfFiles = selectedRows
     .map((rowId) => {
       const job = master.find((job) => job._id === rowId);
-      return job && (!job.blNumber?.trim() || !job.podSignature?.trim())
-        ? { file_url_or_path: job.pdfUrl }
-        : null;
+
+      if (
+        job &&
+        (!job.blNumber?.trim() || !job.podSignature?.trim()) &&
+        job.pdfUrl
+      ) {
+        const fileName = job.pdfUrl.split("/").pop() || "";
+        return { file_url_or_path: `/api/access-file?filename=${fileName}` };
+      }
+
+      return null;
     })
     .filter(Boolean);
 
@@ -691,14 +754,17 @@ const MasterPage = () => {
 
       const response = await fetch(`/api/process-data/get-data/?${queryParams.toString()}`);
 
-      if (response.ok) {
-        const data = await response.json();
-        setMaster(data.jobs);
-        setTotalPages(data.totalPages);
-        setTotalJobs(data.totalJobs);
-      } else {
-        console.log("Failed to fetch jobs");
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Failed to fetch jobs:", errorText);
+        return;
       }
+  
+      const data = await response.json();
+      setMaster(data.jobs);
+      setTotalPages(data.totalPages);
+      setTotalJobs(data.totalJobs);
+
     } catch (error) {
       console.log("Error fetching jobs:", error);
     } finally {

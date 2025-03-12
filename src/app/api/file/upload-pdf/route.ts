@@ -203,6 +203,9 @@ export async function POST(req: NextRequest) {
 
             await fs.rename(file.filepath, filePath);
 
+            // await fs.copyFile(file.filepath, filePath);
+            // await fs.unlink(file.filepath);
+
             uploadedResults.push({ filename: file.originalFilename, status: "uploaded" });
 
             const fileUrl = `/file/${uniqueFilename}`;

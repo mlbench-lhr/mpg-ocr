@@ -73,27 +73,27 @@ const JobDetail = () => {
 
     const formatDateForInput = (dateStr: string | null) => {
         if (!dateStr) return "";
-    
+
         const parts = dateStr.split("/");
         if (parts.length < 2) return "";
-    
+
         const [month, day, rawYear] = [...parts, "2024"].slice(0, 3);
-    
+
         let year = rawYear;
         if (year.length === 2) {
             const currentYear = new Date().getFullYear();
             const century = Math.floor(currentYear / 100) * 100;
             year = (parseInt(year, 10) + century).toString();
         }
-    
+
         return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
     };
-    
-    
-    
+
+
+
 
     const formatDateForDB = (dateStr: string) => {
-        if (!dateStr) return ""; 
+        if (!dateStr) return "";
         const [year, month, day] = dateStr.split("-");
         return `${month}/${day}/${year.slice(-2)}`;
     };
@@ -119,7 +119,7 @@ const JobDetail = () => {
         };
         const decodedToken = decodeJwt(token);
         setUserRole(decodedToken.role);
-        
+
         setName(decodedToken.username);
 
     }, [router]);
@@ -208,7 +208,7 @@ const JobDetail = () => {
         //         }));
         //     }
         // }
-        
+
         if (nonNumericFields.includes(name)) {
 
             const isValidNonNumeric =
@@ -282,6 +282,8 @@ const JobDetail = () => {
 
     if (!job) return <>{error}</>;
 
+    const fileName = job.pdfUrl.split("/").pop();
+
     return (
         <div className="flex flex-row h-screen bg-white">
             <Sidebar onStateChange={handleSidebarStateChange} />
@@ -298,13 +300,21 @@ const JobDetail = () => {
                         </span>
                     </div>
                     <div>
-                        <Link href={job.pdfUrl} target='_blank'>
+
+
+                        <Link href={`/api/access-file?filename=${fileName}`} target="_blank" rel="noopener noreferrer">
+                            <button className="bg-[#005B97] rounded-lg py-2 px-10 text-white md:mt-0 w-60 md:w-auto">
+                                View Pdf
+                            </button>
+                        </Link>
+
+                        {/* <Link href={job.pdfUrl} target='_blank'>
                             <button
                                 className="bg-[#005B97] rounded-lg py-2 px-10 text-white md:mt-0 w-60 md:w-auto"
                             >
                                 View Pdf
                             </button>
-                        </Link>
+                        </Link> */}
                     </div>
                 </div>
                 {loading ? <Spinner /> :
@@ -320,7 +330,8 @@ const JobDetail = () => {
 
 
                                 <iframe
-                                    src={`${job.pdfUrl}#toolbar=0`}
+                                    // src={`${job.pdfUrl}#toolbar=0`}
+                                    src={`/api/access-file?filename=${fileName}#toolbar=0`}
                                     className="w-11/12 h-full bg-white"
                                     loading="lazy"
                                     onLoad={handleIframeLoad}

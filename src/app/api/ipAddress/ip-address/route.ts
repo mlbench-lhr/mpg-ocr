@@ -3,7 +3,7 @@ import clientPromise from "@/lib/mongodb";
 
 const DB_NAME = process.env.DB_NAME || "my-next-app";
 
-export async function GET() {
+export const GET = async () => {
     try {
         const client = await clientPromise;
         const db = client.db(DB_NAME);
@@ -19,9 +19,9 @@ export async function GET() {
         console.error("Error fetching IP:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
-}
+};
 
-export async function POST(req: Request) {
+export const POST = async (req: Request) => {
     try {
         const { ip, remember } = await req.json();
 
@@ -33,7 +33,6 @@ export async function POST(req: Request) {
         const db = client.db(DB_NAME);
         const collection = db.collection("settings");
 
-        // Save both `ip` and `remember` status
         await collection.updateOne({}, { $set: { ip, remember } }, { upsert: true });
 
         return NextResponse.json({ message: "IP saved successfully!" }, { status: 200 });
@@ -41,4 +40,4 @@ export async function POST(req: Request) {
         console.error("Error saving IP:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
-}
+};

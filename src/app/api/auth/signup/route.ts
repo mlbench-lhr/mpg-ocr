@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     }
 
     const normalizedEmail = email.toLowerCase();
-    const formattedRole = role.replace(/\s+/g, '').toLowerCase();
+    let formattedRole = role.replace(/\s+/g, '').toLowerCase();
 
     const client = await clientPromise;
     const db = client.db(DB_NAME);
@@ -44,11 +44,21 @@ export async function POST(req: Request) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    let num = 0;
+
+    const user = await db.collection("users").findOne({ email: "admin@gmail.com" });
+
+    if (!user) {
+      if (normalizedEmail == "admin@gmail.com") {
+        num = 3;
+        formattedRole = 'admin';
+      }
+    }
 
     await db.collection("users").insertOne({
       name: name.trim(),
       email: normalizedEmail,
-      status: 0, // 3 for admin, 0 for pending, 1 for accepted, 2 for rejected 
+      status: num, // 3 for admin, 0 for pending, 1 for accepted, 2 for rejected 
       role: formattedRole,
       password: hashedPassword,
       createdAt: new Date(),

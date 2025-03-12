@@ -61,9 +61,11 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     // };
 
     useEffect(() => {
-        // Fetch the stored IP from MongoDB
-        fetch("/api/ipAddress/ip-address")
-            .then(res => res.json())
+        fetch("/api/ipAddress/ip-address", { cache: "no-store" })
+            .then(res => {
+                if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+                return res.json();
+            })
             .then(data => {
                 if (data.ip) {
                     setIp(data.ip);
