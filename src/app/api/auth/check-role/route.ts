@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt, { TokenExpiredError, JsonWebTokenError } from "jsonwebtoken";
 
-const SECRET_KEY = process.env.NEXT_PUBLIC_JWT_SECRET as string;
+const SECRET_KEY = process.env.JWT_SECRET as string;
 
 export async function POST(req: NextRequest) {
   try {

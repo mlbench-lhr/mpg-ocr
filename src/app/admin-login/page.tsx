@@ -6,7 +6,6 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Image from "next/image";
 import ForgotPasswordModal from "../components/ForgotPasswordModal";
 import ResetPasswordModal from "../components/ResetPasswordModal";
-import Router from "next/router";
 
 
 export default function LoginPage() {
@@ -22,6 +21,41 @@ export default function LoginPage() {
     const router = useRouter();
 
 
+    // const handleLogin = useCallback(async (e: React.FormEvent) => {
+    //     e.preventDefault();
+    //     setError(null);
+    //     setLoading(true);
+
+    //     try {
+    //         const res = await fetch("/api/auth/login", {
+    //             method: "POST",
+    //             headers: { "Content-Type": "application/json" },
+    //             body: JSON.stringify({ email, password, role }),
+    //         });
+
+    //         const data = await res.json();
+
+    //         if (!res.ok) {
+    //             throw new Error(data.message);
+    //         }
+
+    //         localStorage.removeItem("token");
+    //         localStorage.setItem("token", data.token);
+
+    //         router.push("/db-connection");
+
+    //     } catch (err: unknown) {
+    //         if (err instanceof Error) {
+    //             setError(err.message);
+    //         } else {
+    //             setError("An unexpected error occurred");
+    //         }
+    //         setLoading(false);
+    //     } finally {
+    //         Router.events.on("routeChangeComplete", () => setLoading(false));
+    //     }
+    // }, [email, password, role, router]);
+
     const handleLogin = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
@@ -35,32 +69,27 @@ export default function LoginPage() {
             });
 
             const data = await res.json();
+            if (!res.ok) throw new Error(data.message);
 
-            if (!res.ok) {
-                throw new Error(data.message);
-            }
-        
-            localStorage.removeItem("token");
             localStorage.setItem("token", data.token);
-        
             router.push("/db-connection");
 
         } catch (err: unknown) {
-            if (err instanceof Error) {
-                setError(err.message);
-            } else {
-                setError("An unexpected error occurred");
-            }
-            setLoading(false);
+            setError(err instanceof Error ? err.message : "An unexpected error occurred");
         } finally {
-            Router.events.on("routeChangeComplete", () => setLoading(false));
+            setLoading(false);
         }
     }, [email, password, role, router]);
 
+
+    // useEffect(() => {
+    //     return () => {
+    //         Router.events.off("routeChangeComplete", () => setLoading(false));
+    //     };
+    // }, []);
+
     useEffect(() => {
-        return () => {
-            Router.events.off("routeChangeComplete", () => setLoading(false));
-        };
+        return () => setLoading(false);
     }, []);
 
     const closeForgotPasswordModal = () => setIsForgotPasswordVisible(false);

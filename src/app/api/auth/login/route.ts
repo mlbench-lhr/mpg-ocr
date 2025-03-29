@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import clientPromise from "@/lib/mongodb";
 
-const SECRET_KEY = process.env.NEXT_PUBLIC_JWT_SECRET as string;
+const SECRET_KEY = process.env.JWT_SECRET as string;
 const DB_NAME = process.env.DB_NAME || "my-next-app";
 
 export async function POST(req: Request) {

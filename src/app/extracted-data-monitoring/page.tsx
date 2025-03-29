@@ -118,6 +118,7 @@ const MasterPage = () => {
   const [isProcessModalOpen, setIsProcessModalOpen] = useState(false);
   const [abortController, setAbortController] = useState(new AbortController());
   const [ocrApiUrl, setOcrApiUrl] = useState("");
+  const [baseUrl, setBaseUrl] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -310,26 +311,26 @@ const MasterPage = () => {
 
   useEffect(() => {
     const fetchStatus = async () => {
-        try {
-            const response = await fetch("/api/jobs/ocr", { cache: "no-store" });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
+      try {
+        const response = await fetch("/api/jobs/ocr", { cache: "no-store" });
 
-            const data = await response.json();
-            setIsOcrRunning(data.status === "start");
-        } catch (error) {
-            console.error("Error fetching OCR status:", error);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
         }
+
+        const data = await response.json();
+        setIsOcrRunning(data.status === "start");
+      } catch (error) {
+        console.error("Error fetching OCR status:", error);
+      }
     };
 
     fetchStatus();
 
-    const interval = setInterval(fetchStatus, 50000); 
+    const interval = setInterval(fetchStatus, 50000);
 
     return () => clearInterval(interval);
-}, []);
+  }, []);
 
 
   useEffect(() => {
@@ -345,6 +346,7 @@ const MasterPage = () => {
 
         if (data.ip) {
           setOcrApiUrl(`http://${data.ip}:8080/run-ocr`);
+          setBaseUrl(`http://${data.secondaryIp}:3000`);
         }
       } catch (error) {
         console.error("Failed to fetch OCR API URL:", error);
@@ -373,8 +375,10 @@ const MasterPage = () => {
         (!job.blNumber?.trim() || !job.podSignature?.trim()) &&
         job.pdfUrl
       ) {
+        // const fileName = job.pdfUrl.split("/").pop() || "";
+        // return { file_url_or_path: `/api/access-file?filename=${fileName}` };
         const fileName = job.pdfUrl.split("/").pop() || "";
-        return { file_url_or_path: `/api/access-file?filename=${fileName}` };
+        return { file_url_or_path: `${baseUrl}/api/access-file?filename=${encodeURIComponent(fileName)}` };
       }
 
       return null;
@@ -477,9 +481,13 @@ const MasterPage = () => {
               const status = (data?.Status as keyof typeof recognitionStatusMap) || "null";
               const recognitionStatus = recognitionStatusMap[status] || "null";
 
+              const urlObj = new URL(filePath);
+              const filename = urlObj.searchParams.get("filename") || "";
+              const decodedFilePath = `/file/${decodeURIComponent(filename)}`;
+
               return {
                 jobId: null,
-                pdfUrl: filePath,
+                pdfUrl: decodedFilePath,
                 deliveryDate: new Date().toISOString().split("T")[0],
                 noOfPages: 1,
                 blNumber: data?.B_L_Number || "",
@@ -749,8 +757,7 @@ const MasterPage = () => {
         queryParams.set("sortOrder", sortOrders.join(","));
       }
 
-      console.log("Query Params:", queryParams.toString());
-
+      // console.log("Query Params:", queryParams.toString());
 
       const response = await fetch(`/api/process-data/get-data/?${queryParams.toString()}`);
 
@@ -759,7 +766,7 @@ const MasterPage = () => {
         console.error("Failed to fetch jobs:", errorText);
         return;
       }
-  
+
       const data = await response.json();
       setMaster(data.jobs);
       setTotalPages(data.totalPages);
@@ -855,8 +862,6 @@ const MasterPage = () => {
     }
   };
 
-
-
   const handlePageChange = (newPage: number) => {
     setFirstTime(true);
     setCurrentPage(newPage);
@@ -868,7 +873,31 @@ const MasterPage = () => {
     setFirstTime(true);
   };
 
-  const handleSend = () => {
+  // const handleSend = () => {
+  //   Swal.fire({
+  //     title: 'Send Files',
+  //     text: 'Are you sure you want to send these files?',
+  //     icon: 'warning',
+  //     iconColor: '#AF9918',
+  //     showCancelButton: true,
+  //     confirmButtonColor: '#AF9918',
+  //     cancelButtonColor: '#E0E0E0',
+  //     confirmButtonText: 'Yes Sure!',
+  //   }).then((result) => {
+  //     if (result.isConfirmed) {
+  //       setSelectedRows([]);
+  //       Swal.fire({
+  //         title: 'Sent!',
+  //         text: 'Your files have been Sent.',
+  //         icon: 'success',
+  //         timer: 2000,
+  //         showConfirmButton: false,
+  //       });
+  //     }
+  //   });
+  // };
+
+  const handleSend = async () => {
     Swal.fire({
       title: 'Send Files',
       text: 'Are you sure you want to send these files?',
@@ -878,16 +907,44 @@ const MasterPage = () => {
       confirmButtonColor: '#AF9918',
       cancelButtonColor: '#E0E0E0',
       confirmButtonText: 'Yes Sure!',
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        setSelectedRows([]);
-        Swal.fire({
-          title: 'Sent!',
-          text: 'Your files have been Sent.',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false,
-        });
+        try {
+          const response = await fetch('/api/process-data/update-rows', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ ids: selectedRows }),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            await fetchJobs();
+            setSelectedRows([]);
+            Swal.fire({
+              title: 'Sent!',
+              text: 'Your files have been sent successfully.',
+              icon: 'success',
+              timer: 2000,
+              showConfirmButton: false,
+            });
+          } else {
+            Swal.fire({
+              title: 'Error!',
+              text: result.error || 'Failed to send files.',
+              icon: 'error',
+            });
+          }
+        } catch (error) {
+          console.log('Error sending files:', error);
+          Swal.fire({
+            title: 'Error!',
+            text: 'Failed to send files due to a network or server error.',
+            icon: 'error',
+          });
+        }
       }
     });
   };
@@ -912,13 +969,13 @@ const MasterPage = () => {
     };
 
     window.addEventListener("beforeunload", preventRefresh);
-    window.addEventListener("unload", updateStatus); // Ensures status update on reload
+    window.addEventListener("unload", updateStatus);
 
     return () => {
       window.removeEventListener("beforeunload", preventRefresh);
       window.removeEventListener("unload", updateStatus);
 
-      // Only update status if modal was open
+
       updateStatus();
 
       setIsOcrRunning(false);
@@ -1518,7 +1575,7 @@ const MasterPage = () => {
 
                       </th> */}
                       <th className="py-2 px-4 border-b text-center min-w-44 max-w-44 sticky left-44 bg-white z-10">Uploaded File</th>
-                      <th className="py-2 px-4 border-b text-center min-w-36 max-w-36 sticky left-[25rem] bg-white z-10">Job Name</th>
+                      <th className="py-2 px-4 border-b text-center min-w-36 max-w-36 sticky left-[22.5rem] bg-white z-10">Job Name</th>
                       <th className="py-2 px-4 border-b text-center min-w-32">POD Date</th>
                       <th className="py-2 px-4 border-b text-center min-w-36">Stamp Exists</th>
                       <th className="py-2 px-4 border-b text-center min-w-40">Signature Exists</th>
@@ -1567,11 +1624,15 @@ const MasterPage = () => {
 
                             </Link>
                           </td>
-                          <td className="py-2 px-4 border-b text-center sticky left-44 bg-white z-10">
-                            {job.pdfUrl ? job.pdfUrl.split('/').pop()?.replace('.pdf', '') || "No PDF Available" : "No PDF Available"}
+                          <td className="py-2 px-4 border-b text-center sticky left-44 bg-white z-10 w-40 truncate">
+                            {job.pdfUrl
+                              ? (() => {
+                                const fileName = job.pdfUrl.split('/').pop()?.replace('.pdf', '') || "No PDF Available";
+                                return fileName.length > 15 ? fileName.substring(0, 15) + "..." : fileName;
+                              })()
+                              : "No PDF Available"}
                           </td>
-
-                          <td className="py-2 px-4 border-b text-center sticky left-[25rem] bg-white z-10">
+                          <td className="py-2 px-4 border-b text-center sticky left-[22.5rem] bg-white z-10">
                             {job.jobName}
                           </td>
                           <td className="py-2 px-4 border-b text-center">{job.podDate}</td>

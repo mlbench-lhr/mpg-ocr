@@ -31,59 +31,9 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     const router = useRouter();
     const { isExpanded, toggleSidebar } = useSidebar();
     const [isImageLoaded, setIsImageLoaded] = useState(true);
-
-    const [secondaryIp, setSecondaryIp] = useState('');
-
     const [ip, setIp] = useState("");
     const [remember, setRemember] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-
-    const [wmsUrl, setWmsUrl] = useState("");
-    const [isSaving, setIsSaving] = useState(false);
-    const [saved, setSaved] = useState(false);
-    const [originalUrl, setOriginalUrl] = useState(""); // Store the fetched URL
-    const [isInputActive, setIsInputActive] = useState(false); // Track input foc
-
-    useEffect(() => {
-        const fetchWmsUrl = async () => {
-            try {
-                const response = await fetch("/api/save-wms-url");
-                const data = await response.json();
-                if (response.ok && data.wmsUrl) {
-                    setWmsUrl(data.wmsUrl);
-                    setOriginalUrl(data.wmsUrl); // Store the original URL
-                }
-            } catch (error) {
-                console.error("Error fetching WMS URL:", error);
-            }
-        };
-
-        fetchWmsUrl();
-    }, []);
-
-    const handleSave = async () => {
-        setIsSaving(true);
-        try {
-            const response = await fetch("/api/save-wms-url", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ wmsUrl }),
-            });
-
-            if (response.ok) {
-                setSaved(true);
-                setOriginalUrl(wmsUrl); // Update stored URL after save
-                setTimeout(() => setSaved(false), 3000); // Hide success message after 10 sec
-            } else {
-                console.error("Failed to save WMS URL");
-            }
-        } catch (error) {
-            console.error("Error saving WMS URL:", error);
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
 
     useEffect(() => {
         const preloadImage = new window.Image();
@@ -111,13 +61,14 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     // };
 
     useEffect(() => {
-        // Fetch the stored IP from MongoDB
-        fetch("/api/ipAddress/ip-address")
-            .then(res => res.json())
+        fetch("/api/ipAddress/ip-address", { cache: "no-store" })
+            .then(res => {
+                if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+                return res.json();
+            })
             .then(data => {
                 if (data.ip) {
                     setIp(data.ip);
-                    setSecondaryIp(data.secondaryIp);
                     setRemember(data.remember);
                 }
             })
@@ -125,12 +76,12 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     }, []);
 
     const handleSaveIP = async () => {
-        if (!ip || !secondaryIp) return alert("Please enter an both IP address");
+        if (!ip) return alert("Please enter an IP address");
 
         await fetch("/api/ipAddress/ip-address", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ip, secondaryIp, remember }),
+            body: JSON.stringify({ ip, remember }),
         });
 
         setIsEditing(false);
@@ -192,9 +143,7 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
         return JSON.parse(jsonPayload);
     };
 
-    // const toggleAutoConfirmation = () => {
-    //     setAutoConfirmationOpen((prevState) => !prevState);
-    // };
+    // setAutoConfirmationOpen((prevState) => !prevState);
 
     const toggleAutoConfirmation = async () => {
         try {
@@ -212,17 +161,17 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
 
     useEffect(() => {
         const fetchStatus = async () => {
-            try {
-                const res = await fetch("/api/settings/auto-confirmation");
-                const data = await res.json();
-                setAutoConfirmationOpen(data.isAutoConfirmationOpen);
-            } catch (error) {
-                console.error("Error fetching status:", error);
-            }
+          try {
+            const res = await fetch("/api/settings/auto-confirmation");
+            const data = await res.json();
+            setAutoConfirmationOpen(data.isAutoConfirmationOpen);
+          } catch (error) {
+            console.error("Error fetching status:", error);
+          }
         };
-
+      
         fetchStatus();
-    }, []);
+      }, []);
 
     const handleLogout = async () => {
         try {
@@ -547,11 +496,12 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                                 </button>
                                             )}
                                         </li> */}
-
                                         <li className="p-2 hover:bg-gray-200 cursor-pointer border-b w-full">
                                             <p className="flex flex-wrap md:flex-nowrap justify-between items-center gap-2">
-                                                <span className="text-sm md:text-base">GPU IP Address</span>
+                                                {/* Label */}
+                                                <span className="text-sm md:text-base">IP Address</span>
 
+                                                {/* Input Field */}
                                                 <span className="flex-1">
                                                     <input
                                                         type="text"
@@ -563,89 +513,42 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                                             setIsEditing(true);
                                                         }}
                                                         onFocus={() => setIsEditing(true)}
-                                                        onBlur={() => {
-                                                            setTimeout(() => {
-                                                                if (
-                                                                    !document.getElementById("app-ip") ||
-                                                                    (document.activeElement !== document.getElementById("app-ip") &&
-                                                                        document.activeElement !== document.getElementById("gpu-ip"))
-                                                                ) {
-                                                                    setIsEditing(false);
-                                                                }
-                                                            }, 200);
+                                                        onBlur={(e) => {
+                                                            if (!e.relatedTarget || e.relatedTarget.id !== "remember-ip") {
+                                                                setTimeout(() => setIsEditing(false), 200);
+                                                            }
                                                         }}
-                                                        id="gpu-ip"
                                                     />
                                                 </span>
 
+                                                {/* Checkbox */}
                                                 <span className="flex items-center">
                                                     <input
                                                         type="checkbox"
                                                         id="remember-ip"
                                                         className="mr-2"
                                                         checked={remember}
+                                                        disabled={!isEditing}
                                                         onChange={() => {
                                                             setRemember(!remember);
-                                                            if (!isEditing) setIsEditing(true);
-                                                        }}
-                                                    />
-                                                </span>
-
-                                            </p>
-
-                                            <p className="flex flex-wrap md:flex-nowrap justify-between items-center gap-2 mt-2">
-                                                <span className="text-sm md:text-base">App IP Address</span>
-
-                                                <span className="flex-1">
-                                                    <input
-                                                        type="text"
-                                                        className="w-full bg-gray-100 py-1 px-2 rounded-lg border-0 outline-none text-sm md:text-base"
-                                                        value={secondaryIp}
-                                                        placeholder="192.168.1.20"
-                                                        onChange={(e) => {
-                                                            setSecondaryIp(e.target.value);
                                                             setIsEditing(true);
                                                         }}
-                                                        onFocus={() => setIsEditing(true)}
-                                                        onBlur={() => {
-                                                            setTimeout(() => {
-                                                                if (
-                                                                    !document.getElementById("gpu-ip") ||
-                                                                    (document.activeElement !== document.getElementById("app-ip") &&
-                                                                        document.activeElement !== document.getElementById("gpu-ip"))
-                                                                ) {
-                                                                    setIsEditing(false);
-                                                                }
-                                                            }, 200);
-                                                        }}
-                                                        id="app-ip"
-                                                    />
-                                                </span>
-
-                                                <span className="flex items-center">
-                                                    <input
-                                                        type="checkbox"
-                                                        id="remember-ip"
-                                                        className="mr-2"
-                                                        checked={remember}
-                                                        disabled={true}
                                                     />
                                                 </span>
                                             </p>
 
+                                            {/* Save Button */}
                                             {isEditing && (
                                                 <div className="w-full flex justify-end mt-2">
                                                     <button
                                                         onClick={handleSaveIP}
                                                         className="bg-[#005B97] text-white px-4 py-1 rounded-lg text-sm md:text-base"
                                                     >
-                                                        Save IPs
+                                                        Save IP
                                                     </button>
                                                 </div>
                                             )}
                                         </li>
-
-
 
                                         <li className="p-2 hover:bg-gray-200 cursor-pointer border-b">
                                             <Link href="/db-connection" className="flex justify-between items-center">
@@ -658,33 +561,6 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                                 <span>Batch Frequency</span>
                                                 <TbCloudDataConnection className="text-[#005B97] text-2xl" />
                                             </Link>
-                                        </li>
-                                        <li className="p-2 border-b">
-                                            <span className="block text-gray-700 font-medium mb-1">WMS API Url</span>
-                                            <input
-                                                type="text"
-                                                placeholder="Enter WMS URL..."
-                                                value={wmsUrl}
-                                                onChange={(e) => {
-                                                    setWmsUrl(e.target.value);
-                                                    setSaved(false);
-                                                }}
-                                                onFocus={() => setIsInputActive(true)}
-                                                onBlur={() => setIsInputActive(false)}
-                                                className="w-full p-2 border border-gray-300 rounded"
-                                            />
-
-                                            {wmsUrl !== originalUrl && (isInputActive || !saved) && (
-                                                <button
-                                                    onClick={handleSave}
-                                                    className="mt-2 px-5 py-1 text-base bg-[#005B97] text-white rounded hover:bg-[#3794d2]"
-                                                    disabled={isSaving}
-                                                >
-                                                    {isSaving ? "Saving..." : "Save"}
-                                                </button>
-                                            )}
-
-                                            {saved && <p className="text-[#005B97] mt-2">WMS URL saved successfully!</p>}
                                         </li>
                                         <li className="p-2 border-b">
                                             <div className="flex justify-between items-center">
