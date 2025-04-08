@@ -660,10 +660,10 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                             </Link>
                                         </li>
                                         <li className="p-2 border-b">
-                                            <span className="block text-gray-700 font-medium mb-1">WMS API Url</span>
+                                            <span className="block mb-1">WMS API IP Address</span>
                                             <input
                                                 type="text"
-                                                placeholder="Enter WMS URL..."
+                                                placeholder="192.168.1.20"
                                                 value={wmsUrl}
                                                 onChange={(e) => {
                                                     setWmsUrl(e.target.value);
@@ -684,7 +684,7 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                                 </button>
                                             )}
 
-                                            {saved && <p className="text-[#005B97] mt-2">WMS URL saved successfully!</p>}
+                                            {saved && <p className="text-[#005B97] mt-2">WMS api ip address saved successfully!</p>}
                                         </li>
                                         <li className="p-2 border-b">
                                             <div className="flex justify-between items-center">

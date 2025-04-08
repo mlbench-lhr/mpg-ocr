@@ -6,7 +6,7 @@ import { format, parse } from "date-fns";
 
 interface Job {
     _id: ObjectId;
-    blNumber: string;
+    blNumber: string | number;
     jobName: string;
     podDate: string;
     deliveryDate: Date;
@@ -152,32 +152,21 @@ export async function GET(req: Request) {
         console.log("Final Sort Query:", sortQuery);
 
 
-        // if (sortColumn === "all") {
-        //     const sortableFields = [
-        //         "blNumber", "podDate", "podSignature", "totalQty", "received",
-        //         "damaged", "short", "over", "refused", "customerOrderNum",
-        //         "stampExists", "finalStatus", "reviewStatus", "recognitionStatus",
-        //         "breakdownReason", "reviewedBy", "jobName"
-        //     ];
-
-        //     sortableFields.forEach((field) => {
-        //         sortQuery[field] = sortOrder;
-        //     });
-        // } else if (sortColumn) {
-        //     sortQuery = { [sortColumn]: sortOrder };
-        // }
-
-        //  let sortQuery = {};
-        //  if (sortColumn) {
-        //      sortQuery = { [sortColumn]: sortOrder };
-        //  }
-
         if (podDateSignature) {
             filter.podSignature = { $regex: podDateSignature.trim(), $options: "i" };
         }
+        // if (bolNumber) {
+        //     filter.blNumber = { $regex: bolNumber.trim(), $options: "i" };
+        // }
+
         if (bolNumber) {
-            filter.blNumber = { $regex: bolNumber.trim(), $options: "i" };
+            if (/^\d+$/.test(bolNumber)) {
+                filter.blNumber = parseInt(bolNumber, 10);
+            } else {
+                filter.blNumber = { $regex: bolNumber.trim(), $options: "i" };
+            }
         }
+
         if (jobName) {
             filter.jobName = { $regex: jobName.trim(), $options: "i" };
         }
@@ -221,3 +210,24 @@ export async function GET(req: Request) {
 export async function OPTIONS() {
     return NextResponse.json({ allowedMethods: ["GET"] });
 }
+
+
+// if (sortColumn === "all") {
+//     const sortableFields = [
+//         "blNumber", "podDate", "podSignature", "totalQty", "received",
+//         "damaged", "short", "over", "refused", "customerOrderNum",
+//         "stampExists", "finalStatus", "reviewStatus", "recognitionStatus",
+//         "breakdownReason", "reviewedBy", "jobName"
+//     ];
+
+//     sortableFields.forEach((field) => {
+//         sortQuery[field] = sortOrder;
+//     });
+// } else if (sortColumn) {
+//     sortQuery = { [sortColumn]: sortOrder };
+// }
+
+//  let sortQuery = {};
+//  if (sortColumn) {
+//      sortQuery = { [sortColumn]: sortOrder };
+//  }

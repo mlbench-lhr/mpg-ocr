@@ -1,6 +1,7 @@
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { NextResponse, NextRequest } from "next/server";
+
 interface PDFCriteria {
   fromTime: Date;
   toTime: Date;
@@ -8,12 +9,10 @@ interface PDFCriteria {
 
 const DB_NAME = process.env.DB_NAME || "my-next-app";
 
-const client = await clientPromise; 
-
 export async function GET(req: NextRequest) {
   try {
-    const id = new URL(req.url).pathname.split("/").pop(); 
-
+    const id = new URL(req.url).pathname.split("/").pop();
+    const client = await clientPromise;
     const db = client.db(DB_NAME);
     const jobsCollection = db.collection("jobs");
 
@@ -44,7 +43,6 @@ export async function PATCH(req: NextRequest) {
 
     const parseTime = (timeString: string): Date => {
       const [hours, minutes] = timeString.split(":").map(Number);
-
       const newDate = new Date(currentDate);
       newDate.setHours(hours, minutes, 0, 0);
 
@@ -59,6 +57,7 @@ export async function PATCH(req: NextRequest) {
       toTime: parseTime(toTime),
     };
 
+    const client = await clientPromise;
     const db = client.db(DB_NAME);
     const jobsCollection = db.collection("jobs");
 
@@ -87,4 +86,3 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Failed to update job." }, { status: 500 });
   }
 }
-

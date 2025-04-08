@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { Job } from "../../types";
-import { FaChevronDown, FaClock } from "react-icons/fa";
+import { FaClock } from "react-icons/fa";
 import { DatePicker } from 'rsuite';
 import 'rsuite/DatePicker/styles/index.css';
+// import DatePicker1 from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 
 interface AddJobModalProps {
   onClose: () => void;
@@ -13,21 +15,91 @@ interface AddJobModalProps {
 
 
 const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
+  // const [availableDurations, setAvailableDurations] = useState<number[]>([]);
+  // const [fromTime, setFromTime] = useState<string | null>("");
+  // const [toTime, setToTime] = useState<string | null>("");
+  // const [time, setTime] = useState<Date | null>(new Date());
+
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
-  const [everyTime, setEveryTime] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [availableDurations, setAvailableDurations] = useState<number[]>([]);
-  const [error, setError] = useState<string>("");
-
+  const [everyTime, setEveryTime] = useState("");
+  const [time, setTime] = useState<Date | null>(null);
   const [fromTime, setFromTime] = useState<string | null>("");
   const [toTime, setToTime] = useState<string | null>("");
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+  const [error, setError] = useState<string>("");
+
 
   const formatTime = (date: Date): string => {
     const hours = date.getHours().toString().padStart(2, "0");
     const minutes = date.getMinutes().toString().padStart(2, "0");
     return `${hours}:${minutes}`;
   };
+
+  const timeToMinutes = (time: string): number => {
+    const [hours, minutes] = time.split(":").map(Number);
+    return hours * 60 + minutes;
+  };
+
+  const minutesToTime = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60)
+      .toString()
+      .padStart(2, "0");
+    const mins = (minutes % 60).toString().padStart(2, "0");
+    return `${hours}:${mins}`;
+  };
+
+  const generateDurations = (startTime: string, endTime: string): string[] => {
+    const startTimeInMinutes = timeToMinutes(startTime);
+    const endTimeInMinutes = timeToMinutes(endTime);
+    const durations: string[] = [];
+
+    for (let i = 0; i <= endTimeInMinutes - startTimeInMinutes; i++) {
+      durations.push(minutesToTime(i));
+    }
+
+    return durations;
+  };
+
+  useEffect(() => {
+    if (fromTime && toTime) {
+      const startTimeInMinutes = timeToMinutes(fromTime);
+      const endTimeInMinutes = timeToMinutes(toTime);
+
+      if (endTimeInMinutes <= startTimeInMinutes) {
+        setError("The 'To' time must be after the 'From' time.");
+        setAvailableTimes([]);
+      } else {
+        const durations = generateDurations(fromTime, toTime);
+        setAvailableTimes(durations);
+        setError("");
+
+        if (durations.length > 0) {
+          setTime(new Date(`2024-01-01T${durations[0]}`));
+        }
+      }
+    }
+  }, [fromTime, toTime]);
+
+  // const handleTimeChange = (date: Date | null) => {
+  //   if (date) {
+  //     const selectedTime = formatTime(date);
+  //     if (availableTimes.includes(selectedTime)) {
+  //       setTime(date);
+  //       setError("");
+  //     } else {
+  //       setError("Selected every time is not within the available range.");
+  //     }
+  //   }
+  // };
+
+  useEffect(() => {
+    const timeHeader = document.querySelector(".react-datepicker-time__header");
+    if (timeHeader) {
+      timeHeader.textContent = "Every";
+    }
+  }, [time]);
 
   const handleDateChange = (date: Date | null) => {
     if (date) {
@@ -46,43 +118,62 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
     }
   };
 
-  const timeToMinutes = (time: string): number => {
-    const [hours, minutes] = time.split(":").map(Number);
-    return hours * 60 + minutes;
-  };
 
-  useEffect(() => {
-    if (fromTime && toTime) {
-      const startTimeInMinutes = timeToMinutes(fromTime);
-      let endTimeInMinutes = timeToMinutes(toTime);
+  // useEffect(() => {
+  //   if (fromTime && toTime) {
+  //     const startTimeInMinutes = timeToMinutes(fromTime);
+  //     let endTimeInMinutes = timeToMinutes(toTime);
 
-      if (endTimeInMinutes < startTimeInMinutes) {
-        endTimeInMinutes += 24 * 60;
-        setError("Select 'fromTime' and 'toTime' on the same day.");
-        setAvailableDurations([]);
-        return;
-      }
+  //     if (endTimeInMinutes < startTimeInMinutes) {
+  //       endTimeInMinutes += 24 * 60;
+  //       setError("Select 'fromTime' and 'toTime' on the same day.");
+  //       setAvailableDurations([]);
+  //       return;
+  //     }
 
-      const duration = endTimeInMinutes - startTimeInMinutes;
+  //     if (endTimeInMinutes <= startTimeInMinutes) {
+  //       setError("The 'To' time must be after the 'From' time.");
+  //       setAvailableDurations([]);
+  //     } else {
+  //       const durations = generateDurations(fromTime, toTime);
+  //       setAvailableDurations(durations);
+  //       setError("");
+  //     }
+  //   }
+  // }, [fromTime, toTime]);
 
-      if (duration < 60) {
-        setError("The 'To' time must be at least 1 hour after the 'From' time.");
-        setAvailableDurations([]);
-      } else {
-        setError("");
-        const maxDuration = Math.min(duration, 20);
+  // useEffect(() => {
+  //   if (fromTime && toTime) {
+  //     const startTimeInMinutes = timeToMinutes(fromTime);
+  //     let endTimeInMinutes = timeToMinutes(toTime);
 
-        const durations: number[] = [];
-        for (let i = 5; i <= maxDuration; i += 5) {
-          durations.push(i);
-        }
-        setAvailableDurations(durations);
-      }
-    } else {
-      setError("");
-      setAvailableDurations([]);
-    }
-  }, [fromTime, toTime, everyTime]);
+  //     if (endTimeInMinutes < startTimeInMinutes) {
+  //       endTimeInMinutes += 24 * 60;
+  //       setError("Select 'fromTime' and 'toTime' on the same day.");
+  //       // setAvailableDurations([]);
+  //       return;
+  //     }
+
+  //     const duration = endTimeInMinutes - startTimeInMinutes;
+
+  //     if (duration < 60) {
+  //       setError("The 'To' time must be at least 1 hour after the 'From' time.");
+  //       // setAvailableDurations([]);
+  //     } else {
+  //       setError("");
+  //       const maxDuration = Math.min(duration, 20);
+
+  //       const durations: number[] = [];
+  //       for (let i = 5; i <= maxDuration; i += 5) {
+  //         durations.push(i);
+  //       }
+  //       // setAvailableDurations(durations);
+  //     }
+  //   } else {
+  //     setError("");
+  //     // setAvailableDurations([]);
+  //   }
+  // }, [fromTime, toTime, everyTime]);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,8 +249,6 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
             </div>
           )}
 
-
-
           <div className="mb-4">
             <label className="block font-semibold text-gray-800 mb-3">Select Days</label>
             <div className="grid grid-cols-3 gap-4">
@@ -212,9 +301,8 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
               </div>
             </div>
           </div>
-          {error && <div className="text-red-600 text-sm mb-4">{error}</div>}
 
-          <div className="flex flex-col mb-5">
+          {/* <div className="flex flex-col mb-5">
             <label htmlFor="everyTime" className="text-sm font-semibold text-gray-800">
               Every
             </label>
@@ -240,7 +328,63 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
                 <FaChevronDown size={16} className="text-[#005B97]" />
               </button>
             </div>
+          </div> */}
+
+          {/* <div className="flex flex-col mb-5">
+            <label htmlFor="everyTime" className="text-sm font-semibold text-gray-800">
+              Every (HH:MM)
+            </label>
+            <div className="w-full">
+              <DatePicker1
+                selected={time}
+                onChange={handleTimeChange}
+                showTimeSelect
+                showTimeSelectOnly
+                timeFormat="HH:mm"
+                timeIntervals={1}
+                dateFormat="HH:mm"
+                includeTimes={availableTimes.map((t) => new Date(`2024-01-01T${t}`))}
+                className="w-full px-4 py-[6px] mt-1 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97]"
+              />
+            </div>
+          </div> */}
+
+          <div className="flex flex-col mb-5">
+            <label htmlFor="everyTime" className="text-sm font-semibold text-gray-800">
+              Every (HH:MM)
+            </label>
+            <div className="w-full">
+              <input
+                type="text"
+                id="everyTime"
+                placeholder="HH:MM"
+                value={everyTime}
+                onChange={(e) => setEveryTime(e.target.value)}
+                onBlur={() => {
+                  const isValidFormat = /^\d{2}:\d{2}$/.test(everyTime);
+                  if (!isValidFormat) {
+                    setError("Please enter time in HH:MM format.");
+                  } else if (!availableTimes.includes(everyTime)) {
+                    setError(
+                      `Every time must be within the range ${availableTimes[0]} to ${availableTimes[availableTimes.length - 1]
+                      }`
+                    );
+                  } else {
+                    setError("");
+                  }
+                }}
+                disabled={!fromTime || !toTime || availableTimes.length === 0}
+                className={`w-full px-4 py-[6px] mt-1 border rounded-md text-gray-800 focus:outline-none focus:ring-2 ${
+                  !fromTime || !toTime || availableTimes.length === 0
+                    ? "bg-gray-100 cursor-not-allowed"
+                    : "focus:ring-[#005B97]"
+                }`}
+              />
+            </div>
           </div>
+          {error && <div className="text-red-600 text-sm mb-4">{error}</div>}
+
+
 
           <div className="flex">
             <button

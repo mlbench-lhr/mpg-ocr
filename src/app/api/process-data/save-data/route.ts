@@ -124,6 +124,14 @@ export async function POST(req: Request) {
         }
       }
 
+      const intFields = ["totalQty", "received", "damaged", "short", "over", "refused"];
+      for (const field of intFields) {
+        const value = data[field];
+        if (typeof value === "string" && /^\d+$/.test(value)) {
+          data[field] = parseInt(value, 10);
+        }
+      }
+      
       const { jobId, pdfUrl } = data;
 
       // Ensure jobId is properly assigned
@@ -135,8 +143,12 @@ export async function POST(req: Request) {
         data.jobName = job ? job.jobName : "";
       }
 
-      if (typeof data.blNumber === "number") {
-        data.blNumber = data.blNumber.toString();
+      // if (typeof data.blNumber === "number") {
+      //   data.blNumber = data.blNumber.toString();
+      // }
+
+      if (typeof data.blNumber === "string" && /^\d+$/.test(data.blNumber)) {
+        data.blNumber = parseInt(data.blNumber, 10);
       }
 
       // If pdfUrl already exists, update it instead of inserting a new record
@@ -149,7 +161,6 @@ export async function POST(req: Request) {
           }
         });
       } else {
-        // Insert a new record if pdfUrl does not exist
         bulkOps.push({
           insertOne: {
             document: {

@@ -3,7 +3,6 @@ import { getOracleConnection } from "@/lib/oracle";
 import clientPromise from "@/lib/mongodb";
 import oracledb from "oracledb";
 
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(req: NextRequest) {
     let connection;
@@ -37,12 +36,12 @@ export async function GET(req: NextRequest) {
         //   AND B.FILE_ID = C.FILE_ID(+)
         //   AND C.CRTD_USR_CD IS NULL          
         //   AND B.FILE_ID LIKE 'POD%'  
-        //   AND B.CRTD_DTT >= TRUNC(SYSDATE - 5) 
+        //   AND B.CRTD_DTT >= TRUNC(SYSDATE - 15) 
         //   AND B.CRTD_DTT < TRUNC(SYSDATE)
         //   AND NOT EXISTS (
         //       SELECT 1 FROM XTI_FILE_POD_OCR_T X WHERE X.FILE_ID = B.FILE_ID
         //   )
-        //   FETCH FIRST 4 ROW ONLY
+        //   FETCH FIRST 1 ROW ONLY
         // `,
         //         [],
         //         { outFormat: oracledb.OUT_FORMAT_OBJECT }

@@ -372,7 +372,7 @@ const MasterPage = () => {
 
       if (
         job &&
-        (!job.blNumber?.trim() || !job.podSignature?.trim()) &&
+        (!job.blNumber || !job.podSignature?.trim()) &&
         job.pdfUrl
       ) {
         // const fileName = job.pdfUrl.split("/").pop() || "";
@@ -559,7 +559,7 @@ const MasterPage = () => {
 
           setProgress((prev) => ({
             ...prev,
-            [filePath]: 0,
+            [filePath]: 1,
           }));
         }
 
@@ -734,7 +734,7 @@ const MasterPage = () => {
       const queryParams = new URLSearchParams();
       queryParams.set("page", currentPage.toString());
 
-      if (filters.bolNumber) queryParams.set("bolNumber", filters.bolNumber.trim());
+      if (filters.bolNumber) queryParams.set("bolNumber", filters.bolNumber);
       if (filters.finalStatus) queryParams.set("recognitionStatus", filters.finalStatus);
       if (filters.reviewStatus) queryParams.set("reviewStatus", filters.reviewStatus);
       if (filters.reasonStatus) queryParams.set("breakdownReason", filters.reasonStatus);
@@ -1436,11 +1436,17 @@ const MasterPage = () => {
                       {selectedRows
                         .filter((rowId) => {
                           const job = master.find((job) => job._id === rowId);
-                          return job && (!job.blNumber?.trim() || !job.podSignature?.trim());
+                          return job && (!job.blNumber || !job.podSignature?.trim());
                         })
                         .map((rowId) => {
                           const job = master.find((job) => job._id === rowId);
                           if (!job || !job.pdfUrl) return null;
+                          // const pdfFilename = job.pdfUrl.split('/').pop();
+                          const pdfFilename = job.pdfUrl ? encodeURIComponent(job.pdfUrl.split('/').pop()?.trim() ?? "") : "";
+                          const progressKey = `${baseUrl}/api/access-file?filename=${pdfFilename}`;
+                          const jobProgress = progress[progressKey] ?? 0;
+                          // style={{ width: `${jobProgress}%` }}
+                          // {jobProgress}%
                           return (
                             <tr key={job._id} className="">
                               <td className=" px-4 py-2 text-black">
@@ -1464,15 +1470,15 @@ const MasterPage = () => {
                             </td> */}
 
                               <td className="px-4 py-2">
-                                <div className="w-full bg-gray-200 rounded-full h-4 relative">
+                                <div className={`${jobProgress === 1 ? "bg-[rgba(252,197,197,0.1)]" : "bg-gray-200"} w-full rounded-full h-4 relative`}>
                                   <div
-                                    className="bg-[#005B97] h-4 rounded-full relative transition-all duration-500 ease-in-out"
-                                    style={{ width: `${progress[job.pdfUrl] ?? 0}%` }}
+                                    className={`bg-[#005B97] h-4 rounded-full relative transition-all duration-500 ease-in-out`}
+                                    style={{ width: `${jobProgress}%` }}
                                   >
                                     <span
-                                      className="absolute top-1/2 right-[-1.01rem] transform -translate-y-1/2 translate-x-1/2 flex items-center px-2 h-6 text-[#005B97] bg-gray-300 font-semibold text-sm"
+                                      className={`absolute top-1/2 right-[-1.01rem] transform -translate-y-1/2 translate-x-1/2 flex items-center px-2 h-6 text-[#005B97] ${jobProgress === 1 ? "bg-gray-300" : "bg-gray-300"}  font-semibold text-sm`}
                                     >
-                                      {progress[job.pdfUrl] ?? 0}%
+                                      {jobProgress === 1 ? 0 : jobProgress}%
                                     </span>
                                   </div>
                                 </div>
@@ -1480,22 +1486,22 @@ const MasterPage = () => {
 
                               <td className="px-4 py-2 text-center">
                                 <span
-                                  className={`px-3 py-2 rounded-full text-base font-medium ${progress[job.pdfUrl] === 100
+                                  className={`px-3 py-2 rounded-full text-base font-medium ${jobProgress === 100
                                     ? "bg-[#28A4AD1A] text-[#28A4AD]"
-                                    : progress[job.pdfUrl] > 0
+                                    : jobProgress > 1
                                       ? "bg-[#FCB0401A] text-[#FCB040]"
-                                      : progress[job.pdfUrl] === 0
-                                        ? "bg-[#FF4D4D1A] text-[#FF4D4D]"
-                                        : "bg-[#005B971A] text-[#005B97]"
+                                      : jobProgress === 0
+                                        ? "bg-[#005B971A] text-[#005B97]"
+                                        : jobProgress === 1 ? "bg-[rgba(252,197,197,0.1)] text-[#FF4D4D]" : ""
                                     }`}
                                 >
-                                  {progress[job.pdfUrl] === 100
+                                  {jobProgress === 100
                                     ? "Valid"
-                                    : progress[job.pdfUrl] > 0
+                                    : jobProgress > 1
                                       ? "In Progress"
-                                      : progress[job.pdfUrl] === 0
-                                        ? "Failed"
-                                        : "New"}
+                                      : jobProgress === 0
+                                        ? "New"
+                                        : jobProgress === 1 ? "Failed" : ""}
                                 </span>
                               </td>
 

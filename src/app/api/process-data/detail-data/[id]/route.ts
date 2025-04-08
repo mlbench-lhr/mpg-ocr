@@ -68,6 +68,14 @@ export async function PATCH(req: Request) {
 
     const updatedJobData = await req.json();
 
+    const intFields = ["blNumber", "totalQty", "received", "damaged", "short", "over", "refused"];
+    for (const field of intFields) {
+      const value = updatedJobData[field];
+      if (typeof value === "string" && /^\d+$/.test(value)) {
+        updatedJobData[field] = parseInt(value, 10);
+      }
+    }
+
     const headers = req.headers;
     const changedBy = headers.get("x-user-name") || "Unknown User";
 
