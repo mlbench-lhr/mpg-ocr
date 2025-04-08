@@ -16,7 +16,7 @@ export default function DBConnectionPage() {
     const [ipAddress, setIpAddress] = useState("");
     const [portNumber, setPortNumber] = useState("");
     const [serviceName, setServiceName] = useState("");
-    const [checkbox, setCheckBox] = useState(true);
+    const [checkbox, setCheckBox] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [buttonloading, setButttonLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -199,7 +199,7 @@ export default function DBConnectionPage() {
     //     // }, [isLoading, handleJobsAPI]);
     // }, [isLoading]);
 
-     // useEffect(() => {
+    // useEffect(() => {
     //     if (loadingComplete) {
     //         console.log("numan");
     //         handleDBConnection();
@@ -230,14 +230,47 @@ export default function DBConnectionPage() {
         if (!checkbox) {
             setButttonLoading(true);
             router.push("/jobs");
+
+            const token = localStorage.getItem("token");
+
+            if (!token) {
+                setError("You are not authenticated. Please log in again.");
+                return;
+            }
+
+            const res = await fetch("/api/auth/db", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    systemID,
+                    userName,
+                    password,
+                    ipAddress,
+                    portNumber,
+                    serviceName,
+                    dataBase,
+                }),
+            });
+
+            await res.json();
+
+            // if (!res.ok) {
+            //     throw new Error(data.message || "Failed to connect to the database");
+            // }
             return;
         }
 
-        const validationError = validateForm();
-        if (validationError) {
-            setError(validationError);
-            return;
+        if (checkbox) {
+            const validationError = validateForm();
+            if (validationError) {
+                setError(validationError);
+                return;
+            }
         }
+
 
         // Start progress bar
         setIsLoading(true);
@@ -265,7 +298,7 @@ export default function DBConnectionPage() {
     // API call AFTER progress reaches 100%
     useEffect(() => {
         if (loadingComplete) {
-            console.log("⏳ Sending data to backend...");
+            // console.log("⏳ Sending data to backend...");
 
             const sendDBConnection = async () => {
                 try {
@@ -291,6 +324,7 @@ export default function DBConnectionPage() {
                             portNumber,
                             serviceName,
                             dataBase,
+                            checkbox,
                         }),
                     });
 
@@ -337,9 +371,9 @@ export default function DBConnectionPage() {
                     <LoadingSpinner percentage={percentage} />
                 ) : (
                     <form onSubmit={handleSubmit}>
-                        <div className="mb-3 text-center text-gray-400">
+                        {/* <div className="mb-3 text-center text-gray-400">
                             <p>If unchecked, connects through API, not DB</p>
-                        </div>
+                        </div> */}
 
                         {error && <p className="text-red-500 text-center mb-3">{error}</p>}
 
@@ -434,11 +468,10 @@ export default function DBConnectionPage() {
                                 value={dataBase}
                                 onChange={(e) => setDataBase(e.target.value)}
                                 className="w-full px-4 py-2 mt-1 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] cursor-pointer"
-                                required
                             >
                                 <option value="remote">Remote DB</option>
                                 <option value="local">Local DB</option>
-                                <option value="api">API</option>
+                                {/* <option value="api">API</option> */}
                             </select>
                         </div>
 

@@ -3,7 +3,6 @@ const utc = require("dayjs/plugin/utc");
 const isBetween = require("dayjs/plugin/isBetween");
 const cron = require("node-cron");
 const fetch = require("node-fetch");
-
 console.log("✅ Cron job script started...");
 
 dayjs.extend(utc);
@@ -19,13 +18,18 @@ cron.schedule("*/1 * * * *", async () => {
     const res = await fetch("http://localhost:3000/api/ipAddress/ip-address");
     const data_2 = await res.json();
 
-    let ocrUrl, baseUrl;
+    const res1 = await fetch("http://localhost:3000/api/save-wms-url");
+    const data_0 = await res1.json();
+
+    let ocrUrl, baseUrl, wmsUrl, userName, passWord;
 
     if (data_2.ip) {
       ocrUrl = `http://${data_2.ip}:8080/run-ocr`;
       baseUrl = `http://${data_2.secondaryIp}:3000`;
+      wmsUrl = data_0.wmsUrl;
+      userName = data_0.username;
+      passWord = data_0.password;
     }
-
 
     if (jobs && Array.isArray(jobs.activeJobs)) {
       for (const job of jobs.activeJobs) {
@@ -46,7 +50,6 @@ cron.schedule("*/1 * * * *", async () => {
 
               // console.log("My name is Numan 1122", data_1[0]?.fileId);
               // console.log("My name is Numan 1133", data_1[0]?.fileTable);
-
 
               // const file_response = await fetch(`http://localhost:3000/api/pod/file?fileId=${data_1.fileId}&fileTable=${data_1.fileTable}`);
               const file_response = await fetch(`http://localhost:3000/api/pod/file?fileId=${data_1[0]?.fileId}&fileTable=${data_1[0]?.fileTable}`);
@@ -170,6 +173,52 @@ cron.schedule("*/1 * * * *", async () => {
 
                   const processedDataObject = processedDataArray.length > 0 ? processedDataArray[0] : {};
 
+                  // console.log('numan obj', String(processedDataObject.blNumber));
+                  // console.log('numan array', processedDataArray);
+                  // console.log('numan array', processedDataArray[0]['recognitionStatus']);
+
+                  const fetchSAPOData = async () => {
+                    const sapUrl = wmsUrl;
+                    const username = userName;
+                    const password = passWord;
+                    const basicAuth = Buffer.from(`${username}:${password}`).toString('base64');
+                    const BOLNo = [String(processedDataObject.blNumber)];
+                    try {
+                      const response = await fetch(sapUrl, {
+                        method: 'POST',
+                        headers: {
+                          'Authorization': `Basic ${basicAuth}`,
+                          'Accept': 'application/json',
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                          BOLNo: BOLNo
+                        })
+                      });
+
+                      if (!response.ok) {
+                        throw new Error(`SAP API returned ${response.status}`);
+                      }
+
+                      const data = await response.json();
+                      if (String(processedDataObject.blNumber).trim() === data[0].BOLNo.trim()) {
+                        console.log("Matched!");
+                        processedDataObject.recognitionStatus = "valid";
+                        processedDataArray[0].recognitionStatus = "valid";
+                      } else {
+                        console.log("Not matched!");
+                        processedDataObject.recognitionStatus = "failure";
+                        processedDataArray[0].recognitionStatus = "failure";
+
+                      }
+                    } catch (error) {
+                      console.error('Error 12346:', error);
+                    }
+                  };
+
+                  fetchSAPOData();
+
+
                   const check_res = await fetch("http://localhost:3000/api/settings/auto-confirmation");
                   const data_4 = await check_res.json();
                   const check = data_4.isAutoConfirmationOpen;
@@ -185,6 +234,7 @@ cron.schedule("*/1 * * * *", async () => {
                       .then((data) => console.log("Update Response:", data))
                       .catch((error) => console.error("Update Error:", error));
                   }
+
                   const saveResponse = await fetch("http://localhost:3000/api/process-data/save-data", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },

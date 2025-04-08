@@ -25,7 +25,7 @@ export async function PUT(req: Request) {
         const connection = await getOracleConnection(userName, password, ipAddress, portNumber, serviceName);
 
         const columnTypeQuery = await connection.execute(
-            `SELECT DATA_TYPE FROM ALL_TAB_COLUMNS WHERE TABLE_NAME = 'XTI_FILE_POD_OCR_T' AND COLUMN_NAME = 'OCR_STMP_POD_DTT'`,
+            `SELECT DATA_TYPE FROM ALL_TAB_COLUMNS WHERE TABLE_NAME = 'JDATM_PROD.XTI_FILE_POD_OCR_T' AND COLUMN_NAME = 'OCR_STMP_POD_DTT'`,
             [],
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
@@ -43,7 +43,7 @@ export async function PUT(req: Request) {
         }
 
         await connection.execute(
-            `UPDATE XTI_FILE_POD_OCR_T
+            `UPDATE JDATM_PROD.XTI_FILE_POD_OCR_T
             SET OCR_BOLNO = :bolNo, 
                 OCR_ISSQTY = :issQty, 
                 OCR_RCVQTY = :rcvQty,

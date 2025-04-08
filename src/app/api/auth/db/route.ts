@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     const missingFields = [];
     if (!systemID) missingFields.push("systemID");
     if (!userName) missingFields.push("userName");
-    if (!password) missingFields.push("password");
+    // if (!password) missingFields.push("password");
     if (!ipAddress) missingFields.push("ipAddress");
     if (!portNumber) missingFields.push("portNumber");
     if (!serviceName) missingFields.push("serviceName");
@@ -102,37 +102,72 @@ export async function POST(req: NextRequest) {
 
     let oracleMessage = "Unknown status";
 
-    try {
-      connection = await oracledb.getConnection({
-        user: userName,
-        password,
-        connectString: `${ipAddress}:${portNumber}/${serviceName}`,
-      });
+    if (dataBase !== "local") {
+      try {
+        connection = await oracledb.getConnection({
+          user: userName,
+          password,
+          connectString: `${ipAddress}:${portNumber}/${serviceName}`,
+        });
 
-      const result = await connection.execute(
-        "SELECT 'Connected' AS status FROM dual",
-        [],
-        { outFormat: oracledb.OUT_FORMAT_OBJECT }
-      );
+        const result = await connection.execute(
+          "SELECT 'Connected' AS status FROM dual",
+          [],
+          { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
 
-      if (!result.rows || result.rows.length === 0) {
-        throw new Error("OracleDB connection test failed: No response from database.");
+        if (!result.rows || result.rows.length === 0) {
+          throw new Error("OracleDB connection test failed: No response from database.");
+        }
+
+        const rows = result.rows as { status: string }[] | undefined;
+        oracleMessage = rows?.length ? rows[0].status : "No data";
+
+      } catch (oracleError: unknown) {
+        console.error("Error connecting to OracleDB:", oracleError);
+        const errorMessage = oracleError instanceof Error ? oracleError.message : "An unknown error occurred";
+
+        return NextResponse.json(
+          { success: false, message: "Failed to connect to OracleDB. Please check credentials.", error: errorMessage },
+          { status: 500 }
+        );
       }
-
-      const rows = result.rows as { status: string }[] | undefined;
-      oracleMessage = rows?.length ? rows[0].status : "No data";
-
-    } catch (oracleError: unknown) {
-      console.error("Error connecting to OracleDB:", oracleError);
-
-      const errorMessage =
-        oracleError instanceof Error ? oracleError.message : "An unknown error occurred";
-
-      return NextResponse.json(
-        { success: false, message: "Failed to connect to OracleDB. Please check credentials.", error: errorMessage },
-        { status: 500 }
-      );
+    } else {
+      oracleMessage = "Skipped OracleDB connection for local database";
     }
+
+
+    // try {
+    //   connection = await oracledb.getConnection({
+    //     user: userName,
+    //     password,
+    //     connectString: `${ipAddress}:${portNumber}/${serviceName}`,
+    //   });
+
+    //   const result = await connection.execute(
+    //     "SELECT 'Connected' AS status FROM dual",
+    //     [],
+    //     { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    //   );
+
+    //   if (!result.rows || result.rows.length === 0) {
+    //     throw new Error("OracleDB connection test failed: No response from database.");
+    //   }
+
+    //   const rows = result.rows as { status: string }[] | undefined;
+    //   oracleMessage = rows?.length ? rows[0].status : "No data";
+
+    // } catch (oracleError: unknown) {
+    //   console.error("Error connecting to OracleDB:", oracleError);
+
+    //   const errorMessage =
+    //     oracleError instanceof Error ? oracleError.message : "An unknown error occurred";
+
+    //   return NextResponse.json(
+    //     { success: false, message: "Failed to connect to OracleDB. Please check credentials.", error: errorMessage },
+    //     { status: 500 }
+    //   );
+    // }
 
     const result = await connectionsCollection.updateOne(
       { userId: userObjId },
@@ -180,28 +215,28 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const token = req.headers.get("Authorization")?.split(" ")[1];
-    console.log("Token received:", token);
+    // console.log("Token received:", token);
 
     if (!token) {
       return NextResponse.json({ success: false, message: "Authentication required" }, { status: 401 });
     }
 
     const { id: userId } = jwt.verify(token, SECRET_KEY) as { id: string };
-    console.log("Decoded userId:", userId);
+    // console.log("Decoded userId:", userId);
 
     const client = await clientPromise;
-    console.log("MongoDB Client:", client);
+    // console.log("MongoDB Client:", client);
 
     const db = client.db(DB_NAME);
     const connectionsCollection = db.collection("db_connections");
 
     const connection = await connectionsCollection.findOne({ userId: new ObjectId(userId) });
-    console.log("Fetched connection:", connection);
+    // console.log("Fetched connection:", connection);
 
     if (!connection) {
       return NextResponse.json({ success: false, message: "No data found" }, { status: 404 });
     }
-    
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...connectionWithoutPassword } = connection;
 

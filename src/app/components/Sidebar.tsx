@@ -39,10 +39,56 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     const [isEditing, setIsEditing] = useState(false);
 
     const [wmsUrl, setWmsUrl] = useState("");
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const [saved, setSaved] = useState(false);
     const [originalUrl, setOriginalUrl] = useState(""); // Store the fetched URL
+    const [originalUsername, setOriginalUsername] = useState("");
+    const [originalPassword, setOriginalPassword] = useState("");
+
     const [isInputActive, setIsInputActive] = useState(false); // Track input foc
+
+    // useEffect(() => {
+    //     const fetchWmsUrl = async () => {
+    //         try {
+    //             const response = await fetch("/api/save-wms-url");
+    //             const data = await response.json();
+    //             if (response.ok && data.wmsUrl) {
+    //                 setWmsUrl(data.wmsUrl);
+    //                 setOriginalUrl(data.wmsUrl);
+    //             }
+    //         } catch (error) {
+    //             console.error("Error fetching WMS URL:", error);
+    //         }
+    //     };
+
+    //     fetchWmsUrl();
+    // }, []);
+
+    // const handleSave = async () => {
+    //     setIsSaving(true);
+    //     try {
+    //         const response = await fetch("/api/save-wms-url", {
+    //             method: "POST",
+    //             headers: { "Content-Type": "application/json" },
+    //             body: JSON.stringify({ wmsUrl }),
+    //         });
+
+    //         if (response.ok) {
+    //             setSaved(true);
+    //             setOriginalUrl(wmsUrl); // Update stored URL after save
+    //             setTimeout(() => setSaved(false), 3000); // Hide success message after 10 sec
+    //         } else {
+    //             console.error("Failed to save WMS URL");
+    //         }
+    //     } catch (error) {
+    //         console.error("Error saving WMS URL:", error);
+    //     } finally {
+    //         setIsSaving(false);
+    //     }
+    // };
+
 
     useEffect(() => {
         const fetchWmsUrl = async () => {
@@ -51,7 +97,11 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                 const data = await response.json();
                 if (response.ok && data.wmsUrl) {
                     setWmsUrl(data.wmsUrl);
-                    setOriginalUrl(data.wmsUrl); // Store the original URL
+                    setOriginalUrl(data.wmsUrl);
+                    setUsername(data.username || "");
+                    setOriginalUsername(data.username || "");
+                    setPassword(data.password || "");
+                    setOriginalPassword(data.password || "");
                 }
             } catch (error) {
                 console.error("Error fetching WMS URL:", error);
@@ -67,14 +117,19 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
             const response = await fetch("/api/save-wms-url", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ wmsUrl }),
+                body: JSON.stringify({ wmsUrl, username, password }),
             });
 
             if (response.ok) {
                 setSaved(true);
-                setOriginalUrl(wmsUrl); // Update stored URL after save
-                setTimeout(() => setSaved(false), 3000); // Hide success message after 10 sec
-            } else {
+                setOriginalUrl(wmsUrl);
+                setOriginalUsername(username);
+                setOriginalPassword(password);
+
+                // Hide success message after 3 sec
+                setTimeout(() => setSaved(false), 3000);
+            }
+            else {
                 console.error("Failed to save WMS URL");
             }
         } catch (error) {
@@ -83,7 +138,6 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
             setIsSaving(false);
         }
     };
-
 
     useEffect(() => {
         const preloadImage = new window.Image();
@@ -302,7 +356,7 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     return (
         <>
             <div
-                className={`fixed top-0 left-0 bg-gray-100 text-gray-800 h-screen z-50 transform transition-all duration-300 ease-in-out ${!isExpanded ? "w-24" : "w-64"
+                className={`fixed top-0 left-0 bg-gray-100 text-gray-800 h-screen z-30 transform transition-all duration-300 ease-in-out ${!isExpanded ? "w-24" : "w-64"
                     } flex flex-col justify-between`}
             >
                 <div className="flex items-center justify-center h-20 bg-gray-100">
@@ -659,11 +713,11 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                                 <TbCloudDataConnection className="text-[#005B97] text-2xl" />
                                             </Link>
                                         </li>
-                                        <li className="p-2 border-b">
-                                            <span className="block mb-1">WMS API IP Address</span>
+                                        {/* <li className="p-2 border-b">
+                                            <span className="block mb-1">WMS API Address</span>
                                             <input
                                                 type="text"
-                                                placeholder="192.168.1.20"
+                                                placeholder="Address..."
                                                 value={wmsUrl}
                                                 onChange={(e) => {
                                                     setWmsUrl(e.target.value);
@@ -684,7 +738,63 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                                 </button>
                                             )}
 
-                                            {saved && <p className="text-[#005B97] mt-2">WMS api ip address saved successfully!</p>}
+                                            {saved && <p className="text-[#005B97] mt-2">WMS api address saved successfully!</p>}
+                                        </li> */}
+
+                                        <li className="p-2 border-b">
+                                            <span className="block mb-1">WMS API</span>
+                                            <input
+                                                type="text"
+                                                placeholder="Address..."
+                                                value={wmsUrl}
+                                                onChange={(e) => {
+                                                    setWmsUrl(e.target.value);
+                                                    setSaved(false);
+                                                }}
+                                                onFocus={() => setIsInputActive(true)}
+                                                onBlur={() => setIsInputActive(false)}
+                                                className="w-full p-2 border border-gray-300 rounded"
+                                            />
+
+                                            <span className="block mt-2 mb-1">Username</span>
+                                            <input
+                                                type="text"
+                                                placeholder="Username..."
+                                                value={username}
+                                                onChange={(e) => setUsername(e.target.value)}
+                                                onFocus={() => setIsInputActive(true)}
+                                                onBlur={() => setIsInputActive(false)}
+                                                className="w-full p-2 border border-gray-300 rounded"
+                                            />
+
+                                            <span className="block mt-2 mb-1">Password</span>
+                                            <input
+                                                type="password"
+                                                placeholder="Password..."
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                onFocus={() => setIsInputActive(true)}
+                                                onBlur={() => setIsInputActive(false)}
+                                                className="w-full p-2 border border-gray-300 rounded"
+                                            />
+
+
+
+                                            {!saved && (isInputActive ||
+                                                wmsUrl !== originalUrl ||
+                                                username !== originalUsername ||
+                                                password !== originalPassword) && (
+                                                    <button
+                                                        onClick={handleSave}
+                                                        className="mt-2 px-5 py-1 text-base bg-[#005B97] text-white rounded hover:bg-[#3794d2]"
+                                                        disabled={isSaving}
+                                                    >
+                                                        {isSaving ? "Saving..." : "Save"}
+                                                    </button>
+                                                )}
+
+
+                                            {saved && <p className="text-[#005B97] mt-2">WMS details saved successfully!</p>}
                                         </li>
                                         <li className="p-2 border-b">
                                             <div className="flex justify-between items-center">
@@ -753,7 +863,7 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
             <button
                 onClick={toggleExpand}
                 className={`fixed top-16 ${isExpanded ? "translate-x-60" : "translate-x-20"
-                    } z-50 text-white px-[2px] rounded-full transition-all duration-300 ease-in-out flex items-center justify-center`
+                    } z-30 text-white px-[2px] rounded-full transition-all duration-300 ease-in-out flex items-center justify-center`
                 }
             >
                 <span
