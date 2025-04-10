@@ -168,16 +168,16 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, fetchJobs })
         if (files.length === 0) return;
         setUploading(true);
         setProgress({});
-    
+
         for (const file of files) {
             const formData = new FormData();
             formData.append("pdf_file", file);
-    
+
             setProgress((prev) => ({
                 ...prev,
                 [file.name]: 0,
             }));
-    
+
             try {
                 await axios.post("/api/file/upload-pdf", formData, {
                     headers: { "Content-Type": "multipart/form-data" },
@@ -185,19 +185,19 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, fetchJobs })
                         const percentCompleted = Math.round(
                             (progressEvent.loaded * 100) / (progressEvent.total || 1)
                         );
-    
+
                         setProgress((prev) => ({
                             ...prev,
                             [file.name]: Math.min(percentCompleted, 100),
                         }));
                     },
                 });
-    
+
                 setProgress((prev) => ({
                     ...prev,
                     [file.name]: 100,
                 }));
-    
+
             } catch (error) {
                 console.error(`Error uploading ${file.name}:`, error);
                 setProgress((prev) => ({
@@ -206,16 +206,16 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, fetchJobs })
                 }));
             }
         }
-    
+
         fetchJobs();
         setUploading(false);
         clearAll();
         onClose();
     };
-    
-    
-    
-    
+
+
+
+
 
     const clearAll = () => {
         setFiles([]);
@@ -225,9 +225,19 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, fetchJobs })
     return isOpen ? (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                <h2 className="text-xl font-semibold mb-5 text-black text-center">Upload PDFs</h2>
-                <p className="mb-2 text-black">Select multiple PDFs</p>
-                <input type="file" multiple onChange={handleFileChange} accept="application/pdf" className="mb-4 text-black" disabled={uploading} />
+                <h2 className="text-xl font-semibold mb-5 text-black text-center">Upload Files</h2>
+                <p className="mb-2 text-black">Select multiple Files</p>
+                {/* <input type="file" multiple onChange={handleFileChange} accept="application/pdf" className="mb-4 text-black" disabled={uploading} /> */}
+
+                <input
+                    type="file"
+                    multiple
+                    onChange={handleFileChange}
+                    className="mb-4 text-black"
+                    disabled={uploading}
+                    accept=".jpg, .jpeg, .pdf, .tiff, .tif, .bmp, .png"
+                />
+
 
                 {files.length > 0 && (
                     <div className=" h-80 overflow-y-scroll">

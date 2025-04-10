@@ -25,15 +25,18 @@ export async function PUT(req: Request) {
         const connection = await getOracleConnection(userName, password, ipAddress, portNumber, serviceName);
 
         const columnTypeQuery = await connection.execute(
-            `SELECT DATA_TYPE FROM ALL_TAB_COLUMNS WHERE TABLE_NAME = 'JDATM_PROD.XTI_FILE_POD_OCR_T' AND COLUMN_NAME = 'OCR_STMP_POD_DTT'`,
+            `SELECT DATA_TYPE 
+             FROM ALL_TAB_COLUMNS 
+             WHERE OWNER = 'JDATM_PROD' AND TABLE_NAME = 'XTI_FILE_POD_OCR_T' AND COLUMN_NAME = 'OCR_STMP_POD_DTT'`,
             [],
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
+
         const rows = columnTypeQuery.rows as Array<{ DATA_TYPE: string }> | undefined;
         const columnType = rows && rows.length > 0 ? rows[0].DATA_TYPE : null;
 
-        console.log("Column Type for OCR_STMP_POD_DTT:", columnType);
+        // console.log("Column Type for OCR_STMP_POD_DTT:", columnType);
 
         let podDateValue = null;
         if (ocrData.podDate && columnType === "DATE") {

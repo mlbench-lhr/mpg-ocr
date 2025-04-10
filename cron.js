@@ -88,6 +88,7 @@ cron.schedule("*/1 * * * *", async () => {
                   breakdownReason: "none",
                   reviewedBy: "",
                   cargoDescription: "",
+                  sealIntact: "",
                 };
 
                 fetch("http://localhost:3000/api/process-data/save-data", {
@@ -167,7 +168,11 @@ cron.schedule("*/1 * * * *", async () => {
                       reviewedBy: "OCR Engine",
                       cargoDescription: "Processed from OCR API.",
                       none: "N",
-                      sealIntact: "N",
+                      sealIntact: data?.Seal_Intact === "yes"
+                        ? "Y"
+                        : data?.Seal_Intact === "no"
+                          ? "N"
+                          : data?.Seal_Intact,
                     };
                   });
 

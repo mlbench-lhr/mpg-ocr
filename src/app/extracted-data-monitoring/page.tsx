@@ -51,6 +51,7 @@ interface Job {
   recognitionStatus: RecognitionStatus;
   breakdownReason: BreakdownReason;
   reviewedBy: string;
+  sealIntact: string;
   cargoDescription: string;
   createdAt: string;
   updatedAt?: string;
@@ -517,6 +518,11 @@ const MasterPage = () => {
                 breakdownReason: "none",
                 reviewedBy: "OCR Engine",
                 cargoDescription: "Processed from OCR API.",
+                sealIntact: data?.Seal_Intact === "yes"
+                  ? "Y"
+                  : data?.Seal_Intact === "no"
+                    ? "N"
+                    : data?.Seal_Intact,
               };
             });
 
@@ -1383,7 +1389,7 @@ const MasterPage = () => {
                 onClick={() => setIsModalOpen(true)}
               >
                 <FiUpload className="text-xl" />
-                <span>Upload PDF</span>
+                <span>Upload File</span>
               </button>
 
               <p
@@ -1450,7 +1456,13 @@ const MasterPage = () => {
                           return (
                             <tr key={job._id} className="">
                               <td className=" px-4 py-2 text-black">
-                                {job.pdfUrl ? job.pdfUrl.split('/').pop()?.replace('.pdf', '') || "No PDF Available" : "No PDF Available"}
+                                {/* {job.pdfUrl ? job.pdfUrl.split('/').pop()?.replace('.pdf', '') || "No PDF Available" : "No PDF Available"} */}
+                                {job.pdfUrl
+                                  ? (() => {
+                                    const fileName = job.pdfUrl.split('/').pop()?.replace('.pdf', '.pdf') || "No PDF Available";
+                                    return fileName.length > 15 ? fileName.substring(0, 19) + "..." : fileName;
+                                  })()
+                                  : "No PDF Available"}
                               </td>
                               {/* <td className=" px-4 py-2">
 
@@ -1633,7 +1645,7 @@ const MasterPage = () => {
                           <td className="py-2 px-4 border-b text-center sticky left-44 bg-white z-10 min-w-44 max-w-44 truncate">
                             {job.pdfUrl
                               ? (() => {
-                                const fileName = job.pdfUrl.split('/').pop()?.replace('.pdf', '') || "No PDF Available";
+                                const fileName = job.pdfUrl.split('/').pop()?.replace('.pdf', '.pdf') || "No PDF Available";
                                 return fileName.length > 15 ? fileName.substring(0, 15) + "..." : fileName;
                               })()
                               : "No PDF Available"}

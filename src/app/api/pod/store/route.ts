@@ -23,11 +23,11 @@ export async function POST(req: Request) {
         const { userName, password, ipAddress, portNumber, serviceName } = userDBCredentials;
         const connection = await getOracleConnection(userName, password, ipAddress, portNumber, serviceName);
 
-    //     await connection.execute(
-    //         `INSERT INTO XTI_FILE_POD_OCR_T (FILE_ID, CRTD_USR_CD, CRTD_DTT, SENT_FILE_DTT)
-    //    VALUES (:fileId, 'OCR', SYSDATE, SYSDATE)`,
-    //         [fileId]
-    //     );
+        //     await connection.execute(
+        //         `INSERT INTO XTI_FILE_POD_OCR_T (FILE_ID, CRTD_USR_CD, CRTD_DTT, SENT_FILE_DTT)
+        //    VALUES (:fileId, 'OCR', SYSDATE, SYSDATE)`,
+        //         [fileId]
+        //     );
 
         await connection.execute(
             `INSERT INTO JDATM_PROD.XTI_FILE_POD_OCR_T (FILE_ID, CRTD_USR_CD, CRTD_DTT, SENT_FILE_DTT)
@@ -35,7 +35,15 @@ export async function POST(req: Request) {
              FROM JDATM_PROD.XTI_FILE_POD_T B
              WHERE B.FILE_ID = :fileId`,
             [fileId]
-          );
+        );
+
+        // await connection.execute(
+        // `INSERT INTO NUMAN.XTI_FILE_POD_OCR_T (FILE_ID, CRTD_USR_CD, CRTD_DTT, SENT_FILE_DTT)
+        //     SELECT B.FILE_ID, 'OCR', SYSDATE, SYSDATE
+        //     FROM NUMAN.XTI_FILE_POD_T B
+        //     WHERE B.FILE_ID = :fileId`,
+        // [fileId]
+        // );
 
         await connection.commit();
         await connection.close();
