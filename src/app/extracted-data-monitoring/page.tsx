@@ -29,7 +29,6 @@ type ReviewStatus = "unConfirmed" | "confirmed" | "denied" | "deleted";
 type RecognitionStatus = "new" | "inProgress" | "valid" | "partiallyValid" | "failure" | "sent";
 type BreakdownReason = "none" | "damaged" | "shortage" | "overage" | "refused";
 
-
 interface Job {
   _id: string;
   blNumber: string;
@@ -58,8 +57,6 @@ interface Job {
   customerOrderNum?: string | string[] | null;
 }
 
-
-
 const options = [
   { value: "blNumber", label: "BL Number" },
   { value: "jobName", label: "Job Name" },
@@ -73,6 +70,7 @@ const options = [
   { value: "refused", label: "Refused Qty" },
   { value: "customerOrderNum", label: "Customer Order Num" },
   { value: "stampExists", label: "Stamp Exists" },
+  { value: "sealIntact", label: "Seal Intact" },
   { value: "finalStatus", label: "Final Status" },
   { value: "reviewStatus", label: "Review Status" },
   { value: "recognitionStatus", label: "Recognition Status" },
@@ -1597,6 +1595,7 @@ const MasterPage = () => {
                       <th className="py-2 px-4 border-b text-center min-w-32">POD Date</th>
                       <th className="py-2 px-4 border-b text-center min-w-36">Stamp Exists</th>
                       <th className="py-2 px-4 border-b text-center min-w-40">Signature Exists</th>
+                      <th className="py-2 px-4 border-b text-center min-w-36">Seal Intact</th>
                       <th className="py-2 px-4 border-b text-center min-w-32">Issued Qty</th>
                       <th className="py-2 px-4 border-b text-center min-w-36">Received Qty</th>
                       <th className="py-2 px-4 border-b text-center min-w-36">Damaged Qty</th>
@@ -1667,6 +1666,13 @@ const MasterPage = () => {
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>
                             ) : job.podSignature}
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.sealIntact === null || job.sealIntact === undefined ? (
+                              <span className="flex justify-center items-center">
+                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                              </span>
+                            ) : job.sealIntact}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
                             {job.totalQty === null || job.totalQty === undefined ? (

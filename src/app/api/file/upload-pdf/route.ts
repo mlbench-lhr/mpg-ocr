@@ -132,16 +132,16 @@
 //         // });
 //     } catch (error: unknown) {
 //         console.error("File upload error:", error);
-    
+
 //         let errorMessage = "An unknown error occurred";
-        
+
 //         if (error instanceof Error) {
 //             errorMessage = error.message;
 //         }
-    
+
 //         return NextResponse.json({ message: "Error saving files", error: errorMessage }, { status: 500 });
 //     }
-    
+
 // }
 
 import { NextRequest, NextResponse } from "next/server";
@@ -221,7 +221,18 @@ export async function POST(req: NextRequest) {
                 continue;
             }
 
-            await fs.rename(file.filepath, filePath);
+            // await fs.rename(file.filepath, filePath);
+            try {
+                await fs.rename(file.filepath, filePath)
+            } catch (error) {
+                if (error instanceof Error && (error as any).code === 'EXDEV') {
+                    await fs.copyFile(file.filepath, filePath)
+                    await fs.unlink(file.filepath)
+                } else {
+                    throw error
+                }
+            }
+
             uploadedResults.push({ filename: file.originalFilename, status: "uploaded" });
 
             const fileData = {

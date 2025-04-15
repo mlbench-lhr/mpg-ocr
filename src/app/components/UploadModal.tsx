@@ -105,7 +105,6 @@ interface UploadModalProps {
     isOpen: boolean;
     onClose: () => void;
     fetchJobs: () => void;
-
 }
 
 const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, fetchJobs }) => {
@@ -214,9 +213,6 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, fetchJobs })
     };
 
 
-
-
-
     const clearAll = () => {
         setFiles([]);
         setProgress({});
@@ -235,7 +231,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, fetchJobs })
                     onChange={handleFileChange}
                     className="mb-4 text-black"
                     disabled={uploading}
-                    accept=".jpg, .jpeg, .pdf, .tiff, .tif, .bmp, .png"
+                    accept=".jpg, .jpeg, .pdf, .bmp, .png"
                 />
 
 

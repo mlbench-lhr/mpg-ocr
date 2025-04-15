@@ -25,6 +25,7 @@ interface Job {
     refused: number;
     noOfPages: number;
     stampExists: string;
+    sealIntact: string;
     finalStatus: string;
     reviewStatus: string;
     recognitionStatus: string;
@@ -50,6 +51,7 @@ const JobDetail = () => {
         over: "",
         refused: "",
         stampExists: "",
+        sealIntact: "",
     });
     const [isEditMode, setIsEditMode] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -63,6 +65,11 @@ const JobDetail = () => {
     const handleSidebarStateChange = (newState: boolean) => {
         // setIsSidebarExpanded(newState);
         return newState;
+    };
+
+    const isSupportedFormat = (fileName: string) => {
+        const ext = fileName.toLowerCase().split(".").pop();
+        return ["pdf", "jpg", "jpeg", "png", "bmp"].includes(ext || "");
     };
 
     // const formatDateForInput = (dateStr: string | null) => {
@@ -89,15 +96,11 @@ const JobDetail = () => {
         return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
     };
 
-
-
-
     const formatDateForDB = (dateStr: string) => {
         if (!dateStr) return "";
         const [year, month, day] = dateStr.split("-");
         return `${month}/${day}/${year.slice(-2)}`;
     };
-
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -145,6 +148,7 @@ const JobDetail = () => {
                             over: data.over ?? "",
                             refused: data.refused ?? "",
                             stampExists: data.stampExists ?? "",
+                            sealIntact: data.sealIntact ?? "",
                         });
                         setLoading(false);
                     }
@@ -187,6 +191,7 @@ const JobDetail = () => {
             "over",
             "refused",
             "stampExists",
+            "sealIntact",
         ];
 
         if (name === "podDate") {
@@ -328,16 +333,28 @@ const JobDetail = () => {
                                     </div>
                                 )}
 
+                                {fileName && isSupportedFormat(fileName) ? (
+                                    <iframe
+                                        src={`/api/access-file?filename=${fileName}#toolbar=0`}
+                                        className="w-11/12 h-full bg-white"
+                                        loading="lazy"
+                                        onLoad={handleIframeLoad}
+                                    />
+                                ) : (
+                                    <div className="text-center text-red-500">
+                                        Preview not available or filename is missing.
+                                    </div>
+                                )}
 
-                                <iframe
+                                {/* <iframe
                                     // src={`${job.pdfUrl}#toolbar=0`}
                                     src={`/api/access-file?filename=${fileName}#toolbar=0`}
                                     className="w-11/12 h-full bg-white"
                                     loading="lazy"
                                     onLoad={handleIframeLoad}
-                                />
+                                /> */}
                             </div>
-                            <div className="flex-1 bg-gray-100 rounded-xl p-6 flex flex-col  xl:h-[calc(160vh-6rem)] 2xl:h-[calc(120vh-6rem)]">
+                            <div className="flex-1 bg-gray-100 rounded-xl p-6 flex flex-col  xl:h-[calc(170vh-6rem)] 2xl:h-[calc(130vh-6rem)]">
                                 <div className='flex justify-between items-center mb-4'>
                                     <span>
                                         <h3 className="text-xl font-medium text-gray-800">Extracted Data</h3>
