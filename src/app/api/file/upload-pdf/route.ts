@@ -154,6 +154,10 @@ import clientPromise from "@/lib/mongodb";
 
 const DB_NAME = process.env.DB_NAME || "my-next-app";
 
+function isNodeErrorWithCode(error: unknown): error is NodeJS.ErrnoException {
+    return error instanceof Error && typeof (error as NodeJS.ErrnoException).code === 'string';
+}
+
 export const config = {
     api: {
         bodyParser: false,
@@ -223,13 +227,13 @@ export async function POST(req: NextRequest) {
 
             // await fs.rename(file.filepath, filePath);
             try {
-                await fs.rename(file.filepath, filePath)
+                await fs.rename(file.filepath, filePath);
             } catch (error) {
-                if (error instanceof Error && (error as any).code === 'EXDEV') {
-                    await fs.copyFile(file.filepath, filePath)
-                    await fs.unlink(file.filepath)
+                if (isNodeErrorWithCode(error) && error.code === 'EXDEV') {
+                    await fs.copyFile(file.filepath, filePath);
+                    await fs.unlink(file.filepath);
                 } else {
-                    throw error
+                    throw error;
                 }
             }
 
