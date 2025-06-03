@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import sideBarLogo from "../../../public/images/sidbar.svg";
 import { usePathname } from "next/navigation";
-import { FaClipboardList, FaUserPlus } from "react-icons/fa";
+import { FaClipboardList, FaHistory, FaUserPlus } from "react-icons/fa";
 import { BsClipboard2CheckFill } from "react-icons/bs";
 import { IoSettingsSharp, IoLogOut } from "react-icons/io5";
 import { IoIosArrowForward } from "react-icons/io";
@@ -15,6 +15,7 @@ import { TbCloudDataConnection } from "react-icons/tb";
 import { useRouter } from "next/navigation";
 import { IoIosArrowDroprightCircle } from "react-icons/io";
 import { useSidebar } from "../context/SidebarContext";
+import { CiBoxList } from "react-icons/ci";
 
 
 interface SidebarProps {
@@ -48,6 +49,40 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     const [originalPassword, setOriginalPassword] = useState("");
 
     const [isInputActive, setIsInputActive] = useState(false); // Track input foc
+    const [dataBase, setDataBase] = useState("local");
+      const [status, setStatus] = useState<'online' | 'offline' | 'loading'>('loading');
+      console.log(dataBase)
+
+
+
+
+    useEffect(() => {
+        const fetchExistingData = async () => {
+            const token = localStorage.getItem("token");
+            if (!token) {
+
+                router.push("/admin-login");
+                return;
+            }
+
+            const res = await fetch("/api/auth/db", {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                },
+            });
+
+            if (res.ok) {
+                const { data } = await res.json();
+                if (data) {
+
+                    setDataBase(data.dataBase || "");
+                }
+            }
+        };
+
+        fetchExistingData();
+    }, []);
 
     // useEffect(() => {
     //     const fetchWmsUrl = async () => {
@@ -178,6 +213,8 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
             .catch(err => console.error("Failed to fetch IP:", err));
     }, []);
 
+
+
     const handleSaveIP = async () => {
         if (!ip || !secondaryIp) return alert("Please enter an both IP address");
 
@@ -249,6 +286,35 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     // const toggleAutoConfirmation = () => {
     //     setAutoConfirmationOpen((prevState) => !prevState);
     // };
+
+      useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const res = await fetch('/api/oracle/health');
+        const data = await res.json();
+        setStatus(data.status === 'online' ? 'online' : 'offline');
+      } catch (error) {
+        console.error('Error checking Oracle status:', error);
+        setStatus('offline');
+      }
+    };
+
+    checkStatus();
+    const interval = setInterval(checkStatus, 10000); // Refresh every 10s
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const getDotColor = () => {
+    switch (status) {
+      case 'online':
+        return 'bg-green-500';
+      case 'offline':
+        return 'bg-red-500';
+      case 'loading':
+        return 'bg-yellow-500 animate-pulse';
+    }
+  };
 
     const toggleAutoConfirmation = async () => {
         try {
@@ -353,6 +419,8 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
         return pathname?.startsWith(path);
     };
 
+
+
     return (
         <>
             <div
@@ -451,6 +519,62 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                         }}
                                     >
                                         Roles Requests
+                                    </span>
+                                </li>
+                            </Link>
+                        )}
+
+
+                        {userRole === "admin" && (
+                            <Link href="/logs">
+                                <li
+                                    className={`flex items-center mb-2 justify-start
+                                     space-x-3 pl-5 pr-0 py-2 rounded-lg transition-all duration-300 ease-in-out ${isActive("/logs") ? "bg-gray-200" : "hover:bg-gray-200"
+                                        }`}
+                                >
+                                    <span className="flex-shrink-0">
+                                        <FaHistory className={` ${isActive("/logs") ? "text-[#005B97]" : "text-[#7B849A]"
+                                            } transition-all duration-300 ease-in-out text-2xl`} />
+                                    </span>
+                                    <span
+                                        className={`${isActive("/logs") ? " text-gray-950" : "text-gray-400"
+                                            } text-lg transition-all duration-300 ease-in-out`}
+                                        style={{
+                                            width: isExpanded ? "auto" : "0",
+                                            overflow: "hidden",
+                                            whiteSpace: "nowrap",
+                                            opacity: isExpanded ? 1 : 0,
+                                            transition: "opacity 0.3s ease, width 0.3s ease",
+                                        }}
+                                    >
+                                        Logs 
+                                   </span>
+                                </li>
+                            </Link>
+                        )}
+                           {userRole === "admin" && (
+                            <Link href="/pod-ocr">
+                                <li
+                                    className={`flex items-center mb-2 justify-start
+                                     space-x-3 pl-5 pr-0 py-2 rounded-lg transition-all duration-300 ease-in-out ${isActive("/pod-ocr") ? "bg-gray-200" : "hover:bg-gray-200"
+                                        }`}
+                                >
+                                    <span className="flex-shrink-0">
+                                        <CiBoxList className={` ${isActive("/pod-ocr") ? "text-[#005B97]" : "text-[#7B849A]"
+                                            } transition-all duration-300 ease-in-out text-2xl`} />
+                                    </span>
+                                    <span
+                                        className={`${isActive("/pod-ocr") ? " text-gray-950" : "text-gray-400"
+                                            } text-lg transition-all duration-300 ease-in-out`}
+                                        style={{
+                                            width: isExpanded ? "auto" : "0",
+                                            overflow: "hidden",
+                                            whiteSpace: "nowrap",
+                                            opacity: isExpanded ? 1 : 0,
+                                            transition: "opacity 0.3s ease, width 0.3s ease",
+                                        }}
+                                    >
+                                        POD 
                                     </span>
                                 </li>
                             </Link>
@@ -701,12 +825,18 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
 
 
 
-                                        <li className="p-2 hover:bg-gray-200 cursor-pointer border-b">
-                                            <Link href="/db-connection" className="flex justify-between items-center">
-                                                <span>DB Connection</span>
-                                                <FaHouseSignal className="text-[#005B97] text-2xl" />
-                                            </Link>
-                                        </li>
+                                       <li className="p-2 hover:bg-gray-200 cursor-pointer border-b">
+  <Link href="/db-connection" className="flex justify-between items-center">
+    <span>DB Connection</span>
+    <div className="relative">
+      <FaHouseSignal className="text-[#005B97] text-2xl" />
+      <span
+        className={`absolute top-0 right-0 h-[10px] w-[10px] rounded-full ${getDotColor()}`}
+      />
+    </div>
+  </Link>
+</li>
+
                                         <li className="p-2 hover:bg-gray-200 cursor-pointer border-b">
                                             <Link href="/jobs" className="flex justify-between items-center">
                                                 <span>Batch Frequency</span>

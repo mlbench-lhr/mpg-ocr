@@ -385,7 +385,9 @@ const JobDetail = () => {
                                                 {keyMappings[key] || key.replace(/([A-Z])/g, " $1")} :
                                             </label>
                                             <input
-                                                type={key === "podDate" ? "date" : "text"}
+                                                // type={key === "podDate" ? "date" : "text"}
+                                                type={"text"}
+
                                                 name={key}
                                                 value={formData[key as keyof typeof formData]}
                                                 onChange={handleChange}

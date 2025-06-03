@@ -1,0 +1,25 @@
+import React, { useState } from "react";
+
+const FileNameCell = ({ pdfUrl }: { pdfUrl?: string }) => {
+  const [showFull, setShowFull] = useState(false);
+
+  const fileName = pdfUrl?.split("/").pop() || "No PDF Available";
+
+  const isTruncated = fileName.length > 15 && !showFull;
+  const displayName = isTruncated ? fileName.substring(0, 15) + "..." : fileName;
+
+  return (
+    <td
+      className={`py-2 px-4 border-b text-center sticky left-44 bg-white z-10 min-w-44 max-w-44 cursor-pointer ${
+        isTruncated ? "truncate" : "whitespace-normal break-words"
+      }`}
+      onClick={() => setShowFull((prev) => !prev)}
+      title={!showFull ? "Click to show full name" : "Click to hide"}
+    >
+      {displayName}
+    </td>
+  );
+};
+
+
+export default FileNameCell

@@ -110,18 +110,18 @@ export async function POST(req: NextRequest) {
         connection = await oracledb.getConnection({
             user: "numan",
             password: "numan786$",
-            connectString: "192.168.18.126:1539/ORCLCDB",
+            connectString: "192.168.0.145:1539/ORCLCDB",
         });
 
         const check = await connection.execute<{ FILE_DATA: oracledb.Lob }>(
-            `SELECT FILE_DATA FROM XTI_2024_T WHERE FILE_ID = :id FOR UPDATE`,
+            `SELECT FILE_DATA FROM XTI_2025_T WHERE FILE_ID = :id FOR UPDATE`,
             { id: fileId }
         );
 
         let result;
         if (check.rows && check.rows.length > 0) {
             result = await connection.execute(
-                `UPDATE XTI_2024_T 
+                `UPDATE XTI_2025_T 
                  SET FILE_DATA = EMPTY_BLOB(), FILE_NAME = :fileName 
                  WHERE FILE_ID = :id 
                  RETURNING FILE_DATA INTO :blob`,
@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
             );
         } else {
             result = await connection.execute(
-                `INSERT INTO XTI_2024_T (FILE_ID, FILE_DATA, FILE_NAME) 
+                `INSERT INTO XTI_2025_T (FILE_ID, FILE_DATA, FILE_NAME) 
                  VALUES (:id, EMPTY_BLOB(), :fileName) 
                  RETURNING FILE_DATA INTO :blob`,
                 {

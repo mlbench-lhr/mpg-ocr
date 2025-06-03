@@ -10,6 +10,14 @@ dayjs.extend(isBetween);
 
 cron.schedule("*/1 * * * *", async () => {
   try {
+    const dbResponse = await fetch("http://localhost:3000/api/auth/public-db");
+    const dbData = await dbResponse.json();
+
+    console.log("dbData?.database -> ", dbData);
+    if (dbData?.database !== "remote") {
+      console.log("Database is not remote. Skipping job execution.");
+      return;
+    }
 
     const activeJobs = await fetch("http://localhost:3000/api/jobs/get-job");
     const jobs = await activeJobs.json();
@@ -42,29 +50,44 @@ cron.schedule("*/1 * * * *", async () => {
           if (currentTime.isBetween(from, to)) {
             const [hours, minutes] = job.everyTime.split(":").map(Number);
             const intervalMinutes = hours * 60 + minutes;
-            const minuteDifference = currentTime.diff(from, 'minute');
+            const minuteDifference = currentTime.diff(from, "minute");
             if (minuteDifference % intervalMinutes === 0) {
-
-              const response = await fetch("http://localhost:3000/api/pod/retrieve");
+              const response = await fetch(
+                "http://localhost:3000/api/pod/retrieve"
+              );
               const data_1 = await response.json();
+              console.log("data_1 full:", JSON.stringify(data_1, null, 2));
+              console.log("keys of first object:", Object.keys(data_1[0]));
 
-              // console.log("My name is Numan 1122", data_1[0]?.fileId);
-              // console.log("My name is Numan 1133", data_1[0]?.fileTable);
+              const fileId = data_1[0]?.FILE_ID || data_1[0]?.file_id || "";
+              const fileTable =
+                data_1[0]?.FILE_TABLE || data_1[0]?.file_table || "";
+
+              console.log("Using fileId:", fileId, "fileTable:", fileTable);
+
+              // console.log("My name is JDATM_PROD 1122", data_1[0]?.fileId);
+              // console.log("My name is JDATM_PROD 1133", data_1[0]?.fileTable);
 
               // const file_response = await fetch(`http://localhost:3000/api/pod/file?fileId=${data_1.fileId}&fileTable=${data_1.fileTable}`);
-              const file_response = await fetch(`http://localhost:3000/api/pod/file?fileId=${data_1[0]?.fileId}&fileTable=${data_1[0]?.fileTable}`);
-              // const file_response = await fetch(`http://localhost:3000/api/pod/file?fileId=POD_001&fileTable=XTI_2024_T`);
-              const data_3 = await file_response.json();
-              if (file_response.ok) {
+              // const file_response = await fetch(`http://localhost:3000/api/pod/file?fileId=${data_1[0]?.FILE_ID}&fileTable=${data_1[0]?.FILE_TABLE}`);
+              const file_response = await fetch(
+                `http://localhost:3000/api/pod/file?fileId=${fileId}&fileTable=${fileTable}`
+              );
+              // const file_response = await fetch(`http://localhost:3000/api/pod/file?fileId=POD_002&fileTable=XTI_2025_T`);
 
-                const insertRes = await fetch("http://localhost:3000/api/pod/store", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ fileId: data_3.FILE_ID }),
-                });
+              const data_3 = await file_response.json();
+
+              if (file_response.ok) {
+                const insertRes = await fetch(
+                  "http://localhost:3000/api/pod/store",
+                  {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ fileId: data_3.FILE_ID }),
+                  }
+                );
 
                 const insertData = await insertRes.json();
-
                 const fileData = {
                   jobId: "",
                   fileId: data_3.FILE_ID,
@@ -100,8 +123,9 @@ cron.schedule("*/1 * * * *", async () => {
                   .then((result) => console.log("Response:", result))
                   .catch((error) => console.error("Error:", error));
 
-
-                let filePath = `${baseUrl}/api/access-file?filename=${encodeURIComponent(data_3.FILE_NAME)}`;
+                let filePath = `${baseUrl}/api/access-file?filename=${encodeURIComponent(
+                  data_3.FILE_NAME
+                )}`;
 
                 const ocrResponse = await fetch(ocrUrl, {
                   method: "POST",
@@ -116,7 +140,6 @@ cron.schedule("*/1 * * * *", async () => {
 
                 const ocrData = await ocrResponse.json();
 
-
                 if (ocrData && Array.isArray(ocrData)) {
                   const processedDataArray = ocrData.map((data) => {
                     const recognitionStatusMap = {
@@ -127,11 +150,14 @@ cron.schedule("*/1 * * * *", async () => {
                     };
 
                     const status = recognitionStatusMap[data?.Status] || "null";
-                    const recognitionStatus = recognitionStatusMap[status] || "null";
+                    const recognitionStatus =
+                      recognitionStatusMap[status] || "null";
 
                     const urlObj = new URL(filePath);
                     const filename = urlObj.searchParams.get("filename") || "";
-                    const decodedFilePath = `/file/${decodeURIComponent(filename)}`;
+                    const decodedFilePath = `/file/${decodeURIComponent(
+                      filename
+                    )}`;
 
                     return {
                       jobId: job._id ? job._id.toString() : null,
@@ -144,10 +170,14 @@ cron.schedule("*/1 * * * *", async () => {
                         data?.Signature_Exists === "yes"
                           ? "yes"
                           : data?.Signature_Exists === "no"
-                            ? "no"
-                            : data?.Signature_Exists,
-                      totalQty: isNaN(data?.Issued_Qty) ? data?.Issued_Qty : Number(data?.Issued_Qty),
-                      received: isNaN(data?.Received_Qty) ? data?.Received_Qty : Number(data?.Received_Qty),
+                          ? "no"
+                          : data?.Signature_Exists,
+                      totalQty: isNaN(data?.Issued_Qty)
+                        ? data?.Issued_Qty
+                        : Number(data?.Issued_Qty),
+                      received: isNaN(data?.Received_Qty)
+                        ? data?.Received_Qty
+                        : Number(data?.Received_Qty),
 
                       damaged: data?.Damage_Qty,
                       short: data?.Short_Qty,
@@ -159,8 +189,8 @@ cron.schedule("*/1 * * * *", async () => {
                         data?.Stamp_Exists === "yes"
                           ? "yes"
                           : data?.Stamp_Exists === "no"
-                            ? "no"
-                            : data?.Stamp_Exists,
+                          ? "no"
+                          : data?.Stamp_Exists,
                       finalStatus: "valid",
                       reviewStatus: "unConfirmed",
                       recognitionStatus: recognitionStatus,
@@ -168,15 +198,17 @@ cron.schedule("*/1 * * * *", async () => {
                       reviewedBy: "OCR Engine",
                       cargoDescription: "Processed from OCR API.",
                       none: "N",
-                      sealIntact: data?.Seal_Intact === "yes"
-                        ? "Y"
-                        : data?.Seal_Intact === "no"
+                      sealIntact:
+                        data?.Seal_Intact === "yes"
+                          ? "Y"
+                          : data?.Seal_Intact === "no"
                           ? "N"
                           : data?.Seal_Intact,
                     };
                   });
 
-                  const processedDataObject = processedDataArray.length > 0 ? processedDataArray[0] : {};
+                  const processedDataObject =
+                    processedDataArray.length > 0 ? processedDataArray[0] : {};
 
                   // console.log('numan obj', String(processedDataObject.blNumber));
                   // console.log('numan array', processedDataArray);
@@ -186,19 +218,21 @@ cron.schedule("*/1 * * * *", async () => {
                     const sapUrl = wmsUrl;
                     const username = userName;
                     const password = passWord;
-                    const basicAuth = Buffer.from(`${username}:${password}`).toString('base64');
+                    const basicAuth = Buffer.from(
+                      `${username}:${password}`
+                    ).toString("base64");
                     const BOLNo = [String(processedDataObject.blNumber)];
                     try {
                       const response = await fetch(sapUrl, {
-                        method: 'POST',
+                        method: "POST",
                         headers: {
-                          'Authorization': `Basic ${basicAuth}`,
-                          'Accept': 'application/json',
-                          'Content-Type': 'application/json'
+                          Authorization: `Basic ${basicAuth}`,
+                          Accept: "application/json",
+                          "Content-Type": "application/json",
                         },
                         body: JSON.stringify({
-                          BOLNo: BOLNo
-                        })
+                          BOLNo: BOLNo,
+                        }),
                       });
 
                       if (!response.ok) {
@@ -206,7 +240,10 @@ cron.schedule("*/1 * * * *", async () => {
                       }
 
                       const data = await response.json();
-                      if (String(processedDataObject.blNumber).trim() === data[0].BOLNo.trim()) {
+                      if (
+                        String(processedDataObject.blNumber).trim() ===
+                        data[0].BOLNo.trim()
+                      ) {
                         console.log("Matched!");
                         processedDataObject.recognitionStatus = "valid";
                         processedDataArray[0].recognitionStatus = "valid";
@@ -214,17 +251,17 @@ cron.schedule("*/1 * * * *", async () => {
                         console.log("Not matched!");
                         processedDataObject.recognitionStatus = "failure";
                         processedDataArray[0].recognitionStatus = "failure";
-
                       }
                     } catch (error) {
-                      console.error('Error 12346:', error);
+                      console.error("Error 12346:", error);
                     }
                   };
 
                   fetchSAPOData();
 
-
-                  const check_res = await fetch("http://localhost:3000/api/settings/auto-confirmation");
+                  const check_res = await fetch(
+                    "http://localhost:3000/api/settings/auto-confirmation"
+                  );
                   const data_4 = await check_res.json();
                   const check = data_4.isAutoConfirmationOpen;
 
@@ -233,27 +270,34 @@ cron.schedule("*/1 * * * *", async () => {
                     fetch("http://localhost:3000/api/pod/update", {
                       method: "PUT",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ fileId, ocrData: processedDataObject }),
+                      body: JSON.stringify({
+                        fileId,
+                        ocrData: processedDataObject,
+                      }),
                     })
                       .then((res) => res.json())
                       .then((data) => console.log("Update Response:", data))
                       .catch((error) => console.error("Update Error:", error));
                   }
 
-                  const saveResponse = await fetch("http://localhost:3000/api/process-data/save-data", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(processedDataArray),
-                  });
-
+                  const saveResponse = await fetch(
+                    "http://localhost:3000/api/process-data/save-data",
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(processedDataArray),
+                    }
+                  );
 
                   if (!saveResponse.ok) {
-                    console.error("Error saving data:", await saveResponse.json());
+                    console.error(
+                      "Error saving data:",
+                      await saveResponse.json()
+                    );
                   } else {
                     // console.log("OCR data saved successfully.");
                   }
                 }
-
               }
             }
           }
@@ -327,7 +371,6 @@ cron.schedule("*/1 * * * *", async () => {
     //   }
 
     //   const ocrData = await ocrResponse.json();
-
 
     //   if (ocrData && Array.isArray(ocrData)) {
     //     const processedDataArray = ocrData.map((data) => {
@@ -408,7 +451,6 @@ cron.schedule("*/1 * * * *", async () => {
     //       body: JSON.stringify(processedDataArray),
     //     });
 
-
     //     if (!saveResponse.ok) {
     //       console.error("Error saving data:", await saveResponse.json());
     //     } else {
@@ -417,7 +459,6 @@ cron.schedule("*/1 * * * *", async () => {
     //   }
 
     // }
-
   } catch (error) {
     console.error("Cron Job Error:", error);
   }

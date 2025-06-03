@@ -16,18 +16,42 @@ import { GiShare } from "react-icons/gi";
 import { FiSearch } from "react-icons/fi";
 import { FaChevronDown } from "react-icons/fa";
 import { IoCalendar } from "react-icons/io5";
-import Swal from 'sweetalert2';
-import Tippy from '@tippyjs/react';
-import { Instance } from 'tippy.js';
-import 'tippy.js/dist/tippy.css';
+import Swal from "sweetalert2";
+import Tippy from "@tippyjs/react";
+import { Instance } from "tippy.js";
+import "tippy.js/dist/tippy.css";
 import TableSpinner from "../components/TableSpinner";
 import UploadModal from "../components/UploadModal";
 import { FiUpload } from "react-icons/fi";
+import FileNameCell from "../components/UI/FileNameCell";
 
-type FinalStatus = "new" | "inProgress" | "valid" | "partiallyValid" | "failure" | "sent";
+type FinalStatus =
+  | "new"
+  | "inProgress"
+  | "valid"
+  | "partiallyValid"
+  | "failure"
+  | "sent";
 type ReviewStatus = "unConfirmed" | "confirmed" | "denied" | "deleted";
-type RecognitionStatus = "new" | "inProgress" | "valid" | "partiallyValid" | "failure" | "sent";
+type RecognitionStatus =
+  | "new"
+  | "inProgress"
+  | "valid"
+  | "partiallyValid"
+  | "failure"
+  | "sent";
 type BreakdownReason = "none" | "damaged" | "shortage" | "overage" | "refused";
+type StatusCounts = {
+  updated: number;
+  notFound: number;
+  added: number;
+};
+
+type ResultItem = {
+  status: "updated" | "not_found" | "added";
+  // other fields if any...
+};
+
 
 interface Job {
   _id: string;
@@ -56,6 +80,14 @@ interface Job {
   updatedAt?: string;
   customerOrderNum?: string | string[] | null;
 }
+
+type LogEntry = {
+  fileName: string;
+  status: string;
+  connectionResult?: string;
+  logDescription?: string;
+  message?: string;
+};
 
 const options = [
   { value: "blNumber", label: "BL Number" },
@@ -100,9 +132,15 @@ const MasterPage = () => {
   const [jobNameFilter, setJobNameFilter] = useState("");
   const [bolNumberFilter, setBolNumberFilter] = useState("");
   const [dropdownStates, setDropdownStates] = useState<string | null>(null);
-  const [dropdownStatesFirst, setDropdownStatesFirst] = useState<string | null>(null);
-  const [dropdownStatesSecond, setDropdownStatesSecond] = useState<string | null>(null);
-  const [dropdownStatesThird, setDropdownStatesThird] = useState<string | null>(null);
+  const [dropdownStatesFirst, setDropdownStatesFirst] = useState<string | null>(
+    null
+  );
+  const [dropdownStatesSecond, setDropdownStatesSecond] = useState<
+    string | null
+  >(null);
+  const [dropdownStatesThird, setDropdownStatesThird] = useState<string | null>(
+    null
+  );
   const parentRefFinal = useRef<Instance | null>(null);
   const parentRefReview = useRef<Instance | null>(null);
   const parentRefRecognition = useRef<Instance | null>(null);
@@ -122,26 +160,45 @@ const MasterPage = () => {
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-
   const finalOptions = [
     { status: "new", color: "text-blue-600", bgColor: "bg-blue-100" },
-    { status: "inProgress", color: "text-yellow-600", bgColor: "bg-yellow-100" },
+    {
+      status: "inProgress",
+      color: "text-yellow-600",
+      bgColor: "bg-yellow-100",
+    },
     { status: "valid", color: "text-green-600", bgColor: "bg-green-100" },
-    { status: "partiallyValid", color: "text-[#AF9918]", bgColor: "bg-[#faf1be]" },
+    {
+      status: "partiallyValid",
+      color: "text-[#AF9918]",
+      bgColor: "bg-[#faf1be]",
+    },
     { status: "failure", color: "text-red-600", bgColor: "bg-red-100" },
     { status: "sent", color: "text-green-600", bgColor: "bg-green-100" },
   ];
   const reviewOptions = [
-    { status: "unConfirmed", color: "text-yellow-600", bgColor: "bg-yellow-100" },
+    {
+      status: "unConfirmed",
+      color: "text-yellow-600",
+      bgColor: "bg-yellow-100",
+    },
     { status: "confirmed", color: "text-green-600", bgColor: "bg-green-100" },
     { status: "deleted", color: "text-red-600", bgColor: "bg-red-100" },
     { status: "denied", color: "text-[#AF9918]", bgColor: "bg-[#faf1be]" },
   ];
   const recognitionOptions = [
     { status: "new", color: "text-blue-600", bgColor: "bg-blue-100" },
-    { status: "inProgress", color: "text-yellow-600", bgColor: "bg-yellow-100" },
+    {
+      status: "inProgress",
+      color: "text-yellow-600",
+      bgColor: "bg-yellow-100",
+    },
     { status: "valid", color: "text-green-600", bgColor: "bg-green-100" },
-    { status: "partiallyValid", color: "text-[#AF9918]", bgColor: "bg-[#faf1be]" },
+    {
+      status: "partiallyValid",
+      color: "text-[#AF9918]",
+      bgColor: "bg-[#faf1be]",
+    },
     { status: "failure", color: "text-red-600", bgColor: "bg-red-100" },
     { status: "sent", color: "text-green-600", bgColor: "bg-green-100" },
   ];
@@ -169,15 +226,22 @@ const MasterPage = () => {
       if (localStorage.getItem("prev") === "") {
         setFirstTime(true);
         setFinalStatusFilter(sessionStorage.getItem("finalStatusFilter") || "");
-        setReviewStatusFilter(sessionStorage.getItem("reviewStatusFilter") || "");
-        setReasonStatusFilter(sessionStorage.getItem("reasonStatusFilter") || "");
-        setReviewByStatusFilter(sessionStorage.getItem("reviewByStatusFilter") || "");
+        setReviewStatusFilter(
+          sessionStorage.getItem("reviewStatusFilter") || ""
+        );
+        setReasonStatusFilter(
+          sessionStorage.getItem("reasonStatusFilter") || ""
+        );
+        setReviewByStatusFilter(
+          sessionStorage.getItem("reviewByStatusFilter") || ""
+        );
         setPodDateFilter(sessionStorage.getItem("podDateFilter") || "");
-        setPodDateSignatureFilter(sessionStorage.getItem("podDateSignatureFilter") || "");
+        setPodDateSignatureFilter(
+          sessionStorage.getItem("podDateSignatureFilter") || ""
+        );
         setJobNameFilter(sessionStorage.getItem("jobNameFilter") || "");
         setBolNumberFilter(sessionStorage.getItem("bolNumberFilter") || "");
-      }
-      else {
+      } else {
         sessionStorage.setItem("finalStatusFilter", "");
         sessionStorage.setItem("reviewStatusFilter", "");
         sessionStorage.setItem("reasonStatusFilter", "");
@@ -214,7 +278,10 @@ const MasterPage = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -331,11 +398,12 @@ const MasterPage = () => {
     return () => clearInterval(interval);
   }, []);
 
-
   useEffect(() => {
     async function fetchOcrApiUrl() {
       try {
-        const res = await fetch("/api/ipAddress/ip-address", { cache: "no-store" });
+        const res = await fetch("/api/ipAddress/ip-address", {
+          cache: "no-store",
+        });
 
         if (!res.ok) {
           throw new Error(`HTTP error! Status: ${res.status}`);
@@ -355,7 +423,6 @@ const MasterPage = () => {
     fetchOcrApiUrl();
   }, []);
 
-
   // const pdfFiles = selectedRows
   //   .map((rowId) => {
   //     const job = master.find((job) => job._id === rowId);
@@ -369,15 +436,15 @@ const MasterPage = () => {
     .map((rowId) => {
       const job = master.find((job) => job._id === rowId);
 
-      if (
-        job &&
-        (!job.blNumber || !job.podSignature?.trim()) &&
-        job.pdfUrl
-      ) {
+      if (job && (!job.blNumber || !job.podSignature?.trim()) && job.pdfUrl) {
         // const fileName = job.pdfUrl.split("/").pop() || "";
         // return { file_url_or_path: `/api/access-file?filename=${fileName}` };
         const fileName = job.pdfUrl.split("/").pop() || "";
-        return { file_url_or_path: `${baseUrl}/api/access-file?filename=${encodeURIComponent(fileName)}` };
+        return {
+          file_url_or_path: `${baseUrl}/api/access-file?filename=${encodeURIComponent(
+            fileName
+          )}`,
+        };
       }
 
       return null;
@@ -385,7 +452,6 @@ const MasterPage = () => {
     .filter(Boolean);
 
   const handleOcrToggle = async () => {
-
     // if (selectedRows.length === 0 && !isOcrRunning) return;
 
     if (!ocrApiUrl) {
@@ -399,7 +465,6 @@ const MasterPage = () => {
     }
 
     if (pdfFiles.length === 0 && !isOcrRunning) return;
-
 
     const newStatus = isOcrRunning ? "stop" : "start";
 
@@ -437,8 +502,6 @@ const MasterPage = () => {
     //   })
     //   .filter((file) => file !== null);
 
-
-
     async function processPdfsSequentially() {
       for (const pdfFile of pdfFiles) {
         if (!pdfFile?.file_url_or_path) continue;
@@ -460,7 +523,6 @@ const MasterPage = () => {
             signal: abortController.signal,
           });
 
-
           if (!ocrResponse.ok) {
             const errorData = await ocrResponse.json().catch(() => null);
             throw new Error(errorData?.error || "Failed to process OCR");
@@ -470,14 +532,18 @@ const MasterPage = () => {
 
           if (ocrData && Array.isArray(ocrData)) {
             const processedDataArray = ocrData.map((data) => {
-              const recognitionStatusMap: Record<"failed" | "partially valid" | "valid" | "null", string> = {
+              const recognitionStatusMap: Record<
+                "failed" | "partially valid" | "valid" | "null",
+                string
+              > = {
                 failed: "failure",
                 "partially valid": "partiallyValid",
                 valid: "valid",
                 null: "null",
               };
 
-              const status = (data?.Status as keyof typeof recognitionStatusMap) || "null";
+              const status =
+                (data?.Status as keyof typeof recognitionStatusMap) || "null";
               const recognitionStatus = recognitionStatusMap[status] || "null";
 
               const urlObj = new URL(filePath);
@@ -495,9 +561,11 @@ const MasterPage = () => {
                   data?.Signature_Exists === "yes"
                     ? "yes"
                     : data?.Signature_Exists === "no"
-                      ? "no"
-                      : data?.Signature_Exists,
-                totalQty: isNaN(data?.Issued_Qty) ? data?.Issued_Qty : Number(data?.Issued_Qty),
+                    ? "no"
+                    : data?.Signature_Exists,
+                totalQty: isNaN(data?.Issued_Qty)
+                  ? data?.Issued_Qty
+                  : Number(data?.Issued_Qty),
                 received: data?.Received_Qty,
                 damaged: data?.Damage_Qty,
                 short: data?.Short_Qty,
@@ -508,17 +576,18 @@ const MasterPage = () => {
                   data?.Stamp_Exists === "yes"
                     ? "yes"
                     : data?.Stamp_Exists === "no"
-                      ? "no"
-                      : data?.Stamp_Exists,
+                    ? "no"
+                    : data?.Stamp_Exists,
                 finalStatus: "valid",
                 reviewStatus: "unConfirmed",
                 recognitionStatus: recognitionStatus,
                 breakdownReason: "none",
                 reviewedBy: "OCR Engine",
                 cargoDescription: "Processed from OCR API.",
-                sealIntact: data?.Seal_Intact === "yes"
-                  ? "Y"
-                  : data?.Seal_Intact === "no"
+                sealIntact:
+                  data?.Seal_Intact === "yes"
+                    ? "Y"
+                    : data?.Seal_Intact === "no"
                     ? "N"
                     : data?.Seal_Intact,
               };
@@ -549,7 +618,6 @@ const MasterPage = () => {
           }
 
           setProgress((prev) => ({ ...prev, [filePath]: 100 }));
-
         } catch (error: unknown) {
           if (error instanceof Error) {
             if (error.name === "AbortError") {
@@ -566,9 +634,7 @@ const MasterPage = () => {
             [filePath]: 1,
           }));
         }
-
       }
-
 
       const newStatus = "stop";
       await fetch("/api/jobs/ocr", {
@@ -582,7 +648,6 @@ const MasterPage = () => {
       setSelectedRows([]);
       setProgress({});
       fetchJobs();
-
     }
 
     await processPdfsSequentially();
@@ -596,27 +661,39 @@ const MasterPage = () => {
     }
   };
 
-  const isAllSelected = selectedRows.length === master.length && master.length > 0;
+  const isAllSelected =
+    selectedRows.length === master.length && master.length > 0;
 
   const capitalizeFirstLetter = (str: string): string => {
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   };
 
-  const updateStatus = async (id: string, field: string, value: string, reviewedBy: string): Promise<void> => {
-
+  const updateStatus = async (
+    id: string,
+    field: string,
+    value: string,
+    reviewedBy: string
+  ): Promise<void> => {
     const formattedReviewedBy = capitalizeFirstLetter(reviewedBy);
 
     try {
       const res = await fetch(`/api/process-data/update-status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, field, value, reviewedBy: formattedReviewedBy }),
+        body: JSON.stringify({
+          id,
+          field,
+          value,
+          reviewedBy: formattedReviewedBy,
+        }),
       });
 
       if (res.ok) {
         setMaster((prevJobs) =>
           prevJobs.map((job) =>
-            job._id === id ? { ...job, [field]: value, reviewedBy: formattedReviewedBy } : job
+            job._id === id
+              ? { ...job, [field]: value, reviewedBy: formattedReviewedBy }
+              : job
           )
         );
 
@@ -640,21 +717,21 @@ const MasterPage = () => {
 
   const handleDelete = async () => {
     Swal.fire({
-      title: 'Delete Files',
-      text: 'Are you sure you want to delete these files?',
-      icon: 'warning',
-      iconColor: '#005B97',
+      title: "Delete Files",
+      text: "Are you sure you want to delete these files?",
+      icon: "warning",
+      iconColor: "#005B97",
       showCancelButton: true,
-      confirmButtonColor: '#005B97',
-      cancelButtonColor: '#E0E0E0',
-      confirmButtonText: 'Delete',
+      confirmButtonColor: "#005B97",
+      cancelButtonColor: "#E0E0E0",
+      confirmButtonText: "Delete",
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await fetch('/api/process-data/delete-rows', {
-            method: 'POST',
+          const response = await fetch("/api/process-data/delete-rows", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({ ids: selectedRows }),
           });
@@ -662,7 +739,8 @@ const MasterPage = () => {
           const result = await response.json();
 
           if (response.ok) {
-            const isLastPage = master.length === selectedRows.length && currentPage > 1;
+            const isLastPage =
+              master.length === selectedRows.length && currentPage > 1;
             if (isLastPage) {
               setCurrentPage((prevPage) => prevPage - 1);
             }
@@ -671,32 +749,34 @@ const MasterPage = () => {
             setTotalJobs(totalJobs - selectedRows.length);
             setSelectedRows([]);
             Swal.fire({
-              title: 'Deleted!',
-              text: 'Your files have been deleted.',
-              icon: 'success',
+              title: "Deleted!",
+              text: "Your files have been deleted.",
+              icon: "success",
               timer: 2000,
               showConfirmButton: false,
             });
           } else {
             Swal.fire({
-              title: 'Error!',
-              text: result.error || 'Failed to delete files.',
-              icon: 'error',
+              title: "Error!",
+              text: result.error || "Failed to delete files.",
+              icon: "error",
             });
           }
         } catch (error) {
-          console.log('Error deleting files:', error);
+          console.log("Error deleting files:", error);
           Swal.fire({
-            title: 'Error!',
-            text: 'Failed to delete files due to a network or server error.',
-            icon: 'error',
+            title: "Error!",
+            text: "Failed to delete files due to a network or server error.",
+            icon: "error",
           });
         }
       }
     });
   };
 
-  const handleSortColumnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSortColumnChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const { value, checked } = event.target;
 
     setFirstTime(true);
@@ -728,23 +808,28 @@ const MasterPage = () => {
         reasonStatus: sessionStorage.getItem("reasonStatusFilter") || "",
         reviewByStatus: sessionStorage.getItem("reviewByStatusFilter") || "",
         podDate: sessionStorage.getItem("podDateFilter") || "",
-        podDateSignature: sessionStorage.getItem("podDateSignatureFilter") || "",
+        podDateSignature:
+          sessionStorage.getItem("podDateSignatureFilter") || "",
         jobName: sessionStorage.getItem("jobNameFilter") || "",
         sortColumn,
         sortOrder,
       };
 
-
       const queryParams = new URLSearchParams();
       queryParams.set("page", currentPage.toString());
 
       if (filters.bolNumber) queryParams.set("bolNumber", filters.bolNumber);
-      if (filters.finalStatus) queryParams.set("recognitionStatus", filters.finalStatus);
-      if (filters.reviewStatus) queryParams.set("reviewStatus", filters.reviewStatus);
-      if (filters.reasonStatus) queryParams.set("breakdownReason", filters.reasonStatus);
-      if (filters.reviewByStatus) queryParams.set("reviewByStatus", filters.reviewByStatus);
+      if (filters.finalStatus)
+        queryParams.set("recognitionStatus", filters.finalStatus);
+      if (filters.reviewStatus)
+        queryParams.set("reviewStatus", filters.reviewStatus);
+      if (filters.reasonStatus)
+        queryParams.set("breakdownReason", filters.reasonStatus);
+      if (filters.reviewByStatus)
+        queryParams.set("reviewByStatus", filters.reviewByStatus);
       if (filters.podDate) queryParams.set("podDate", filters.podDate);
-      if (filters.podDateSignature) queryParams.set("podDateSignature", filters.podDateSignature.trim());
+      if (filters.podDateSignature)
+        queryParams.set("podDateSignature", filters.podDateSignature.trim());
       if (filters.jobName) queryParams.set("jobName", filters.jobName.trim());
 
       if (filters.sortColumn.length) {
@@ -752,7 +837,9 @@ const MasterPage = () => {
       }
 
       if (filters.sortOrder) {
-        let sortOrders = Array.isArray(filters.sortOrder) ? filters.sortOrder : [filters.sortOrder];
+        let sortOrders = Array.isArray(filters.sortOrder)
+          ? filters.sortOrder
+          : [filters.sortOrder];
 
         if (sortOrders.length === 1 && filters.sortColumn.length > 1) {
           sortOrders = new Array(filters.sortColumn.length).fill(sortOrders[0]);
@@ -763,7 +850,9 @@ const MasterPage = () => {
 
       // console.log("Query Params:", queryParams.toString());
 
-      const response = await fetch(`/api/process-data/get-data/?${queryParams.toString()}`);
+      const response = await fetch(
+        `/api/process-data/get-data/?${queryParams.toString()}`
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -775,14 +864,15 @@ const MasterPage = () => {
       setMaster(data.jobs);
       setTotalPages(data.totalPages);
       setTotalJobs(data.totalJobs);
-
     } catch (error) {
       console.log("Error fetching jobs:", error);
     } finally {
       setLoadingTable(false);
     }
   }, [
-    currentPage, sortColumn, sortOrder
+    currentPage,
+    sortColumn,
+    sortOrder,
     // bolNumberFilter,
     // finalStatusFilter,
     // reviewStatusFilter,
@@ -869,7 +959,7 @@ const MasterPage = () => {
   const handlePageChange = (newPage: number) => {
     setFirstTime(true);
     setCurrentPage(newPage);
-  }
+  };
 
   const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value as "asc" | "desc";
@@ -903,50 +993,73 @@ const MasterPage = () => {
 
   const handleSend = async () => {
     Swal.fire({
-      title: 'Send Files',
-      text: 'Are you sure you want to send these files?',
-      icon: 'warning',
-      iconColor: '#AF9918',
+      title: "Send Files",
+      text: "Are you sure you want to send these files?",
+      icon: "warning",
+      iconColor: "#AF9918",
       showCancelButton: true,
-      confirmButtonColor: '#AF9918',
-      cancelButtonColor: '#E0E0E0',
-      confirmButtonText: 'Yes Sure!',
+      confirmButtonColor: "#AF9918",
+      cancelButtonColor: "#E0E0E0",
+      confirmButtonText: "Yes Sure!",
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await fetch('/api/process-data/update-rows', {
-            method: 'PUT',
+          const response = await fetch("/api/process-data/update-rows", {
+            method: "PUT",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({ ids: selectedRows }),
           });
 
           const result = await response.json();
+          const resultArray = result?.logs?.map((data: LogEntry) => ({
+            fileName: data.fileName,
+            status: data.status,
+          }));
+
+          // Count the status occurrences
+          const counts = resultArray?.reduce(
+            (acc: StatusCounts, item: ResultItem) => {
+              if (item.status === "updated") acc.updated++;
+              else if (item.status === "not_found") acc.notFound++;
+              else if (item.status === "added") acc.added++;
+              return acc;
+            },
+            { updated: 0, notFound: 0, added: 0 }
+          );
+
+          // Build the summary HTML for counts
+   const summaryHtml = `
+  <p><strong>Summary:</strong></p>
+  <p>Updated files: <strong>${counts.updated}</strong></p>
+  <p>Added files: <strong>${counts.added}</strong></p>
+  <p>Not found files: <strong>${counts.notFound}</strong></p>
+  <p><a href="/logs" style="color:#3085d6; text-decoration: underline;">View Logs</a></p>
+`;
 
           if (response.ok) {
             await fetchJobs();
             setSelectedRows([]);
             Swal.fire({
-              title: 'Sent!',
-              text: 'Your files have been sent successfully.',
-              icon: 'success',
-              timer: 2000,
-              showConfirmButton: false,
+              title: "Sent!",
+              html: summaryHtml,
+              icon: "success",
+              showConfirmButton: true,
             });
           } else {
             Swal.fire({
-              title: 'Error!',
-              text: result.error || 'Failed to send files.',
-              icon: 'error',
+              title: "Error!",
+              text: result.error || "Failed to send files.",
+              icon: "error",
             });
           }
         } catch (error) {
-          console.log('Error sending files:', error);
+          console.log("Error sending files:", error);
           Swal.fire({
-            title: 'Error!',
-            text: 'Failed to send files due to a network or server error.',
-            icon: 'error',
+            title: "Error!",
+            text: "Failed to send files due to a network or server error.",
+            icon: "error",
           });
         }
       }
@@ -956,7 +1069,6 @@ const MasterPage = () => {
   useEffect(() => {
     setShowButton(selectedRows.length > 0);
   }, [selectedRows]);
-
 
   useEffect(() => {
     if (!isProcessModalOpen) return;
@@ -979,7 +1091,6 @@ const MasterPage = () => {
       window.removeEventListener("beforeunload", preventRefresh);
       window.removeEventListener("unload", updateStatus);
 
-
       updateStatus();
 
       setIsOcrRunning(false);
@@ -991,9 +1102,9 @@ const MasterPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isProcessModalOpen]);
 
-
-
-  const buttonColor = isOcrRunning ? "bg-red-600 border border-red-600" : "bg-[#005B97]";
+  const buttonColor = isOcrRunning
+    ? "bg-red-600 border border-red-600"
+    : "bg-[#005B97]";
 
   if (loading) return <Spinner />;
   if (!isAuthenticated) return <p>Access Denied. Redirecting...</p>;
@@ -1002,87 +1113,93 @@ const MasterPage = () => {
     <div className="h-screen bg-white overflow-x-hidden max-w-screen">
       <Sidebar onStateChange={handleSidebarStateChange} />
       <div
-        className={`flex-1 flex flex-col transition-all bg-white duration-300 ${!isExpanded ? "ml-24" : "ml-64"
-          }`}
+        className={`flex-1 flex flex-col transition-all bg-white duration-300 ${
+          !isExpanded ? "ml-24" : "ml-64"
+        }`}
       >
         <Header
           leftContent="Extracted Data Monitoring"
           totalContent={totalJobs}
-          rightContent={<>
-            <div className="flex gap-4 mr-3">
-              {showButton && (<>
-                <div
-                  className="flex gap-2 group cursor-pointer transition-all duration-300"
-                  onClick={handleDelete}
-                >
-                  <span>
-                    <MdDelete
-                      className="fill-[red] text-2xl transition-transform transform group-hover:scale-110 group-hover:duration-300"
-                    />
-                  </span>
-                  <span
-                    className="text-[red] transition-all duration-300 group-hover:text-red-600  group-hover:duration-300"
-                  >
-                    Delete
-                  </span>
-                </div>
+          rightContent={
+            <>
+              <div className="flex gap-4 mr-3">
+                {showButton && (
+                  <>
+                    <div
+                      className="flex gap-2 group cursor-pointer transition-all duration-300"
+                      onClick={handleDelete}
+                    >
+                      <span>
+                        <MdDelete className="fill-[red] text-2xl transition-transform transform group-hover:scale-110 group-hover:duration-300" />
+                      </span>
+                      <span className="text-[red] transition-all duration-300 group-hover:text-red-600  group-hover:duration-300">
+                        Delete
+                      </span>
+                    </div>
 
-                <div
-                  className="flex gap-2 group cursor-pointer transition-all duration-300"
-                  onClick={handleSend}
-                >
-                  <span>
-                    <GiShare
-                      className="fill-[#AF9918] text-2xl transition-transform transform group-hover:scale-110 group-hover:duration-300"
-                    />
-                  </span>
-                  <span
-                    className="text-[#AF9918] transition-all duration-300 group-hover:text-[#D5A100]"
-                  >
-                    Send
-                  </span>
-                </div>
-              </>
-
-              )
-              }
-            </div>
-          </>
+                    <div
+                      className="flex gap-2 group cursor-pointer transition-all duration-300"
+                      onClick={handleSend}
+                    >
+                      <span>
+                        <GiShare className="fill-[#AF9918] text-2xl transition-transform transform group-hover:scale-110 group-hover:duration-300" />
+                      </span>
+                      <span className="text-[#AF9918] transition-all duration-300 group-hover:text-[#D5A100]">
+                        Send
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
           }
-          buttonContent={''}
+          buttonContent={""}
         />
 
-        <UploadModal fetchJobs={fetchJobs} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+        <UploadModal
+          fetchJobs={fetchJobs}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
 
         <div className="flex-1 px-2 bg-white">
           {/* sticky top-0 z-10 */}
           <div
-            className={`bg-gray-200 p-3 mb-0 transition-all duration-500 ease-in w-full sm:w-auto  ${isFilterDropDownOpen ? "rounded-t-lg" : "rounded-lg"}`}
+            className={`bg-gray-200 p-3 mb-0 transition-all duration-500 ease-in w-full sm:w-auto  ${
+              isFilterDropDownOpen ? "rounded-t-lg" : "rounded-lg"
+            }`}
           >
-            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setIsFilterDropDownOpen(!isFilterDropDownOpen)}>
+            <div
+              className="flex items-center gap-3 cursor-pointer"
+              onClick={() => setIsFilterDropDownOpen(!isFilterDropDownOpen)}
+            >
               <span className="text-gray-800 text-sm sm:text-base md:text-lg">
                 Filters
               </span>
               <span>
                 <IoIosArrowForward
-                  className={`text-xl p-0 text-[#005B97] transition-all duration-500 ease-in ${isFilterDropDownOpen ? 'rotate-90' : ''}`}
+                  className={`text-xl p-0 text-[#005B97] transition-all duration-500 ease-in ${
+                    isFilterDropDownOpen ? "rotate-90" : ""
+                  }`}
                 />
               </span>
             </div>
           </div>
           {/* sticky top-0 z-40 */}
           <div
-            className={`overflow-hidden transition-all duration-500 ease-in w-auto  ${isFilterDropDownOpen ? "max-h-[1000px] p-3" : "max-h-0"
-              } flex flex-wrap gap-4 mt-0 bg-gray-200 rounded-b-lg`}
+            className={`overflow-hidden transition-all duration-500 ease-in w-auto  ${
+              isFilterDropDownOpen ? "max-h-[1000px] p-3" : "max-h-0"
+            } flex flex-wrap gap-4 mt-0 bg-gray-200 rounded-b-lg`}
           >
-
             <form
               onSubmit={handleFilterApply}
               className="w-full grid grid-cols-3 gap-4"
             >
-
               <div className="flex flex-col">
-                <label htmlFor="search" className="text-sm font-semibold text-gray-800">
+                <label
+                  htmlFor="search"
+                  className="text-sm font-semibold text-gray-800"
+                >
                   BL Number
                 </label>
                 <div className="relative">
@@ -1103,7 +1220,10 @@ const MasterPage = () => {
               </div>
 
               <div className="flex flex-col">
-                <label htmlFor="finalStatusFilter" className="text-sm font-semibold text-gray-800">
+                <label
+                  htmlFor="finalStatusFilter"
+                  className="text-sm font-semibold text-gray-800"
+                >
                   Recognition Status
                 </label>
                 <div className="relative">
@@ -1131,7 +1251,10 @@ const MasterPage = () => {
               </div>
 
               <div className="flex flex-col">
-                <label htmlFor="finalStatusFilter" className="text-sm font-semibold text-gray-800">
+                <label
+                  htmlFor="finalStatusFilter"
+                  className="text-sm font-semibold text-gray-800"
+                >
                   Review Status
                 </label>
                 <div className="relative">
@@ -1146,7 +1269,6 @@ const MasterPage = () => {
                     <option value="confirmed">confirmed</option>
                     <option value="deleted">deleted</option>
                     <option value="denied">denied</option>
-
                   </select>
                   <button
                     type="button"
@@ -1158,7 +1280,10 @@ const MasterPage = () => {
               </div>
 
               <div className="flex flex-col">
-                <label htmlFor="search" className="text-sm font-semibold text-gray-800">
+                <label
+                  htmlFor="search"
+                  className="text-sm font-semibold text-gray-800"
+                >
                   POD Date
                 </label>
                 <div className="relative">
@@ -1175,7 +1300,9 @@ const MasterPage = () => {
                     type="button"
                     className="absolute inset-y-0 right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
                     onClick={() => {
-                      const dateInput = document.getElementById('dateInput') as HTMLInputElement;
+                      const dateInput = document.getElementById(
+                        "dateInput"
+                      ) as HTMLInputElement;
                       if (dateInput) {
                         dateInput.showPicker();
                       }
@@ -1187,7 +1314,10 @@ const MasterPage = () => {
               </div>
 
               <div className="flex flex-col">
-                <label htmlFor="search" className="text-sm font-semibold text-gray-800">
+                <label
+                  htmlFor="search"
+                  className="text-sm font-semibold text-gray-800"
+                >
                   Signature Exists
                 </label>
                 <div className="relative">
@@ -1201,13 +1331,15 @@ const MasterPage = () => {
                   <button
                     type="button"
                     className="absolute inset-y-0 right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                  >
-                  </button>
+                  ></button>
                 </div>
               </div>
 
               <div className="flex flex-col">
-                <label htmlFor="finalStatusFilter" className="text-sm font-semibold text-gray-800">
+                <label
+                  htmlFor="finalStatusFilter"
+                  className="text-sm font-semibold text-gray-800"
+                >
                   Reviewed By
                 </label>
                 <div className="relative">
@@ -1231,7 +1363,10 @@ const MasterPage = () => {
               </div>
 
               <div className="flex flex-col">
-                <label htmlFor="finalStatusFilter" className="text-sm font-semibold text-gray-800">
+                <label
+                  htmlFor="finalStatusFilter"
+                  className="text-sm font-semibold text-gray-800"
+                >
                   Breakdown Reason
                 </label>
                 <div className="relative">
@@ -1247,7 +1382,6 @@ const MasterPage = () => {
                     <option value="shortage">shortage</option>
                     <option value="overage">overage</option>
                     <option value="refused">refused</option>
-
                   </select>
                   <button
                     type="button"
@@ -1259,7 +1393,10 @@ const MasterPage = () => {
               </div>
 
               <div className="flex flex-col">
-                <label htmlFor="search" className="text-sm font-semibold text-gray-800">
+                <label
+                  htmlFor="search"
+                  className="text-sm font-semibold text-gray-800"
+                >
                   Job Name
                 </label>
                 <div className="relative">
@@ -1273,15 +1410,17 @@ const MasterPage = () => {
                   <button
                     type="button"
                     className="absolute inset-y-0 right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                  >
-                  </button>
+                  ></button>
                 </div>
               </div>
 
               <div className="flex justify-end items-center gap-2 col-span-3">
                 <button
-                  className={`text-[#005B97] underline ${!isAnyFilterApplied() ? "text-gray-400 underline cursor-not-allowed" : "cursor-pointer"
-                    }`}
+                  className={`text-[#005B97] underline ${
+                    !isAnyFilterApplied()
+                      ? "text-gray-400 underline cursor-not-allowed"
+                      : "cursor-pointer"
+                  }`}
                   onClick={resetFiltersAndFetch}
                   disabled={!isAnyFilterApplied()}
                 >
@@ -1303,8 +1442,14 @@ const MasterPage = () => {
                 // onSubmit={handleFilterApply}
                 className="w-full flex flex-wrap md:flex-nowrap gap-4 items-center"
               >
-                <div className="flex items-center gap-3 min-w-0 relative" ref={dropdownRef}>
-                  <label htmlFor="sortColumn" className="text-sm font-semibold text-gray-800 whitespace-nowrap">
+                <div
+                  className="flex items-center gap-3 min-w-0 relative"
+                  ref={dropdownRef}
+                >
+                  <label
+                    htmlFor="sortColumn"
+                    className="text-sm font-semibold text-gray-800 whitespace-nowrap"
+                  >
                     Sort By:
                   </label>
 
@@ -1334,7 +1479,9 @@ const MasterPage = () => {
                               onChange={handleSortColumnChange}
                               className="form-checkbox h-4 w-4 text-[#005B97] cursor-pointer"
                             />
-                            <span className="flex-1 truncate">{option.label}</span>
+                            <span className="flex-1 truncate">
+                              {option.label}
+                            </span>
                           </label>
                         ))}
                       </div>
@@ -1343,7 +1490,10 @@ const MasterPage = () => {
                 </div>
 
                 <div className="flex items-center gap-3 min-w-0">
-                  <label htmlFor="sortOrder" className="text-sm font-semibold text-gray-800 whitespace-nowrap">
+                  <label
+                    htmlFor="sortOrder"
+                    className="text-sm font-semibold text-gray-800 whitespace-nowrap"
+                  >
                     Sorting Order:
                   </label>
                   <div className="relative w-full sm:w-40">
@@ -1371,12 +1521,19 @@ const MasterPage = () => {
               <Link
                 href={{
                   pathname: "/history",
-                  query: selectedRows.length > 0
-                    ? { selectedRows: JSON.stringify(selectedRows) }
-                    : undefined,
+                  query:
+                    selectedRows.length > 0
+                      ? { selectedRows: JSON.stringify(selectedRows) }
+                      : undefined,
                 }}
               >
-                <button className={`rounded-lg px-6 py-2 w-full md:w-auto ${selectedRows.length === 0 ? "cursor-not-allowed bg-gray-400 border border-gray-400" : "bg-[#005B971A] text-[#005B97] border border-[#005B971A]"}`}>
+                <button
+                  className={`rounded-lg px-6 py-2 w-full md:w-auto ${
+                    selectedRows.length === 0
+                      ? "cursor-not-allowed bg-gray-400 border border-gray-400"
+                      : "bg-[#005B971A] text-[#005B97] border border-[#005B971A]"
+                  }`}
+                >
                   History
                 </button>
               </Link>
@@ -1391,16 +1548,23 @@ const MasterPage = () => {
               </button>
 
               <p
-                onClick={selectedRows.length > 0 || isOcrRunning ? handleOcrToggle : undefined}
+                onClick={
+                  selectedRows.length > 0 || isOcrRunning
+                    ? handleOcrToggle
+                    : undefined
+                }
                 className={` ${buttonColor} flex justify-center items-center w-full md:w-auto px-4 py-2 rounded-lg text-white transition 
-                ${selectedRows.length === 0 && !isOcrRunning ? "bg-gray-400 cursor-not-allowed border border-gray-400" : "cursor-pointer border border-[#005B97]"}
+                ${
+                  selectedRows.length === 0 && !isOcrRunning
+                    ? "bg-gray-400 cursor-not-allowed border border-gray-400"
+                    : "cursor-pointer border border-[#005B97]"
+                }
               `}
               >
                 {isOcrRunning ? "Stop" : "Process"}
               </p>
             </div>
           </div>
-
 
           {isProcessModalOpen && (
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -1410,27 +1574,44 @@ const MasterPage = () => {
                     <h2 className="text-xl font-semibold text-black">
                       Processing<span className="dot-animation"></span>
                     </h2>
-                    <p className="text-[#7B849A]">Please wait we are Processing your files will take just few moments</p>
+                    <p className="text-[#7B849A]">
+                      Please wait we are Processing your files will take just
+                      few moments
+                    </p>
                   </div>
                   <div>
                     <p
-                      onClick={selectedRows.length > 0 || isOcrRunning ? handleOcrToggle : undefined}
+                      onClick={
+                        selectedRows.length > 0 || isOcrRunning
+                          ? handleOcrToggle
+                          : undefined
+                      }
                       className={` ${buttonColor} flex justify-center items-center w-fit px-4 py-2 rounded-lg text-white transition 
-                    ${selectedRows.length === 0 && !isOcrRunning ? "bg-gray-400 cursor-not-allowed border border-gray-400" : "cursor-pointer border border-[#005B97]"}
-                  `}>
+                    ${
+                      selectedRows.length === 0 && !isOcrRunning
+                        ? "bg-gray-400 cursor-not-allowed border border-gray-400"
+                        : "cursor-pointer border border-[#005B97]"
+                    }
+                  `}
+                    >
                       {isOcrRunning ? "Stop Processing" : "Process"}
                     </p>
                   </div>
-
                 </div>
 
                 <div className="overflow-scroll min-h-auto max-h-96">
                   <table className="min-w-full border-separate border-spacing-y-3">
                     <thead>
                       <tr className="border-b border-gray-400">
-                        <th className=" px-4 py-2 text-left text-black border-b border-gray-400">File Name</th>
-                        <th className=" px-4 py-2 text-black min-w-72 text-center border-b border-gray-400">Progress</th>
-                        <th className=" px-4 py-2 text-black text-center border-b border-gray-400">Status</th>
+                        <th className=" px-4 py-2 text-left text-black border-b border-gray-400">
+                          File Name
+                        </th>
+                        <th className=" px-4 py-2 text-black min-w-72 text-center border-b border-gray-400">
+                          Progress
+                        </th>
+                        <th className=" px-4 py-2 text-black text-center border-b border-gray-400">
+                          Status
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="">
@@ -1440,13 +1621,19 @@ const MasterPage = () => {
                       {selectedRows
                         .filter((rowId) => {
                           const job = master.find((job) => job._id === rowId);
-                          return job && (!job.blNumber || !job.podSignature?.trim());
+                          return (
+                            job && (!job.blNumber || !job.podSignature?.trim())
+                          );
                         })
                         .map((rowId) => {
                           const job = master.find((job) => job._id === rowId);
                           if (!job || !job.pdfUrl) return null;
                           // const pdfFilename = job.pdfUrl.split('/').pop();
-                          const pdfFilename = job.pdfUrl ? encodeURIComponent(job.pdfUrl.split('/').pop()?.trim() ?? "") : "";
+                          const pdfFilename = job.pdfUrl
+                            ? encodeURIComponent(
+                                job.pdfUrl.split("/").pop()?.trim() ?? ""
+                              )
+                            : "";
                           const progressKey = `${baseUrl}/api/access-file?filename=${pdfFilename}`;
                           const jobProgress = progress[progressKey] ?? 0;
                           // style={{ width: `${jobProgress}%` }}
@@ -1457,9 +1644,16 @@ const MasterPage = () => {
                                 {/* {job.pdfUrl ? job.pdfUrl.split('/').pop()?.replace('.pdf', '') || "No PDF Available" : "No PDF Available"} */}
                                 {job.pdfUrl
                                   ? (() => {
-                                    const fileName = job.pdfUrl.split('/').pop()?.replace('.pdf', '.pdf') || "No PDF Available";
-                                    return fileName.length > 15 ? fileName.substring(0, 19) + "..." : fileName;
-                                  })()
+                                      const fileName =
+                                        job.pdfUrl
+                                          .split("/")
+                                          .pop()
+                                          ?.replace(".pdf", ".pdf") ||
+                                        "No PDF Available";
+                                      return fileName.length > 15
+                                        ? fileName.substring(0, 19) + "..."
+                                        : fileName;
+                                    })()
                                   : "No PDF Available"}
                               </td>
                               {/* <td className=" px-4 py-2">
@@ -1480,13 +1674,23 @@ const MasterPage = () => {
                             </td> */}
 
                               <td className="px-4 py-2">
-                                <div className={`${jobProgress === 1 ? "bg-[rgba(252,197,197,0.1)]" : "bg-gray-200"} w-full rounded-full h-4 relative`}>
+                                <div
+                                  className={`${
+                                    jobProgress === 1
+                                      ? "bg-[rgba(252,197,197,0.1)]"
+                                      : "bg-gray-200"
+                                  } w-full rounded-full h-4 relative`}
+                                >
                                   <div
                                     className={`bg-[#005B97] h-4 rounded-full relative transition-all duration-500 ease-in-out`}
                                     style={{ width: `${jobProgress}%` }}
                                   >
                                     <span
-                                      className={`absolute top-1/2 right-[-1.01rem] transform -translate-y-1/2 translate-x-1/2 flex items-center px-2 h-6 text-[#005B97] ${jobProgress === 1 ? "bg-gray-300" : "bg-gray-300"}  font-semibold text-sm`}
+                                      className={`absolute top-1/2 right-[-1.01rem] transform -translate-y-1/2 translate-x-1/2 flex items-center px-2 h-6 text-[#005B97] ${
+                                        jobProgress === 1
+                                          ? "bg-gray-300"
+                                          : "bg-gray-300"
+                                      }  font-semibold text-sm`}
                                     >
                                       {jobProgress === 1 ? 0 : jobProgress}%
                                     </span>
@@ -1496,25 +1700,29 @@ const MasterPage = () => {
 
                               <td className="px-4 py-2 text-center">
                                 <span
-                                  className={`px-3 py-2 rounded-full text-base font-medium ${jobProgress === 100
-                                    ? "bg-[#28A4AD1A] text-[#28A4AD]"
-                                    : jobProgress > 1
+                                  className={`px-3 py-2 rounded-full text-base font-medium ${
+                                    jobProgress === 100
+                                      ? "bg-[#28A4AD1A] text-[#28A4AD]"
+                                      : jobProgress > 1
                                       ? "bg-[#FCB0401A] text-[#FCB040]"
                                       : jobProgress === 0
-                                        ? "bg-[#005B971A] text-[#005B97]"
-                                        : jobProgress === 1 ? "bg-[rgba(252,197,197,0.1)] text-[#FF4D4D]" : ""
-                                    }`}
+                                      ? "bg-[#005B971A] text-[#005B97]"
+                                      : jobProgress === 1
+                                      ? "bg-[rgba(252,197,197,0.1)] text-[#FF4D4D]"
+                                      : ""
+                                  }`}
                                 >
                                   {jobProgress === 100
                                     ? "Valid"
                                     : jobProgress > 1
-                                      ? "In Progress"
-                                      : jobProgress === 0
-                                        ? "New"
-                                        : jobProgress === 1 ? "Failed" : ""}
+                                    ? "In Progress"
+                                    : jobProgress === 0
+                                    ? "New"
+                                    : jobProgress === 1
+                                    ? "Failed"
+                                    : ""}
                                 </span>
                               </td>
-
                             </tr>
                           );
                         })}
@@ -1544,20 +1752,31 @@ const MasterPage = () => {
           )} */}
 
           <div className="py-3 mx-auto z-10">
-
             {master.length === 0 && !loadingTable ? (
               <div className="flex flex-col items-center mt-20">
-                <span className="text-gray-800 text-xl shadow-xl p-4 rounded-lg">No data found</span>
+                <span className="text-gray-800 text-xl shadow-xl p-4 rounded-lg">
+                  No data found
+                </span>
               </div>
             ) : (
-              <div className={`overflow-x-auto w-full relative ${isFilterDropDownOpen ? "2xl:h-[700px] md:h-[170px] sm:h-[150px]" : "2xl:h-[900px] md:h-[460px] sm:h-[450px]"}`}>
+              <div
+                className={`overflow-x-auto w-full relative ${
+                  isFilterDropDownOpen
+                    ? "2xl:h-[700px] md:h-[170px] sm:h-[150px]"
+                    : "2xl:h-[900px] md:h-[460px] sm:h-[450px]"
+                }`}
+              >
                 {/* <div className={`overflow-x-auto w-full relative`}> */}
                 <table className="table-auto min-w-full w-full border-collapse">
                   <thead className="sticky top-0 bg-white z-20 shadow-md">
                     <tr className="text-gray-800">
                       <th className="py-2 px-4 border-b text-start min-w-44 max-w-44 sticky left-0 bg-white z-20">
                         <span className="mr-3">
-                          <input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} />
+                          <input
+                            type="checkbox"
+                            checked={isAllSelected}
+                            onChange={handleSelectAll}
+                          />
                         </span>
                         BL Number
                       </th>
@@ -1590,31 +1809,72 @@ const MasterPage = () => {
                         )}
 
                       </th> */}
-                      <th className="py-2 px-4 border-b text-center min-w-44 max-w-44 sticky left-44 bg-white z-10">Uploaded File</th>
-                      <th className="py-2 px-4 border-b text-center min-w-44 max-w-44 sticky left-[22rem] bg-white z-10">Job Name</th>
-                      <th className="py-2 px-4 border-b text-center min-w-32">POD Date</th>
-                      <th className="py-2 px-4 border-b text-center min-w-36">Stamp Exists</th>
-                      <th className="py-2 px-4 border-b text-center min-w-40">Signature Exists</th>
-                      <th className="py-2 px-4 border-b text-center min-w-36">Seal Intact</th>
-                      <th className="py-2 px-4 border-b text-center min-w-32">Issued Qty</th>
-                      <th className="py-2 px-4 border-b text-center min-w-36">Received Qty</th>
-                      <th className="py-2 px-4 border-b text-center min-w-36">Damaged Qty</th>
-                      <th className="py-2 px-4 border-b text-center min-w-28">Short Qty</th>
-                      <th className="py-2 px-4 border-b text-center min-w-28">Over Qty</th>
-                      <th className="py-2 px-4 border-b text-center min-w-32">Refused Qty</th>
-                      <th className="py-2 px-4 border-b text-center min-w-52">Customer Order Num</th>
-                      <th className="py-2 px-4 border-b text-center min-w-32">Final Status</th>
-                      <th className="py-2 px-4 border-b text-center min-w-36">Review Status</th>
-                      <th className="py-2 px-4 border-b text-center min-w-48">Recognition Status</th>
-                      <th className="py-2 px-4 border-b text-center min-w-48">Breakdown Reason</th>
-                      <th className="py-2 px-4 border-b text-center min-w-36">Reviewed By</th>
-                      <th className="py-2 px-4 border-b text-center min-w-28">Action</th>
+                      <th className="py-2 px-4 border-b text-center min-w-44 max-w-44 sticky left-44 bg-white z-10">
+                        Uploaded File
+                      </th>
+                      <th className="py-2 px-4 border-b text-center min-w-44 max-w-44 sticky left-[22rem] bg-white z-10">
+                        Job Name
+                      </th>
+                      <th className="py-2 px-4 border-b text-center min-w-32">
+                        POD Date
+                      </th>
+                      <th className="py-2 px-4 border-b text-center min-w-36">
+                        Stamp Exists
+                      </th>
+                      <th className="py-2 px-4 border-b text-center min-w-40">
+                        Signature Exists
+                      </th>
+                      <th className="py-2 px-4 border-b text-center min-w-36">
+                        Seal Intact
+                      </th>
+                      <th className="py-2 px-4 border-b text-center min-w-32">
+                        Issued Qty
+                      </th>
+                      <th className="py-2 px-4 border-b text-center min-w-36">
+                        Received Qty
+                      </th>
+                      <th className="py-2 px-4 border-b text-center min-w-36">
+                        Damaged Qty
+                      </th>
+                      <th className="py-2 px-4 border-b text-center min-w-28">
+                        Short Qty
+                      </th>
+                      <th className="py-2 px-4 border-b text-center min-w-28">
+                        Over Qty
+                      </th>
+                      <th className="py-2 px-4 border-b text-center min-w-32">
+                        Refused Qty
+                      </th>
+                      <th className="py-2 px-4 border-b text-center min-w-52">
+                        Customer Order Num
+                      </th>
+                      <th className="py-2 px-4 border-b text-center min-w-32">
+                        Final Status
+                      </th>
+                      <th className="py-2 px-4 border-b text-center min-w-36">
+                        Review Status
+                      </th>
+                      <th className="py-2 px-4 border-b text-center min-w-48">
+                        Recognition Status
+                      </th>
+                      <th className="py-2 px-4 border-b text-center min-w-48">
+                        Breakdown Reason
+                      </th>
+                      <th className="py-2 px-4 border-b text-center min-w-36">
+                        Reviewed By
+                      </th>
+                      <th className="py-2 px-4 border-b text-center min-w-28">
+                        Action
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="relative">
                     {loadingTable ? (
                       <tr>
-                        <td colSpan={Object.keys(master[0] || {}).length} className="text-center">
+                        <td
+                          colSpan={Object.keys(master[0] || {}).length}
+                          className="text-center"
+                        >
                           <div className="flex justify-center">
                             <TableSpinner />
                           </div>
@@ -1622,102 +1882,147 @@ const MasterPage = () => {
                       </tr>
                     ) : master.length === 0 ? (
                       <tr>
-                        <td colSpan={9999} className="py-10 text-center text-gray-800 text-xl shadow-xl p-4 rounded-lg">
+                        <td
+                          colSpan={9999}
+                          className="py-10 text-center text-gray-800 text-xl shadow-xl p-4 rounded-lg"
+                        >
                           No data found
                         </td>
                       </tr>
                     ) : (
                       master.map((job) => (
                         <tr key={job._id} className="text-gray-500">
-                          <td className="py-2 px-4 border-b text-start m-0 sticky left-0 bg-white z-10" ><span className="mr-3"><input type="checkbox" checked={selectedRows.includes(job._id)}
-                            onChange={() => handleRowSelection(job._id)} /></span>
+                          <td className="py-2 px-4 border-b text-start m-0 sticky left-0 bg-white z-10">
+                            <span className="mr-3">
+                              <input
+                                type="checkbox"
+                                checked={selectedRows.includes(job._id)}
+                                onChange={() => handleRowSelection(job._id)}
+                              />
+                            </span>
                             <Link
-                              href={`/extracted-data-monitoring/${job._id}`} onClick={() => { handleRouteChange(); localStorage.setItem("prev", "") }}
+                              href={`/extracted-data-monitoring/${job._id}`}
+                              onClick={() => {
+                                handleRouteChange();
+                                localStorage.setItem("prev", "");
+                              }}
                               className="group"
                             >
                               <span className="text-[#005B97] underline group-hover:text-blue-500 transition-all duration-500 transform group-hover:scale-110">
                                 {job.blNumber}
                               </span>
-
                             </Link>
                           </td>
-                          <td className="py-2 px-4 border-b text-center sticky left-44 bg-white z-10 min-w-44 max-w-44 truncate">
+                          <FileNameCell pdfUrl={job.pdfUrl} />
+
+                          {/* <td className="py-2 px-4 border-b text-center sticky left-44 bg-white z-10 min-w-44 max-w-44 truncate">
                             {job.pdfUrl
                               ? (() => {
-                                const fileName = job.pdfUrl.split('/').pop()?.replace('.pdf', '.pdf') || "No PDF Available";
-                                return fileName.length > 15 ? fileName.substring(0, 15) + "..." : fileName;
-                              })()
+                                  const fileName =
+                                    job.pdfUrl
+                                      .split("/")
+                                      .pop()
+                                      ?.replace(".pdf", ".pdf") ||
+                                    "No PDF Available";
+                                  return fileName.length > 15
+                                    ? fileName.substring(0, 15) + "..."
+                                    : fileName;
+                                })()
                               : "No PDF Available"}
-                          </td>
+                          </td> */}
                           <td className="py-2 px-4 border-b text-center min-w-44 max-w-44 sticky left-[22rem] bg-white z-10">
                             {job.jobName}
                           </td>
-                          <td className="py-2 px-4 border-b text-center">{job.podDate}</td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.stampExists === null || job.stampExists === undefined ? (
+                            {job.podDate}
+                          </td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.stampExists === null ||
+                            job.stampExists === undefined ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>
-                            ) : job.stampExists}
+                            ) : (
+                              job.stampExists
+                            )}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.podSignature === null || job.podSignature === undefined ? (
+                            {job.podSignature === null ||
+                            job.podSignature === undefined ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>
-                            ) : job.podSignature}
+                            ) : (
+                              job.podSignature
+                            )}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.sealIntact === null || job.sealIntact === undefined ? (
+                            {job.sealIntact === null ||
+                            job.sealIntact === undefined ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>
-                            ) : job.sealIntact}
+                            ) : (
+                              job.sealIntact
+                            )}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.totalQty === null || job.totalQty === undefined ? (
+                            {job.totalQty === null ||
+                            job.totalQty === undefined ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>
                             ) : (
                               job.totalQty
                             )}
-
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.received === null || job.received === undefined ? (
+                            {job.received === null ||
+                            job.received === undefined ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>
-                            ) : job.received}
+                            ) : (
+                              job.received
+                            )}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.damaged === null || job.damaged === undefined ? (
+                            {job.damaged === null ||
+                            job.damaged === undefined ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>
-                            ) : job.damaged}
+                            ) : (
+                              job.damaged
+                            )}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
                             {job.short === null || job.short === undefined ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>
-                            ) : job.short}
+                            ) : (
+                              job.short
+                            )}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
                             {job.over === null || job.over === undefined ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>
-                            ) : job.over}
+                            ) : (
+                              job.over
+                            )}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.refused === null || job.refused === undefined ? (
+                            {job.refused === null ||
+                            job.refused === undefined ? (
                               <span className="flex justify-center items-center">
                                 <IoIosInformationCircle className="text-2xl text-red-500" />
                               </span>
-                            ) : job.refused}
+                            ) : (
+                              job.refused
+                            )}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
                             {Array.isArray(job.customerOrderNum)
@@ -1735,19 +2040,29 @@ const MasterPage = () => {
                               }}
                               content={
                                 <ul className="bg-white border text-center rounded-md shadow-lg w-32">
-                                  {finalOptions.map(({ status, color, bgColor }) => (
-                                    <li
-                                      key={status}
-                                      className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${job.finalStatus === status ? `${color} ${bgColor}` : color
+                                  {finalOptions.map(
+                                    ({ status, color, bgColor }) => (
+                                      <li
+                                        key={status}
+                                        className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${
+                                          job.finalStatus === status
+                                            ? `${color} ${bgColor}`
+                                            : color
                                         }`}
-                                      onClick={() => {
-                                        updateStatus(job._id, "finalStatus", status, name);
-                                        parentRefFinal.current?.hide();
-                                      }}
-                                    >
-                                      {status}
-                                    </li>
-                                  ))}
+                                        onClick={() => {
+                                          updateStatus(
+                                            job._id,
+                                            "finalStatus",
+                                            status,
+                                            name
+                                          );
+                                          parentRefFinal.current?.hide();
+                                        }}
+                                      >
+                                        {status}
+                                      </li>
+                                    )
+                                  )}
                                 </ul>
                               }
                               interactive={true}
@@ -1762,26 +2077,36 @@ const MasterPage = () => {
                                   return false;
                                 }
                               }}
-                              appendTo={() => document.body}>
+                              appendTo={() => document.body}
+                            >
                               <div
-                                className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${userRole !== "standarduser" ? 'cursor-pointer' : ''} ${job.finalStatus === "new"
-                                  ? "bg-blue-100 text-blue-600"
-                                  : job.finalStatus === "inProgress"
+                                className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${
+                                  userRole !== "standarduser"
+                                    ? "cursor-pointer"
+                                    : ""
+                                } ${
+                                  job.finalStatus === "new"
+                                    ? "bg-blue-100 text-blue-600"
+                                    : job.finalStatus === "inProgress"
                                     ? "bg-yellow-100 text-yellow-600"
                                     : job.finalStatus === "valid"
-                                      ? "bg-green-100 text-green-600"
-                                      : job.finalStatus === "partiallyValid"
-                                        ? "bg-[#faf1be] text-[#AF9918]"
-                                        : job.finalStatus === "failure"
-                                          ? "bg-red-100 text-red-600"
-                                          : job.finalStatus === "sent"
-                                            ? "bg-green-100 text-green-600"
-                                            : "bg-gray-100 text-gray-600"
-                                  }`}
+                                    ? "bg-green-100 text-green-600"
+                                    : job.finalStatus === "partiallyValid"
+                                    ? "bg-[#faf1be] text-[#AF9918]"
+                                    : job.finalStatus === "failure"
+                                    ? "bg-red-100 text-red-600"
+                                    : job.finalStatus === "sent"
+                                    ? "bg-green-100 text-green-600"
+                                    : "bg-gray-100 text-gray-600"
+                                }`}
                               >
                                 <div>{job.finalStatus}</div>
                                 <RiArrowDropDownLine
-                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${dropdownStates === job._id ? "rotate-180" : ""}`}
+                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${
+                                    dropdownStates === job._id
+                                      ? "rotate-180"
+                                      : ""
+                                  }`}
                                 />
                               </div>
                             </Tippy>
@@ -1797,19 +2122,29 @@ const MasterPage = () => {
                               }}
                               content={
                                 <ul className="bg-white border text-center rounded-md shadow-lg w-32">
-                                  {reviewOptions.map(({ status, color, bgColor }) => (
-                                    <li
-                                      key={status}
-                                      className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${job.reviewStatus === status ? `${color} ${bgColor}` : color
+                                  {reviewOptions.map(
+                                    ({ status, color, bgColor }) => (
+                                      <li
+                                        key={status}
+                                        className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${
+                                          job.reviewStatus === status
+                                            ? `${color} ${bgColor}`
+                                            : color
                                         }`}
-                                      onClick={() => {
-                                        updateStatus(job._id, "reviewStatus", status, name);
-                                        parentRefReview.current?.hide();
-                                      }}
-                                    >
-                                      {status}
-                                    </li>
-                                  ))}
+                                        onClick={() => {
+                                          updateStatus(
+                                            job._id,
+                                            "reviewStatus",
+                                            status,
+                                            name
+                                          );
+                                          parentRefReview.current?.hide();
+                                        }}
+                                      >
+                                        {status}
+                                      </li>
+                                    )
+                                  )}
                                 </ul>
                               }
                               interactive={true}
@@ -1824,22 +2159,32 @@ const MasterPage = () => {
                                   return false;
                                 }
                               }}
-                              appendTo={() => document.body}>
-
+                              appendTo={() => document.body}
+                            >
                               <div
-                                className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${userRole !== "standarduser" ? 'cursor-pointer' : ''} ${job.reviewStatus === "unConfirmed"
-                                  ? "bg-yellow-100 text-yellow-600"
-                                  : job.reviewStatus === "confirmed"
+                                className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${
+                                  userRole !== "standarduser"
+                                    ? "cursor-pointer"
+                                    : ""
+                                } ${
+                                  job.reviewStatus === "unConfirmed"
+                                    ? "bg-yellow-100 text-yellow-600"
+                                    : job.reviewStatus === "confirmed"
                                     ? "bg-green-100 text-green-600"
                                     : job.reviewStatus === "denied"
-                                      ? "bg-[#faf1be] text-[#AF9918]"
-                                      : job.reviewStatus === "deleted"
-                                        ? "bg-red-100 text-red-600"
-                                        : ""
-                                  }`}>
+                                    ? "bg-[#faf1be] text-[#AF9918]"
+                                    : job.reviewStatus === "deleted"
+                                    ? "bg-red-100 text-red-600"
+                                    : ""
+                                }`}
+                              >
                                 <div>{job.reviewStatus}</div>
                                 <RiArrowDropDownLine
-                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${dropdownStatesFirst === job._id ? "rotate-180" : ""}`}
+                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${
+                                    dropdownStatesFirst === job._id
+                                      ? "rotate-180"
+                                      : ""
+                                  }`}
                                 />
                               </div>
                             </Tippy>
@@ -1855,19 +2200,29 @@ const MasterPage = () => {
                               }}
                               content={
                                 <ul className="bg-white border text-center rounded-md shadow-lg w-32">
-                                  {recognitionOptions.map(({ status, color, bgColor }) => (
-                                    <li
-                                      key={status}
-                                      className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${job.recognitionStatus === status ? `${color} ${bgColor}` : color
+                                  {recognitionOptions.map(
+                                    ({ status, color, bgColor }) => (
+                                      <li
+                                        key={status}
+                                        className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${
+                                          job.recognitionStatus === status
+                                            ? `${color} ${bgColor}`
+                                            : color
                                         }`}
-                                      onClick={() => {
-                                        updateStatus(job._id, "recognitionStatus", status, name);
-                                        parentRefRecognition.current?.hide();
-                                      }}
-                                    >
-                                      {status}
-                                    </li>
-                                  ))}
+                                        onClick={() => {
+                                          updateStatus(
+                                            job._id,
+                                            "recognitionStatus",
+                                            status,
+                                            name
+                                          );
+                                          parentRefRecognition.current?.hide();
+                                        }}
+                                      >
+                                        {status}
+                                      </li>
+                                    )
+                                  )}
                                 </ul>
                               }
                               interactive={true}
@@ -1882,26 +2237,36 @@ const MasterPage = () => {
                                   return false;
                                 }
                               }}
-                              appendTo={() => document.body}>
-
+                              appendTo={() => document.body}
+                            >
                               <div
-                                className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${userRole !== "standarduser" ? 'cursor-pointer' : ''} ${job.recognitionStatus === "new"
-                                  ? "bg-blue-100 text-blue-600"
-                                  : job.recognitionStatus === "inProgress"
+                                className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${
+                                  userRole !== "standarduser"
+                                    ? "cursor-pointer"
+                                    : ""
+                                } ${
+                                  job.recognitionStatus === "new"
+                                    ? "bg-blue-100 text-blue-600"
+                                    : job.recognitionStatus === "inProgress"
                                     ? "bg-yellow-100 text-yellow-600"
                                     : job.recognitionStatus === "valid"
-                                      ? "bg-green-100 text-green-600"
-                                      : job.recognitionStatus === "partiallyValid"
-                                        ? "bg-[#faf1be] text-[#AF9918]"
-                                        : job.recognitionStatus === "failure"
-                                          ? "bg-red-100 text-red-600"
-                                          : job.recognitionStatus === "sent"
-                                            ? "bg-green-100 text-green-600"
-                                            : ""
-                                  }`}>
+                                    ? "bg-green-100 text-green-600"
+                                    : job.recognitionStatus === "partiallyValid"
+                                    ? "bg-[#faf1be] text-[#AF9918]"
+                                    : job.recognitionStatus === "failure"
+                                    ? "bg-red-100 text-red-600"
+                                    : job.recognitionStatus === "sent"
+                                    ? "bg-green-100 text-green-600"
+                                    : ""
+                                }`}
+                              >
                                 <div>{job.recognitionStatus}</div>
                                 <RiArrowDropDownLine
-                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${dropdownStatesSecond === job._id ? "rotate-180" : ""}`}
+                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${
+                                    dropdownStatesSecond === job._id
+                                      ? "rotate-180"
+                                      : ""
+                                  }`}
                                 />
                               </div>
                             </Tippy>
@@ -1917,19 +2282,29 @@ const MasterPage = () => {
                               }}
                               content={
                                 <ul className="bg-white border text-center rounded-md shadow-lg w-32">
-                                  {breakdownOptions.map(({ status, color, bgColor }) => (
-                                    <li
-                                      key={status}
-                                      className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${job.breakdownReason === status ? `${color} ${bgColor}` : color
+                                  {breakdownOptions.map(
+                                    ({ status, color, bgColor }) => (
+                                      <li
+                                        key={status}
+                                        className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${
+                                          job.breakdownReason === status
+                                            ? `${color} ${bgColor}`
+                                            : color
                                         }`}
-                                      onClick={() => {
-                                        updateStatus(job._id, "breakdownReason", status, name);
-                                        parentRefBreakdown.current?.hide();
-                                      }}
-                                    >
-                                      {status}
-                                    </li>
-                                  ))}
+                                        onClick={() => {
+                                          updateStatus(
+                                            job._id,
+                                            "breakdownReason",
+                                            status,
+                                            name
+                                          );
+                                          parentRefBreakdown.current?.hide();
+                                        }}
+                                      >
+                                        {status}
+                                      </li>
+                                    )
+                                  )}
                                 </ul>
                               }
                               interactive={true}
@@ -1944,39 +2319,52 @@ const MasterPage = () => {
                                   return false;
                                 }
                               }}
-                              appendTo={() => document.body}>
-
+                              appendTo={() => document.body}
+                            >
                               <div
-                                className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${userRole !== "standarduser" ? 'cursor-pointer' : ''} ${job.breakdownReason === "none"
-                                  ? "bg-blue-100 text-blue-600"
-                                  : job.breakdownReason === "damaged"
+                                className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${
+                                  userRole !== "standarduser"
+                                    ? "cursor-pointer"
+                                    : ""
+                                } ${
+                                  job.breakdownReason === "none"
+                                    ? "bg-blue-100 text-blue-600"
+                                    : job.breakdownReason === "damaged"
                                     ? "bg-yellow-100 text-yellow-600"
                                     : job.breakdownReason === "shortage"
-                                      ? "bg-green-100 text-green-600"
-                                      : job.breakdownReason === "overage"
-                                        ? "bg-[#faf1be] text-[#AF9918]"
-                                        : job.breakdownReason === "refused"
-                                          ? "bg-red-100 text-red-600"
-                                          : ""
-                                  }`}
+                                    ? "bg-green-100 text-green-600"
+                                    : job.breakdownReason === "overage"
+                                    ? "bg-[#faf1be] text-[#AF9918]"
+                                    : job.breakdownReason === "refused"
+                                    ? "bg-red-100 text-red-600"
+                                    : ""
+                                }`}
                               >
                                 <div>{job.breakdownReason}</div>
                                 <RiArrowDropDownLine
-                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${dropdownStatesThird === job._id ? "rotate-180" : ""}`}
+                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${
+                                    dropdownStatesThird === job._id
+                                      ? "rotate-180"
+                                      : ""
+                                  }`}
                                 />
                               </div>
                             </Tippy>
                           </td>
-                          <td className="py-2 px-4 border-b text-center">{job.reviewedBy}</td>
+                          <td className="py-2 px-4 border-b text-center">
+                            {job.reviewedBy}
+                          </td>
                           <td className="py-2 px-6 border-b text-center">
                             <Link
-                              href={`/extracted-data-monitoring/edit-pdf/${job._id}`} onClick={() => { handleRouteChange(); localStorage.setItem("prev", "") }}
+                              href={`/extracted-data-monitoring/edit-pdf/${job._id}`}
+                              onClick={() => {
+                                handleRouteChange();
+                                localStorage.setItem("prev", "");
+                              }}
                               className="underline text-[#005B97] flex items-center gap-1 transition-all duration-300 hover:text-blue-500 group"
                             >
                               Detail
-                              <span
-                                className="transform transition-transform duration-300 ease-in-out group-hover:translate-x-1"
-                              >
+                              <span className="transform transition-transform duration-300 ease-in-out group-hover:translate-x-1">
                                 <IoIosArrowForward className="text-xl p-0" />
                               </span>
                             </Link>
@@ -1989,33 +2377,39 @@ const MasterPage = () => {
               </div>
             )}
 
-            {
-              master.length !== 0 && (
-                <div className="mt-5 flex justify-end gap-5 items-center text-gray-800">
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-md ${currentPage === 1 ? "bg-gray-300 cursor-not-allowed" : "bg-blue-500 text-white hover:bg-blue-600"}`}
-                  >
-                    Previous
-                  </button>
-                  <span>Page {currentPage} of {totalPages}</span>
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className={`px-4 py-2 rounded-md ${currentPage === totalPages ? "bg-gray-300 cursor-not-allowed" : "bg-blue-500 text-white hover:bg-blue-600"}`}
-                  >
-                    Next
-                  </button>
-
-                </div>
-              )
-            }
-
-          </div >
-        </div >
-      </div >
-    </div >
+            {master.length !== 0 && (
+              <div className="mt-5 flex justify-end gap-5 items-center text-gray-800">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-md ${
+                    currentPage === 1
+                      ? "bg-gray-300 cursor-not-allowed"
+                      : "bg-blue-500 text-white hover:bg-blue-600"
+                  }`}
+                >
+                  Previous
+                </button>
+                <span>
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className={`px-4 py-2 rounded-md ${
+                    currentPage === totalPages
+                      ? "bg-gray-300 cursor-not-allowed"
+                      : "bg-blue-500 text-white hover:bg-blue-600"
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 export default MasterPage;

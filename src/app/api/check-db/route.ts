@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
     const dbConfig = {
         user: "numan",
         password: "numan786$",
-        connectString: "192.168.18.126:1539/ORCLCDB",
+        connectString: "192.168.0.145:1539/ORCLCDB",
     };
 
     let connection;
