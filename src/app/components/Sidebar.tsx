@@ -39,14 +39,20 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     const [remember, setRemember] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
 
-    const [wmsUrl, setWmsUrl] = useState("");
+    // const [wmsUrl, setWmsUrl] = useState("");
     const [username, setUsername] = useState("");
+    const [hostName, setHostName] = useState("");
+    const [port, setPort] = useState("");
+    const [serviceName, setServiceName] = useState("");
     const [password, setPassword] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const [saved, setSaved] = useState(false);
-    const [originalUrl, setOriginalUrl] = useState(""); // Store the fetched URL
+    // const [originalUrl, setOriginalUrl] = useState(""); // Store the fetched URL
     const [originalUsername, setOriginalUsername] = useState("");
     const [originalPassword, setOriginalPassword] = useState("");
+        const [originalHostName, setOriginalHostName] = useState(""); // Store the fetched URL
+    const [originalPort, setOriginalPort] = useState("");
+    const [originalServiceName, setOriginalServiceName] = useState("");
 
     const [isInputActive, setIsInputActive] = useState(false); // Track input foc
     const [dataBase, setDataBase] = useState("local");
@@ -130,11 +136,18 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
             try {
                 const response = await fetch("/api/save-wms-url");
                 const data = await response.json();
-                if (response.ok && data.wmsUrl) {
-                    setWmsUrl(data.wmsUrl);
-                    setOriginalUrl(data.wmsUrl);
+                console.log("data-> ", data)
+                if (response.ok) {
+                    // setWmsUrl(data.wmsUrl);
+                    // setOriginalUrl(data.wmsUrl);
                     setUsername(data.username || "");
+                    setHostName(data.hostName|| "")
                     setOriginalUsername(data.username || "");
+                    setOriginalHostName(data.hostName || "")
+                    setPort(data.port||"")
+                    setOriginalPort(data.port||"")
+                    setServiceName(data.serviceName||"")
+                    setOriginalServiceName(data.serviceName||"")
                     setPassword(data.password || "");
                     setOriginalPassword(data.password || "");
                 }
@@ -152,14 +165,17 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
             const response = await fetch("/api/save-wms-url", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ wmsUrl, username, password }),
+                body: JSON.stringify({  username, password,hostName, port, serviceName }),
             });
 
             if (response.ok) {
                 setSaved(true);
-                setOriginalUrl(wmsUrl);
+                // setOriginalUrl(wmsUrl);
                 setOriginalUsername(username);
                 setOriginalPassword(password);
+                setOriginalHostName(hostName);
+                setOriginalPort(port);
+                setOriginalServiceName(serviceName);
 
                 // Hide success message after 3 sec
                 setTimeout(() => setSaved(false), 3000);
@@ -872,7 +888,7 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                         </li> */}
 
                                         <li className="p-2 border-b">
-                                            <span className="block mb-1">WMS API</span>
+                                            {/* <span className="block mb-1">WMS API</span>
                                             <input
                                                 type="text"
                                                 placeholder="Address..."
@@ -884,7 +900,40 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                                                 onFocus={() => setIsInputActive(true)}
                                                 onBlur={() => setIsInputActive(false)}
                                                 className="w-full p-2 border border-gray-300 rounded"
+                                            /> */}
+                                            
+  <span className="block mt-2 mb-1">Hostname</span>
+                                            <input
+                                                type="text"
+                                                placeholder="Hostname..."
+                                                value={hostName}
+                                                onChange={(e) => setHostName(e.target.value)}
+                                                onFocus={() => setIsInputActive(true)}
+                                                onBlur={() => setIsInputActive(false)}
+                                                className="w-full p-2 border border-gray-300 rounded"
                                             />
+                                              <span className="block mt-2 mb-1">Port</span>
+                                            <input
+                                                type="text"
+                                                placeholder="Port..."
+                                                value={port}
+                                                onChange={(e) => setPort(e.target.value)}
+                                                onFocus={() => setIsInputActive(true)}
+                                                onBlur={() => setIsInputActive(false)}
+                                                className="w-full p-2 border border-gray-300 rounded"
+                                            />
+                                              <span className="block mt-2 mb-1">Service Name</span>
+                                            <input
+                                                type="text"
+                                                placeholder="Service name..."
+                                                value={serviceName}
+                                                onChange={(e) => setServiceName(e.target.value)}
+                                                onFocus={() => setIsInputActive(true)}
+                                                onBlur={() => setIsInputActive(false)}
+                                                className="w-full p-2 border border-gray-300 rounded"
+                                            />
+
+
 
                                             <span className="block mt-2 mb-1">Username</span>
                                             <input
@@ -911,9 +960,12 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
 
 
                                             {!saved && (isInputActive ||
-                                                wmsUrl !== originalUrl ||
+                                                // wmsUrl !== originalUrl ||
                                                 username !== originalUsername ||
-                                                password !== originalPassword) && (
+                                                password !== originalPassword||
+                                            hostName!== originalHostName
+                                        || port!== originalPort||
+                                    serviceName!== originalServiceName) && (
                                                     <button
                                                         onClick={handleSave}
                                                         className="mt-2 px-5 py-1 text-base bg-[#005B97] text-white rounded hover:bg-[#3794d2]"

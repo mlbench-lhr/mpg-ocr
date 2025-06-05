@@ -28,6 +28,7 @@ cron.schedule("*/1 * * * *", async () => {
 
     const res1 = await fetch("http://localhost:3000/api/save-wms-url");
     const data_0 = await res1.json();
+    console.log('wms url-> ', data_0)
 
     let ocrUrl, baseUrl, wmsUrl, userName, passWord;
 
@@ -38,6 +39,8 @@ cron.schedule("*/1 * * * *", async () => {
       userName = data_0.username;
       passWord = data_0.password;
     }
+
+    console.log('username-> ', userName)
 
     if (jobs && Array.isArray(jobs.activeJobs)) {
       for (const job of jobs.activeJobs) {
@@ -56,8 +59,13 @@ cron.schedule("*/1 * * * *", async () => {
                 "http://localhost:3000/api/pod/retrieve"
               );
               const data_1 = await response.json();
-              console.log("data_1 full:", JSON.stringify(data_1, null, 2));
-              console.log("keys of first object:", Object.keys(data_1[0]));
+              if (data_1.length > 0 && data_1[0]) {
+                console.log("data_1 full:", JSON.stringify(data_1, null, 2));
+                console.log("keys of first object:", Object.keys(data_1[0]));
+              } else {
+                console.log("data_1 is empty or invalid:", data_1);
+                return; // or skip the rest of the logic for this iteration
+              }
 
               const fileId = data_1[0]?.FILE_ID || data_1[0]?.file_id || "";
               const fileTable =
