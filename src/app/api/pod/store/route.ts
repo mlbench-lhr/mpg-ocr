@@ -33,20 +33,14 @@ export async function POST(req: Request) {
         //     );
 
         await connection.execute(
-            `INSERT INTO JDATM_PROD.XTI_FILE_POD_OCR_T (FILE_ID, CRTD_USR_CD, CRTD_DTT, SENT_FILE_DTT)
+            `INSERT INTO  ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T (FILE_ID, CRTD_USR_CD, CRTD_DTT, SENT_FILE_DTT)
              SELECT B.FILE_ID, 'OCR', SYSDATE, SYSDATE
-             FROM JDATM_PROD.XTI_FILE_POD_T B
+             FROM  ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_T B
              WHERE B.FILE_ID = :fileId`,
             [fileId]
         );
 
-        // await connection.execute(
-        // `INSERT INTO JDATM_PROD.XTI_FILE_POD_OCR_T (FILE_ID, CRTD_USR_CD, CRTD_DTT, SENT_FILE_DTT)
-        //     SELECT B.FILE_ID, 'OCR', SYSDATE, SYSDATE
-        //     FROM JDATM_PROD.XTI_FILE_POD_T B
-        //     WHERE B.FILE_ID = :fileId`,
-        // [fileId]
-        // );
+   
 
         await connection.commit();
         await connection.close();

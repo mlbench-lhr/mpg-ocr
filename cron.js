@@ -1,473 +1,231 @@
+const cron = require("node-cron");
+const fetch = require("node-fetch");
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const isBetween = require("dayjs/plugin/isBetween");
-const cron = require("node-cron");
-const fetch = require("node-fetch");
-console.log("✅ Cron job script started...");
+
 
 dayjs.extend(utc);
 dayjs.extend(isBetween);
 
-cron.schedule("*/1 * * * *", async () => {
+let cronJobCounter = 1;
+console.log("✅ OCR Cron Job Script Initialized");
+
+async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
+  console.log("ocr script started.");
+
+  try {
+    const retrieveRes = await fetch("http://localhost:3000/api/pod/retrieve");
+
+    const fileList = await retrieveRes.json();
+    console.log("file list-> ", fileList);
+
+    for (const item of fileList) {
+      try {
+        const fileId = item.FILE_ID || item.file_id;
+        const fileTable = item.FILE_TABLE || item.file_table;
+        const fileRes = await fetch(
+          `http://localhost:3000/api/pod/file?fileId=${fileId}&fileTable=${fileTable}`
+        );
+        if (!fileRes.ok) continue;
+
+        const fileData = await fileRes.json();
+        console.log("filer data-> ", fileData);
+        await fetch("http://localhost:3000/api/pod/store", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fileId: fileData.FILE_ID }),
+        });
+
+        const filePath = `${baseUrl}/api/access-file?filename=${encodeURIComponent(
+          fileData.FILE_NAME
+        )}`;
+        console.log("file path-> ", filePath);
+        const ocrRes = await fetch(ocrUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ file_url_or_path: filePath }),
+        });
+
+        if (!ocrRes.ok) {
+          const errJson = await ocrRes.json().catch(() => null);
+          throw new Error(errJson?.error || "OCR Failed");
+        }
+
+        const ocrData = await ocrRes.json();
+        if (!Array.isArray(ocrData)) continue;
+
+        const processed = ocrData.map((d) => ({
+          jobId: job._id,
+          pdfUrl: decodeURIComponent(
+            new URL(filePath).searchParams.get("filename") || ""
+          ),
+          deliveryDate: new Date().toISOString().split("T")[0],
+          noOfPages: 1,
+          blNumber: String(d?.B_L_Number || ""),
+          podDate: d?.POD_Date || "",
+          podSignature: d?.Signature_Exists || "unknown",
+          totalQty: Number(d?.Issued_Qty) || 0,
+          received: Number(d?.Received_Qty) || 0,
+          damaged: d?.Damage_Qty,
+          short: d?.Short_Qty,
+          over: d?.Over_Qty,
+          refused: d?.Refused_Qty,
+          customerOrderNum: d?.Customer_Order_Num,
+          stampExists: d?.Stamp_Exists,
+          finalStatus: "valid",
+          reviewStatus: "unConfirmed",
+          recognitionStatus:
+            {
+              failed: "failure",
+              valid: "valid",
+              "partially valid": "partiallyValid",
+            }[d?.Status] || "null",
+          breakdownReason: "none",
+          reviewedBy: "OCR Engine",
+          cargoDescription: "Processed from OCR API.",
+          none: "N",
+          sealIntact: d?.Seal_Intact === "yes" ? "Y" : "N",
+        }));
+
+        const single = processed[0];
+
+        // SAP BOL matching
+        try {
+          const basicAuth = Buffer.from(`${userName}:${passWord}`).toString(
+            "base64"
+          );
+          const response = await fetch(wmsUrl, {
+            method: "POST",
+            headers: {
+              Authorization: `Basic ${basicAuth}`,
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ BOLNo: [single.blNumber] }),
+          });
+
+          const sapData = await response.json();
+          if (sapData[0]?.BOLNo?.trim() === single.blNumber.trim()) {
+            single.recognitionStatus = "valid";
+            processed[0].recognitionStatus = "valid";
+          } else {
+            single.recognitionStatus = "failure";
+            processed[0].recognitionStatus = "failure";
+          }
+        } catch (err) {
+          console.error("SAP check error:", err.message);
+        }
+
+        const confirmRes = await fetch(
+          "http://localhost:3000/api/settings/auto-confirmation"
+        );
+        const confirmJson = await confirmRes.json();
+
+        if (confirmJson.isAutoConfirmationOpen) {
+          await fetch("http://localhost:3000/api/pod/update", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              fileId: fileData.FILE_ID,
+              ocrData: single,
+            }),
+          });
+        }
+
+        await fetch("http://localhost:3000/api/process-data/save-data", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(processed),
+        });
+
+        console.log(`✅ File ${fileId} processed.`);
+      } catch (err) {
+        console.error("❌ File processing error:", err.message);
+      }
+    }
+  } catch (err) {
+    console.error("OCR job error:", err.message);
+  }
+}
+
+async function scheduleJobs() {
   try {
     const dbResponse = await fetch("http://localhost:3000/api/auth/public-db");
     const dbData = await dbResponse.json();
 
-    console.log("dbData?.database -> ", dbData);
     if (dbData?.database !== "remote") {
-      console.log("Database is not remote. Skipping job execution.");
+      console.log("Database is not remote. Skipping job scheduling.");
       return;
     }
 
-    const activeJobs = await fetch("http://localhost:3000/api/jobs/get-job");
-    const jobs = await activeJobs.json();
-    const currentTime = dayjs().add(5, "hours");
+    // Fetch necessary data (IP, OCR URL, WMS URL, jobs)
+    const ipRes = await fetch("http://localhost:3000/api/ipAddress/ip-address");
+    const ipData = await ipRes.json();
+    const baseUrl = `http://${ipData.secondaryIp}:3000`;
+    const ocrUrl = `http://${ipData.ip}:8080/run-ocr`;
 
-    const res = await fetch("http://localhost:3000/api/ipAddress/ip-address");
-    const data_2 = await res.json();
+    const wmsRes = await fetch("http://localhost:3000/api/save-wms-url");
+    const {
+      wmsUrl,
+      username: userName,
+      password: passWord,
+    } = await wmsRes.json();
 
-    const res1 = await fetch("http://localhost:3000/api/save-wms-url");
-    const data_0 = await res1.json();
-    console.log('wms url-> ', data_0)
+    const jobRes = await fetch("http://localhost:3000/api/jobs/get-job");
+    const jobJson = await jobRes.json();
+    const jobs = jobJson.activeJobs;
 
-    let ocrUrl, baseUrl, wmsUrl, userName, passWord;
+    for (const job of jobs) {
+      const now = new Date();
+      const currentHours = now.getHours();
+      const currentMinutes = now.getMinutes();
+      const currentTimeStr = `${String(currentHours).padStart(2, "0")}:${String(
+        currentMinutes
+      ).padStart(2, "0")}`;
 
-    if (data_2.ip) {
-      ocrUrl = `http://${data_2.ip}:8080/run-ocr`;
-      baseUrl = `http://${data_2.secondaryIp}:3000`;
-      wmsUrl = data_0.wmsUrl;
-      userName = data_0.username;
-      passWord = data_0.password;
-    }
+      const fromTime = new Date(job.pdfCriteria.fromTime);
+      const toTime = new Date(job.pdfCriteria.toTime);
 
-    console.log('username-> ', userName)
+      const fromHours = String(fromTime.getUTCHours()).padStart(2, "0");
+      const fromMinutes = String(fromTime.getUTCMinutes()).padStart(2, "0");
+      const toHours = String(toTime.getUTCHours()).padStart(2, "0");
+      const toMinutes = String(toTime.getUTCMinutes()).padStart(2, "0");
 
-    if (jobs && Array.isArray(jobs.activeJobs)) {
-      for (const job of jobs.activeJobs) {
-        const selectedDays = job.selectedDays;
-        const currentDay = currentTime.format("dddd");
-        if (selectedDays.includes(currentDay)) {
-          const { fromTime, toTime } = job.pdfCriteria;
-          const from = dayjs(fromTime).utc();
-          const to = dayjs(toTime).utc();
-          if (currentTime.isBetween(from, to)) {
-            const [hours, minutes] = job.everyTime.split(":").map(Number);
-            const intervalMinutes = hours * 60 + minutes;
-            const minuteDifference = currentTime.diff(from, "minute");
-            if (minuteDifference % intervalMinutes === 0) {
-              const response = await fetch(
-                "http://localhost:3000/api/pod/retrieve"
-              );
-              const data_1 = await response.json();
-              if (data_1.length > 0 && data_1[0]) {
-                console.log("data_1 full:", JSON.stringify(data_1, null, 2));
-                console.log("keys of first object:", Object.keys(data_1[0]));
-              } else {
-                console.log("data_1 is empty or invalid:", data_1);
-                return; // or skip the rest of the logic for this iteration
-              }
+      const fromTimeStr = `${fromHours}:${fromMinutes}`;
+      const toTimeStr = `${toHours}:${toMinutes}`;
 
-              const fileId = data_1[0]?.FILE_ID || data_1[0]?.file_id || "";
-              const fileTable =
-                data_1[0]?.FILE_TABLE || data_1[0]?.file_table || "";
+      const currentDay = now.toLocaleString("en-US", { weekday: "long" });
 
-              console.log("Using fileId:", fileId, "fileTable:", fileTable);
+      console.log(
+        "from time-> ",
+        fromTimeStr,
+        "to time-> ",
+        toTimeStr,
+        "current time-> ",
+        currentTimeStr,
+        "current day-> ",
+        currentDay
+      );
 
-              // console.log("My name is JDATM_PROD 1122", data_1[0]?.fileId);
-              // console.log("My name is JDATM_PROD 1133", data_1[0]?.fileTable);
-
-              // const file_response = await fetch(`http://localhost:3000/api/pod/file?fileId=${data_1.fileId}&fileTable=${data_1.fileTable}`);
-              // const file_response = await fetch(`http://localhost:3000/api/pod/file?fileId=${data_1[0]?.FILE_ID}&fileTable=${data_1[0]?.FILE_TABLE}`);
-              const file_response = await fetch(
-                `http://localhost:3000/api/pod/file?fileId=${fileId}&fileTable=${fileTable}`
-              );
-              // const file_response = await fetch(`http://localhost:3000/api/pod/file?fileId=POD_002&fileTable=XTI_2025_T`);
-
-              const data_3 = await file_response.json();
-
-              if (file_response.ok) {
-                const insertRes = await fetch(
-                  "http://localhost:3000/api/pod/store",
-                  {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ fileId: data_3.FILE_ID }),
-                  }
-                );
-
-                const insertData = await insertRes.json();
-                const fileData = {
-                  jobId: "",
-                  fileId: data_3.FILE_ID,
-                  pdfUrl: data_3.FILE_PATH,
-                  deliveryDate: "",
-                  noOfPages: 0,
-                  blNumber: "",
-                  podDate: "",
-                  podSignature: "",
-                  totalQty: "",
-                  received: "",
-                  damaged: "",
-                  short: "",
-                  over: "",
-                  refused: "",
-                  customerOrderNum: "",
-                  stampExists: "",
-                  finalStatus: "new",
-                  reviewStatus: "unConfirmed",
-                  recognitionStatus: "new",
-                  breakdownReason: "none",
-                  reviewedBy: "",
-                  cargoDescription: "",
-                  sealIntact: "",
-                };
-
-                fetch("http://localhost:3000/api/process-data/save-data", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify([fileData]),
-                })
-                  .then((response) => response.json())
-                  .then((result) => console.log("Response:", result))
-                  .catch((error) => console.error("Error:", error));
-
-                let filePath = `${baseUrl}/api/access-file?filename=${encodeURIComponent(
-                  data_3.FILE_NAME
-                )}`;
-
-                const ocrResponse = await fetch(ocrUrl, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ file_url_or_path: filePath }),
-                });
-
-                if (!ocrResponse.ok) {
-                  const errorData = await ocrResponse.json().catch(() => null);
-                  throw new Error(errorData?.error || "Failed to process OCR");
-                }
-
-                const ocrData = await ocrResponse.json();
-
-                if (ocrData && Array.isArray(ocrData)) {
-                  const processedDataArray = ocrData.map((data) => {
-                    const recognitionStatusMap = {
-                      failed: "failure",
-                      "partially valid": "partiallyValid",
-                      valid: "valid",
-                      null: "null",
-                    };
-
-                    const status = recognitionStatusMap[data?.Status] || "null";
-                    const recognitionStatus =
-                      recognitionStatusMap[status] || "null";
-
-                    const urlObj = new URL(filePath);
-                    const filename = urlObj.searchParams.get("filename") || "";
-                    const decodedFilePath = `/file/${decodeURIComponent(
-                      filename
-                    )}`;
-
-                    return {
-                      jobId: job._id ? job._id.toString() : null,
-                      pdfUrl: decodedFilePath,
-                      deliveryDate: new Date().toISOString().split("T")[0],
-                      noOfPages: 1,
-                      blNumber: data?.B_L_Number ? String(data.B_L_Number) : "",
-                      podDate: data?.POD_Date || "",
-                      podSignature:
-                        data?.Signature_Exists === "yes"
-                          ? "yes"
-                          : data?.Signature_Exists === "no"
-                          ? "no"
-                          : data?.Signature_Exists,
-                      totalQty: isNaN(data?.Issued_Qty)
-                        ? data?.Issued_Qty
-                        : Number(data?.Issued_Qty),
-                      received: isNaN(data?.Received_Qty)
-                        ? data?.Received_Qty
-                        : Number(data?.Received_Qty),
-
-                      damaged: data?.Damage_Qty,
-                      short: data?.Short_Qty,
-                      over: data?.Over_Qty,
-                      refused: data?.Refused_Qty,
-
-                      customerOrderNum: data?.Customer_Order_Num,
-                      stampExists:
-                        data?.Stamp_Exists === "yes"
-                          ? "yes"
-                          : data?.Stamp_Exists === "no"
-                          ? "no"
-                          : data?.Stamp_Exists,
-                      finalStatus: "valid",
-                      reviewStatus: "unConfirmed",
-                      recognitionStatus: recognitionStatus,
-                      breakdownReason: "none",
-                      reviewedBy: "OCR Engine",
-                      cargoDescription: "Processed from OCR API.",
-                      none: "N",
-                      sealIntact:
-                        data?.Seal_Intact === "yes"
-                          ? "Y"
-                          : data?.Seal_Intact === "no"
-                          ? "N"
-                          : data?.Seal_Intact,
-                    };
-                  });
-
-                  const processedDataObject =
-                    processedDataArray.length > 0 ? processedDataArray[0] : {};
-
-                  // console.log('numan obj', String(processedDataObject.blNumber));
-                  // console.log('numan array', processedDataArray);
-                  // console.log('numan array', processedDataArray[0]['recognitionStatus']);
-
-                  const fetchSAPOData = async () => {
-                    const sapUrl = wmsUrl;
-                    const username = userName;
-                    const password = passWord;
-                    const basicAuth = Buffer.from(
-                      `${username}:${password}`
-                    ).toString("base64");
-                    const BOLNo = [String(processedDataObject.blNumber)];
-                    try {
-                      const response = await fetch(sapUrl, {
-                        method: "POST",
-                        headers: {
-                          Authorization: `Basic ${basicAuth}`,
-                          Accept: "application/json",
-                          "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                          BOLNo: BOLNo,
-                        }),
-                      });
-
-                      if (!response.ok) {
-                        throw new Error(`SAP API returned ${response.status}`);
-                      }
-
-                      const data = await response.json();
-                      if (
-                        String(processedDataObject.blNumber).trim() ===
-                        data[0].BOLNo.trim()
-                      ) {
-                        console.log("Matched!");
-                        processedDataObject.recognitionStatus = "valid";
-                        processedDataArray[0].recognitionStatus = "valid";
-                      } else {
-                        console.log("Not matched!");
-                        processedDataObject.recognitionStatus = "failure";
-                        processedDataArray[0].recognitionStatus = "failure";
-                      }
-                    } catch (error) {
-                      console.error("Error 12346:", error);
-                    }
-                  };
-
-                  fetchSAPOData();
-
-                  const check_res = await fetch(
-                    "http://localhost:3000/api/settings/auto-confirmation"
-                  );
-                  const data_4 = await check_res.json();
-                  const check = data_4.isAutoConfirmationOpen;
-
-                  if (check) {
-                    const fileId = data_3.FILE_ID;
-                    fetch("http://localhost:3000/api/pod/update", {
-                      method: "PUT",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        fileId,
-                        ocrData: processedDataObject,
-                      }),
-                    })
-                      .then((res) => res.json())
-                      .then((data) => console.log("Update Response:", data))
-                      .catch((error) => console.error("Update Error:", error));
-                  }
-
-                  const saveResponse = await fetch(
-                    "http://localhost:3000/api/process-data/save-data",
-                    {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(processedDataArray),
-                    }
-                  );
-
-                  if (!saveResponse.ok) {
-                    console.error(
-                      "Error saving data:",
-                      await saveResponse.json()
-                    );
-                  } else {
-                    // console.log("OCR data saved successfully.");
-                  }
-                }
-              }
-            }
-          }
-        }
+      if (
+        job.selectedDays.includes(currentDay) &&
+        currentTimeStr >= fromTimeStr &&
+        currentTimeStr <= toTimeStr
+      ) {
+        console.log("Ready to start the OCR for JOB...");
+        runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord);
       }
     }
-
-    // const response = await fetch("http://localhost:3000/api/pod/retrieve");
-    // const data_1 = await response.json();
-    // // const file_response = await fetch(`http://localhost:3000/api/pod/file?fileId=${data_1.fileId}&fileTable=${data_1.fileTable}`);
-    // const file_response = await fetch(`http://localhost:3000/api/pod/file?fileId=POD_001&fileTable=XTI_2024_T`);
-    // const data_3 = await file_response.json();
-    // if (file_response.ok) {
-
-    //   const insertRes = await fetch("http://localhost:3000/api/pod/store", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({ fileId: data_3.FILE_ID }),
-    //   });
-
-    //   const insertData = await insertRes.json();
-    //   // console.log("Insert Response:", insertData);
-
-    //   const fileData = {
-    //     jobId: "",
-    //     fileId: data_3.FILE_ID,
-    //     pdfUrl: data_3.FILE_PATH,
-    //     deliveryDate: "",
-    //     noOfPages: 0,
-    //     blNumber: "",
-    //     podDate: "",
-    //     podSignature: "",
-    //     totalQty: "",
-    //     received: "",
-    //     damaged: "",
-    //     short: "",
-    //     over: "",
-    //     refused: "",
-    //     customerOrderNum: "",
-    //     stampExists: "",
-    //     finalStatus: "new",
-    //     reviewStatus: "unConfirmed",
-    //     recognitionStatus: "new",
-    //     breakdownReason: "none",
-    //     reviewedBy: "",
-    //     cargoDescription: "",
-    //   };
-
-    //   fetch("http://localhost:3000/api/process-data/save-data", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify([fileData]),
-    //   })
-    //     .then((response) => response.json())
-    //     .then((result) => console.log("Response:", result))
-    //     .catch((error) => console.error("Error:", error));
-
-    //   // console.log("Cron Job Triggered:", baseUrl);
-
-    //   let filePath = `${baseUrl}/api/access-file?filename=${encodeURIComponent(data_3.FILE_NAME)}`;
-
-    //   const ocrResponse = await fetch(ocrUrl, {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({ file_url_or_path: filePath }),
-    //   });
-
-    //   if (!ocrResponse.ok) {
-    //     const errorData = await ocrResponse.json().catch(() => null);
-    //     throw new Error(errorData?.error || "Failed to process OCR");
-    //   }
-
-    //   const ocrData = await ocrResponse.json();
-
-    //   if (ocrData && Array.isArray(ocrData)) {
-    //     const processedDataArray = ocrData.map((data) => {
-    //       const recognitionStatusMap = {
-    //         failed: "failure",
-    //         "partially valid": "partiallyValid",
-    //         valid: "valid",
-    //         null: "null",
-    //       };
-
-    //       const status = recognitionStatusMap[data?.Status] || "null";
-    //       const recognitionStatus = recognitionStatusMap[status] || "null";
-
-    //       const urlObj = new URL(filePath);
-    //       const filename = urlObj.searchParams.get("filename") || "";
-    //       const decodedFilePath = `/file/${decodeURIComponent(filename)}`;
-
-    //       return {
-    //         jobId: null,
-    //         pdfUrl: decodedFilePath,
-    //         deliveryDate: new Date().toISOString().split("T")[0],
-    //         noOfPages: 1,
-    //         blNumber: data?.B_L_Number ? String(data.B_L_Number) : "",
-    //         podDate: data?.POD_Date || "",
-    //         podSignature:
-    //           data?.Signature_Exists === "yes"
-    //             ? "yes"
-    //             : data?.Signature_Exists === "no"
-    //               ? "no"
-    //               : data?.Signature_Exists,
-    //         totalQty: isNaN(data?.Issued_Qty) ? data?.Issued_Qty : Number(data?.Issued_Qty),
-    //         received: isNaN(data?.Received_Qty) ? data?.Received_Qty : Number(data?.Received_Qty),
-
-    //         damaged: data?.Damage_Qty,
-    //         short: data?.Short_Qty,
-    //         over: data?.Over_Qty,
-    //         refused: data?.Refused_Qty,
-
-    //         customerOrderNum: data?.Customer_Order_Num,
-    //         stampExists:
-    //           data?.Stamp_Exists === "yes"
-    //             ? "yes"
-    //             : data?.Stamp_Exists === "no"
-    //               ? "no"
-    //               : data?.Stamp_Exists,
-    //         finalStatus: "valid",
-    //         reviewStatus: "unConfirmed",
-    //         recognitionStatus: recognitionStatus,
-    //         breakdownReason: "none",
-    //         reviewedBy: "OCR Engine",
-    //         cargoDescription: "Processed from OCR API.",
-    //         none: "N",
-    //         sealIntact: "N",
-    //       };
-    //     });
-
-    //     const processedDataObject = processedDataArray.length > 0 ? processedDataArray[0] : {};
-
-    //     const check_res = await fetch("http://localhost:3000/api/settings/auto-confirmation");
-    //     const data_4 = await check_res.json();
-    //     const check = data_4.isAutoConfirmationOpen;
-
-    //     if (check) {
-    //       const fileId = data_3.FILE_ID;
-    //       // console.log("fileId:", fileId);
-    //       fetch("http://localhost:3000/api/pod/update", {
-    //         method: "PUT",
-    //         headers: { "Content-Type": "application/json" },
-    //         body: JSON.stringify({ fileId, ocrData: processedDataObject }),
-    //       })
-    //         .then((res) => res.json())
-    //         .then((data) => console.log("Update Response:", data))
-    //         .catch((error) => console.error("Update Error:", error));
-    //     }
-    //     const saveResponse = await fetch("http://localhost:3000/api/process-data/save-data", {
-    //       method: "POST",
-    //       headers: { "Content-Type": "application/json" },
-    //       body: JSON.stringify(processedDataArray),
-    //     });
-
-    //     if (!saveResponse.ok) {
-    //       console.error("Error saving data:", await saveResponse.json());
-    //     } else {
-    //       // console.log("OCR data saved successfully.");
-    //     }
-    //   }
-
-    // }
-  } catch (error) {
-    console.error("Cron Job Error:", error);
+  } catch (err) {
+    console.error("❌ Scheduling failed:", err.message);
   }
+}
+
+cron.schedule("*/1 * * * *", async () => {
+  const jobId = cronJobCounter++;
+  console.log(
+    `✅ OCR Cron Job #${jobId} Started at ${new Date().toISOString()}`
+  );
+  scheduleJobs();
 });

@@ -47,7 +47,7 @@ export async function GET(req: Request) {
     const offset = (page - 1) * limit;
 
     const totalResult = await connection.execute<TotalRow>(
-      `SELECT COUNT(*) AS TOTAL FROM JDATM_PROD.XTI_FILE_POD_OCR_T WHERE FILE_ID LIKE :search COLLATE BINARY_CI`,
+      `SELECT COUNT(*) AS TOTAL FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T WHERE FILE_ID LIKE :search COLLATE BINARY_CI`,
       [`%${search}%`],
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
@@ -60,7 +60,7 @@ export async function GET(req: Request) {
   FROM (
     SELECT a.*, ROWNUM rnum
     FROM (
-      SELECT * FROM JDATM_PROD.XTI_FILE_POD_OCR_T
+      SELECT * FROM  ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T
       WHERE UPPER(FILE_ID) LIKE :search COLLATE BINARY_CI
       ORDER BY CRTD_DTT DESC
     ) a

@@ -49,25 +49,6 @@ export async function PUT(req: Request) {
 
     const { userName, password, ipAddress, portNumber, serviceName } =
       userDBCredentials;
-    //     const connection = await getOracleConnection(
-    //       userName,
-    //       password,
-    //       ipAddress,
-    //       portNumber,
-    //       serviceName,
-    //     );
-    // console.log('connections-> ', connection)
-
-    //     if (!connection) {
-    //       connectionResult="Failed to establish OracleDB connection check DB type"
-    //       return NextResponse.json(
-    //         { error: "Failed to establish OracleDB connection check DB type" },
-    //         { status: 500 }
-    //       );
-    //     }
-    //     else{
-    //       connectionResult="Successfully connected to OracleDB"
-    //     }
 
     let connection: oracledb.Connection | null;
     try {
@@ -105,233 +86,7 @@ export async function PUT(req: Request) {
       .find({ _id: { $in: objectIds } })
       .toArray();
 
-    // for (const job of jobsToUpdate) {
 
-    //     let { fileId } = job;
-    //     console.log('file id-> ', fileId)
-    //     const { pdfUrl, blNumber, podDate, podSignature, totalQty, received, damaged, short, over, refused, sealIntact } = job;
-
-    //     const file_name = pdfUrl.split("/").pop() || "";
-    //     const currentYear = new Date().getFullYear();
-    //     const fileTable = `XTI_${currentYear}_T`;
-
-    //     if (!fileId) {
-
-    //         const result = await connection.execute<FileRow>(
-    //             `SELECT FILE_ID FROM ${fileTable} WHERE FILE_NAME = :file_name`,
-    //             { file_name },
-    //             { outFormat: oracledb.OUT_FORMAT_OBJECT }
-    //         );
-
-    //         const row = result.rows?.[0] as FileRow | undefined;
-    //         fileId = row?.FILE_ID
-    //     }
-
-    //     let podDateValue = null;
-    //     if (podDate) {
-    //         const columnTypeQuery = await connection.execute(
-    //             `SELECT DATA_TYPE
-    //              FROM ALL_TAB_COLUMNS
-    //              WHERE OWNER = 'JDATM_PROD' AND TABLE_NAME = 'XTI_FILE_POD_OCR_T' AND COLUMN_NAME = 'OCR_STMP_POD_DTT'`,
-    //             [],
-    //             { outFormat: oracledb.OUT_FORMAT_OBJECT }
-    //         );
-
-    //         const rows = columnTypeQuery.rows as Array<{ DATA_TYPE: string }> | undefined;
-    //         const columnType = rows && rows.length > 0 ? rows[0].DATA_TYPE : null;
-    //         if (columnType === "DATE") {
-    //             podDateValue = new Date(podDate);
-    //         } else if (columnType?.includes("CHAR")) {
-    //             podDateValue = podDate;
-    //         }
-    //     }
-
-    //     await connection.execute(
-    //         `UPDATE JDATM_PROD.XTI_FILE_POD_OCR_T
-    //         SET OCR_BOLNO = :bolNo,
-    //             OCR_ISSQTY = :issQty,
-    //             OCR_RCVQTY = :rcvQty,
-    //             OCR_STMP_POD_DTT = :podDate,
-    //             OCR_STMP_SIGN = :sign,
-    //             OCR_SYMT_NONE = :symtNone,
-    //             OCR_SYMT_DAMG = :symtDamg,
-    //             OCR_SYMT_SHRT = :symtShrt,
-    //             OCR_SYMT_ORVG = :symtOrvg,
-    //             OCR_SYMT_REFS = :symtRefs,
-    //             OCR_SYMT_SEAL = :symtSeal,
-    //             RECV_DATA_DTT = SYSDATE,
-    //             UPTD_USR_CD = 'OCR',
-    //             UPTD_DTT = SYSDATE
-    //         WHERE FILE_ID = :fileId`,
-    //         {
-    //             bolNo: blNumber,
-    //             issQty: totalQty,
-    //             rcvQty: received,
-    //             podDate: podDateValue,
-    //             sign: podSignature,
-    //             symtNone: "N",
-    //             symtDamg: damaged,
-    //             symtShrt: short,
-    //             symtOrvg: over,
-    //             symtRefs: refused,
-    //             symtSeal: sealIntact,
-    //             fileId: fileId,
-    //         }
-    //     );
-    // }
-
-    // for (const job of jobsToUpdate) {
-    //   let { fileId } = job;
-    //   console.log("file id-> ", fileId);
-    //   const {
-    //     pdfUrl,
-    //     blNumber,
-    //     podDate,
-    //     podSignature,
-    //     totalQty,
-    //     received,
-    //     damaged,
-    //     short,
-    //     over,
-    //     refused,
-    //     sealIntact,
-    //   } = job;
-    //   // console.log('bol num-> ',  job)
-
-    //   const file_name = pdfUrl.split("/").pop() || "";
-    //   const currentYear = new Date().getFullYear();
-    //   // console.log('current year-> ', currentYear)
-    //   const fileTable = `XTI_${currentYear}_T`;
-
-    //   // console.log('fil table-> ', fileTable)
-    //   console.log("file anem-> ", file_name);
-
-    //   if (!fileId) {
-    //     const result = await connection.execute<FileRow>(
-    //       `SELECT FILE_ID FROM ${fileTable} WHERE FILE_NAME = :file_name`,
-    //       { file_name },
-    //       { outFormat: oracledb.OUT_FORMAT_OBJECT }
-    //     );
-    //     const row = result.rows?.[0] as FileRow | undefined;
-    //     fileId = row?.FILE_ID;
-    //     // console.log('result-> ', result)
-    //     // console.log('oracel file id-> ', fileId)
-    //   }
-
-    //   if (!fileId) {
-    //     logs.push({
-    //       fileName: file_name,
-    //       message: `file_id not found in table ${fileTable}, skipping insert/update.`,
-    //     });
-    //     continue;
-    //   } else {
-    //     logs.push({
-    //       fileName: file_name,
-    //       message: `file_id ${fileId} found in table ${fileTable}.`,
-    //     });
-    //   }
-
-    //   let podDateValue = null;
-    //   if (podDate) {
-    //     const columnTypeQuery = await connection.execute(
-    //       `SELECT DATA_TYPE
-    //          FROM ALL_TAB_COLUMNS
-    //          WHERE OWNER = 'JDATM_PROD' AND TABLE_NAME = 'XTI_FILE_POD_OCR_T' AND COLUMN_NAME = 'OCR_STMP_POD_DTT'`,
-    //       [],
-    //       { outFormat: oracledb.OUT_FORMAT_OBJECT }
-    //     );
-
-    //     const rows = columnTypeQuery.rows as
-    //       | Array<{ DATA_TYPE: string }>
-    //       | undefined;
-    //     const columnType = rows && rows.length > 0 ? rows[0].DATA_TYPE : null;
-    //     if (columnType === "DATE") {
-    //       console.log("date");
-    //       podDateValue = new Date(podDate);
-    //     } else if (columnType?.includes("CHAR")) {
-    //       console.log("char");
-    //       podDateValue = podDate;
-    //     }
-    //   }
-
-    //   // Check if record already exists in JDATM_PROD.XTI_FILE_POD_OCR_T
-    //   const existingCheck = await connection.execute(
-    //     `SELECT FILE_ID FROM JDATM_PROD.XTI_FILE_POD_OCR_T WHERE FILE_ID = :fileId`,
-    //     { fileId },
-    //     { outFormat: oracledb.OUT_FORMAT_OBJECT }
-    //   );
-
-    //   const recordExists = existingCheck.rows && existingCheck.rows.length > 0;
-    //   console.log("record exist-> ", existingCheck);
-
-    //   if (recordExists) {
-    //     logs.push({
-    //       fileName: file_name,
-    //       message: `Existing record found for file_id ${fileId}, performing UPDATE.`,
-    //     });
-    //     await connection.execute(
-    //       `UPDATE JDATM_PROD.XTI_FILE_POD_OCR_T
-    //          SET OCR_BOLNO = :bolNo,
-    //              OCR_ISSQTY = :issQty,
-    //              OCR_RCVQTY = :rcvQty,
-    //              OCR_STMP_POD_DTT = :podDate,
-    //              OCR_STMP_SIGN = :sign,
-    //              OCR_SYMT_NONE = :symtNone,
-    //              OCR_SYMT_DAMG = :symtDamg,
-    //              OCR_SYMT_SHRT = :symtShrt,
-    //              OCR_SYMT_ORVG = :symtOrvg,
-    //              OCR_SYMT_REFS = :symtRefs,
-    //              OCR_SYMT_SEAL = :symtSeal,
-    //              RECV_DATA_DTT = SYSDATE,
-    //              UPTD_USR_CD = 'OCR',
-    //              UPTD_DTT = SYSDATE
-    //          WHERE FILE_ID = :fileId`,
-    //       {
-    //         bolNo: blNumber,
-    //         issQty: totalQty,
-    //         rcvQty: received,
-    //         podDate: podDateValue,
-    //         sign: podSignature,
-    //         symtNone: "N",
-    //         symtDamg: damaged,
-    //         symtShrt: short,
-    //         symtOrvg: over,
-    //         symtRefs: refused,
-    //         symtSeal: sealIntact,
-    //         fileId,
-    //       }
-    //     );
-    //   } else {
-    //     logs.push({
-    //       fileName: file_name,
-    //       message: `No existing record found for file_id ${fileId}, performing INSERT.`,
-    //     });
-    //     await connection.execute(
-    //       `INSERT INTO JDATM_PROD.XTI_FILE_POD_OCR_T
-    //             (FILE_ID, OCR_BOLNO, OCR_ISSQTY, OCR_RCVQTY, OCR_STMP_POD_DTT, OCR_STMP_SIGN,
-    //              OCR_SYMT_NONE, OCR_SYMT_DAMG, OCR_SYMT_SHRT, OCR_SYMT_ORVG, OCR_SYMT_REFS, OCR_SYMT_SEAL,
-    //              RECV_DATA_DTT, UPTD_USR_CD, UPTD_DTT)
-    //          VALUES
-    //             (:fileId, :bolNo, :issQty, :rcvQty, :podDate, :sign,
-    //              :symtNone, :symtDamg, :symtShrt, :symtOrvg, :symtRefs, :symtSeal,
-    //              SYSDATE, 'OCR', SYSDATE)`,
-    //       {
-    //         fileId,
-    //         bolNo: blNumber,
-    //         issQty: totalQty,
-    //         rcvQty: received,
-    //         podDate: podDateValue,
-    //         sign: podSignature,
-    //         symtNone: "N",
-    //         symtDamg: damaged,
-    //         symtShrt: short,
-    //         symtOrvg: over,
-    //         symtRefs: refused,
-    //         symtSeal: sealIntact,
-    //       }
-    //     );
-    //   }
-    // }
     for (const job of jobsToUpdate) {
       let { fileId } = job;
       const file_name = job.pdfUrl.split("/").pop() || "";
@@ -365,7 +120,7 @@ export async function PUT(req: Request) {
         const columnTypeQuery = await conn.execute(
           `SELECT DATA_TYPE 
          FROM ALL_TAB_COLUMNS 
-         WHERE OWNER = 'JDATM_PROD' AND TABLE_NAME = 'XTI_FILE_POD_OCR_T' AND COLUMN_NAME = 'OCR_STMP_POD_DTT'`,
+         WHERE OWNER = '${process.env.ORACLE_DB_USER_NAME}' AND TABLE_NAME = 'XTI_FILE_POD_OCR_T' AND COLUMN_NAME = 'OCR_STMP_POD_DTT'`,
           [],
           { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
@@ -379,7 +134,7 @@ export async function PUT(req: Request) {
 
       // check for existing record in OCR table
       const existingCheck = await conn.execute(
-        `SELECT FILE_ID FROM JDATM_PROD.XTI_FILE_POD_OCR_T WHERE FILE_ID = :fileId`,
+        `SELECT FILE_ID FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T WHERE FILE_ID = :fileId`,
         { fileId },
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
@@ -387,7 +142,7 @@ export async function PUT(req: Request) {
 
       if (recordExists) {
         await conn.execute(
-          `UPDATE JDATM_PROD.XTI_FILE_POD_OCR_T
+          `UPDATE ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T
          SET OCR_BOLNO = :bolNo, 
              OCR_ISSQTY = :issQty, 
              OCR_RCVQTY = :rcvQty,
@@ -427,7 +182,7 @@ export async function PUT(req: Request) {
         });
       } else {
         await conn.execute(
-          `INSERT INTO JDATM_PROD.XTI_FILE_POD_OCR_T 
+          `INSERT INTO ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T 
           (FILE_ID, OCR_BOLNO, OCR_ISSQTY, OCR_RCVQTY, OCR_STMP_POD_DTT, OCR_STMP_SIGN, 
            OCR_SYMT_NONE, OCR_SYMT_DAMG, OCR_SYMT_SHRT, OCR_SYMT_ORVG, OCR_SYMT_REFS, OCR_SYMT_SEAL,
            RECV_DATA_DTT, UPTD_USR_CD, UPTD_DTT)

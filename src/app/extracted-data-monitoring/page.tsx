@@ -52,7 +52,6 @@ type ResultItem = {
   // other fields if any...
 };
 
-
 interface Job {
   _id: string;
   blNumber: string;
@@ -423,14 +422,6 @@ const MasterPage = () => {
     fetchOcrApiUrl();
   }, []);
 
-  // const pdfFiles = selectedRows
-  //   .map((rowId) => {
-  //     const job = master.find((job) => job._id === rowId);
-  //     return job && (!job.blNumber?.trim() || !job.podSignature?.trim())
-  //       ? { file_url_or_path: job.pdfUrl }
-  //       : null;
-  //   })
-  //   .filter(Boolean);
 
   const pdfFiles = selectedRows
     .map((rowId) => {
@@ -1030,7 +1021,7 @@ const MasterPage = () => {
           );
 
           // Build the summary HTML for counts
-   const summaryHtml = `
+          const summaryHtml = `
   <p><strong>Summary:</strong></p>
   <p>Updated files: <strong>${counts.updated}</strong></p>
   <p>Added files: <strong>${counts.added}</strong></p>
@@ -1780,35 +1771,6 @@ const MasterPage = () => {
                         </span>
                         BL Number
                       </th>
-                      {/* <th className="py-2 px-4 border-b text-start min-w-44 sticky left-0 bg-white  z-10 cursor-pointer" onClick={() => toggleSort("blNumber")}>
-                        <span className="mr-3">
-                          <input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} />
-                        </span>
-                        BL Number
-                        {sortColumn === "blNumber" && (
-                          <span>{sortOrder === "asc" ? " ▲" : " ▼"}</span>
-                        )}
-                      </th> */}
-                      {/* <th
-                        className="py-2 px-4 border-b text-start min-w-44 sticky left-0 bg-white z-10 cursor-pointer"
-                        onClick={() => toggleSort("blNumber")}
-                      >
-                        <span className="mr-3">
-                          <input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} />
-                        </span>
-                        BL Number
-                        {sortColumn === "blNumber" && (
-                          <motion.div
-                            className="inline-block ml-1"
-                            initial={{ rotate: 0 }}
-                            animate={{ rotate: sortOrder === "asc" ? 0 : 360 }}
-                            transition={{ duration: 0.3, ease: "easeInOut" }}
-                          >
-                            <span className="block w-4 text-center">{sortOrder === "asc" ? "▲" : "▼"}</span>
-                          </motion.div>
-                        )}
-
-                      </th> */}
                       <th className="py-2 px-4 border-b text-center min-w-44 max-w-44 sticky left-44 bg-white z-10">
                         Uploaded File
                       </th>

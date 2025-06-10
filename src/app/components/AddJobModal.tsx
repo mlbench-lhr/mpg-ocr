@@ -62,6 +62,9 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
     return durations;
   };
 
+  const convertTimeToUtc=()=>{
+    
+  }
   useEffect(() => {
     if (fromTime && toTime) {
       const startTimeInMinutes = timeToMinutes(fromTime);
@@ -82,17 +85,7 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
     }
   }, [fromTime, toTime]);
 
-  // const handleTimeChange = (date: Date | null) => {
-  //   if (date) {
-  //     const selectedTime = formatTime(date);
-  //     if (availableTimes.includes(selectedTime)) {
-  //       setTime(date);
-  //       setError("");
-  //     } else {
-  //       setError("Selected every time is not within the available range.");
-  //     }
-  //   }
-  // };
+
 
   useEffect(() => {
     const timeHeader = document.querySelector(".react-datepicker-time__header");
@@ -118,62 +111,6 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
     }
   };
 
-
-  // useEffect(() => {
-  //   if (fromTime && toTime) {
-  //     const startTimeInMinutes = timeToMinutes(fromTime);
-  //     let endTimeInMinutes = timeToMinutes(toTime);
-
-  //     if (endTimeInMinutes < startTimeInMinutes) {
-  //       endTimeInMinutes += 24 * 60;
-  //       setError("Select 'fromTime' and 'toTime' on the same day.");
-  //       setAvailableDurations([]);
-  //       return;
-  //     }
-
-  //     if (endTimeInMinutes <= startTimeInMinutes) {
-  //       setError("The 'To' time must be after the 'From' time.");
-  //       setAvailableDurations([]);
-  //     } else {
-  //       const durations = generateDurations(fromTime, toTime);
-  //       setAvailableDurations(durations);
-  //       setError("");
-  //     }
-  //   }
-  // }, [fromTime, toTime]);
-
-  // useEffect(() => {
-  //   if (fromTime && toTime) {
-  //     const startTimeInMinutes = timeToMinutes(fromTime);
-  //     let endTimeInMinutes = timeToMinutes(toTime);
-
-  //     if (endTimeInMinutes < startTimeInMinutes) {
-  //       endTimeInMinutes += 24 * 60;
-  //       setError("Select 'fromTime' and 'toTime' on the same day.");
-  //       // setAvailableDurations([]);
-  //       return;
-  //     }
-
-  //     const duration = endTimeInMinutes - startTimeInMinutes;
-
-  //     if (duration < 60) {
-  //       setError("The 'To' time must be at least 1 hour after the 'From' time.");
-  //       // setAvailableDurations([]);
-  //     } else {
-  //       setError("");
-  //       const maxDuration = Math.min(duration, 20);
-
-  //       const durations: number[] = [];
-  //       for (let i = 5; i <= maxDuration; i += 5) {
-  //         durations.push(i);
-  //       }
-  //       // setAvailableDurations(durations);
-  //     }
-  //   } else {
-  //     setError("");
-  //     // setAvailableDurations([]);
-  //   }
-  // }, [fromTime, toTime, everyTime]);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

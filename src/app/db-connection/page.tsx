@@ -93,144 +93,6 @@ export default function DBConnectionPage() {
       return "Service Name can only contain alphanumeric characters and underscores.";
     return null;
   };
-
-  // const handleDBConnection = useCallback(async () => {
-  //     setError(null);
-
-  //     const token = localStorage.getItem("token");
-  //     if (!token) {
-  //         setError("You are not authenticated. Please log in again.");
-  //         return;
-  //     }
-
-  //     try {
-  //         const res = await fetch("/api/auth/db", {
-  //             method: "POST",
-  //             headers: {
-  //                 "Content-Type": "application/json",
-  //                 "Authorization": `Bearer ${token}`,
-  //             },
-  //             body: JSON.stringify({
-  //                 systemID,
-  //                 userName,
-  //                 password,
-  //                 ipAddress,
-  //                 portNumber,
-  //                 serviceName,
-  //                 dataBase,
-  //             }),
-  //         });
-
-  //         if (!res.ok) {
-  //             const data = await res.json();
-  //             Swal.fire({
-  //                 icon: "error",
-  //                 title: "DB connection fails",
-  //                 text: data.message || "An error occurred while connecting to your DB. Please try again.",
-  //                 confirmButtonColor: "#005B97",
-  //                 confirmButtonText: "Try Again",
-  //             });
-  //             throw new Error(data.message || "Failed to connect to the database");
-  //         }
-
-  //         Swal.fire({
-  //             icon: "success",
-  //             title: "Success",
-  //             text: "Database connection saved successfully!",
-  //             timer: 3000,
-  //             showConfirmButton: false,
-  //         });
-
-  //     } catch (err: unknown) {
-  //         if (err instanceof Error) {
-  //             setIsLoading(false);
-  //             setPercentage(0);
-  //             setLoadingComplete(true);
-  //             setError(err.message);
-
-  //         } else {
-  //             setIsLoading(false);
-  //             setPercentage(0);
-  //             setLoadingComplete(true);
-
-  //             setError("An unexpected error occurred");
-
-  //         }
-  //     } finally {
-  //         setIsLoading(false);
-  //         setPercentage(0);
-  //         setLoadingComplete(true);
-
-  //     }
-  // }, [systemID, userName, password, ipAddress, portNumber, serviceName, dataBase]);
-
-  // const handleJobsAPI = useCallback(async () => {
-  //     const token = localStorage.getItem("token");
-  //     if (!token) {
-  //         console.error("Authentication error: Token missing");
-  //         return;
-  //     }
-
-  //     try {
-  //         const res = await fetch("/jobs", {
-  //             method: "GET",
-  //             headers: {
-  //                 Authorization: `Bearer ${token}`,
-  //             },
-  //         });
-
-  //         if (!res.ok) {
-  //             console.error("Error fetching jobs:", await res.text());
-  //         }
-  //     } catch (error) {
-  //         console.error("Background jobs API call failed:", error);
-  //     }
-  // }, []);
-  // useEffect(() => {
-  //     if (isLoading) {
-  //         // handleJobsAPI();
-
-  //         let progress = 0;
-  //         const interval = setInterval(() => {
-  //             if (progress < 100) {
-  //                 progress += 10;
-  //                 setPercentage(progress);
-  //             } else {
-  //                 clearInterval(interval);
-  //                 setLoadingComplete(true);
-  //             }
-  //         }, 800);
-
-  //         return () => clearInterval(interval);
-  //     }
-  //     // }, [isLoading, handleJobsAPI]);
-  // }, [isLoading]);
-
-  // useEffect(() => {
-  //     if (loadingComplete) {
-  //         console.log("numan");
-  //         handleDBConnection();
-  //         // router.push("/jobs");
-  //     }
-  // }, [loadingComplete, router, handleDBConnection]);
-
-  // const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-  //     e.preventDefault();
-  //     if (!checkbox) {
-  //         setButttonLoading(true);
-  //         router.push("/jobs");
-  //     } else {
-  //         const validationError = validateForm();
-  //         if (validationError) {
-  //             setError(validationError);
-  //             return;
-  //         }
-  //         setIsLoading(true);
-  //         setPercentage(0);
-  //         setLoadingComplete(false);
-  //     }
-  // };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -261,7 +123,7 @@ export default function DBConnectionPage() {
           ipAddress,
           portNumber,
           serviceName,
-          dataBase: "local",
+          dataBase,
           checkbox,
         }),
       });
@@ -333,7 +195,7 @@ export default function DBConnectionPage() {
               ipAddress,
               portNumber,
               serviceName,
-              dataBase: "remote",
+              dataBase,
               checkbox,
             }),
           });

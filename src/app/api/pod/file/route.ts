@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
     }
 console.log('file table data-> ', fileTable)
     const result = await connection.execute<FileRow>(
-      `SELECT FILE_ID, FILE_DATA FROM JDATM_PROD.${fileTable} WHERE FILE_ID = :fileId`,
+      `SELECT FILE_ID, FILE_DATA FROM ${process.env.ORACLE_DB_USER_NAME}.${fileTable} WHERE FILE_ID = :fileId`,
       { fileId },
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
