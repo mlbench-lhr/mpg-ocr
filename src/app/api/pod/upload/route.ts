@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     const entries = Array.from(formData.entries());
 
     // Filter out file fields (in case other fields are present)
-    const files = entries.filter(([key, value]) => value instanceof Blob);
+    const files = entries.filter(([, value]) => value instanceof Blob);
 
     if (files.length === 0) {
       return NextResponse.json({ message: "No files uploaded" }, { status: 400 });
@@ -22,14 +22,16 @@ export async function POST(req: NextRequest) {
 
     const results = [];
 
-    for (const [key, file] of files) {
+    for (const [, file] of files) {
       const blob = file as Blob;
 
       const arrayBuffer = await blob.arrayBuffer();
       const pdfBuffer = Buffer.from(arrayBuffer);
 
       const fileType = blob.type || 'application/octet-stream';
-      const fileName = (blob as any).name || `uploaded-${Date.now()}.pdf`; // name from blob is not standard, fallback to default
+      const fileName = (blob instanceof File && blob.name)
+        ? blob.name
+        : `uploaded-${Date.now()}.pdf`;
       const fileId = `POD_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
 
       const check = await connection.execute<{ FILE_DATA: oracledb.Lob }>(

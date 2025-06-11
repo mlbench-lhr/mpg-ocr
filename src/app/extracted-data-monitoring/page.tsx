@@ -9,7 +9,7 @@ import Spinner from "../components/Spinner";
 import Header from "../components/Header";
 import Link from "next/link";
 import { IoIosArrowForward } from "react-icons/io";
-import { IoIosInformationCircle } from "react-icons/io";
+// import { IoIosInformationCircle } from "react-icons/io";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import { MdDelete } from "react-icons/md";
 import { GiShare } from "react-icons/gi";
@@ -54,6 +54,7 @@ type ResultItem = {
 
 interface Job {
   _id: string;
+  fileId?: string;
   blNumber: string;
   pdfUrl?: string;
   jobName: string;
@@ -125,8 +126,11 @@ const MasterPage = () => {
   const [finalStatusFilter, setFinalStatusFilter] = useState("");
   const [reviewStatusFilter, setReviewStatusFilter] = useState("");
   const [reasonStatusFilter, setReasonStatusFilter] = useState("");
+  const [uptd_Usr_Cd, setUptd_Usr_Cd] = useState("OCR");
   const [reviewByStatusFilter, setReviewByStatusFilter] = useState("");
   const [podDateFilter, setPodDateFilter] = useState("");
+  const [createdDateFilter, setCreatedDateFilter] = useState("");
+  const [updatedDateFilter, setUpdatedDateFilter] = useState("");
   const [podDateSignatureFilter, setPodDateSignatureFilter] = useState("");
   const [jobNameFilter, setJobNameFilter] = useState("");
   const [bolNumberFilter, setBolNumberFilter] = useState("");
@@ -214,15 +218,20 @@ const MasterPage = () => {
       sessionStorage.getItem("reviewStatusFilter") ||
       sessionStorage.getItem("reasonStatusFilter") ||
       sessionStorage.getItem("reviewByStatusFilter") ||
+      sessionStorage.getItem("uptd_Usr_Cd") ||
       sessionStorage.getItem("podDateFilter") ||
+      sessionStorage.getItem("createdDateFilter") ||
+      sessionStorage.getItem("updatedDateFilter") ||
       sessionStorage.getItem("podDateSignatureFilter") ||
       sessionStorage.getItem("jobNameFilter") ||
       sessionStorage.getItem("bolNumberFilter")
     );
   };
+ 
   useEffect(() => {
     if (typeof window !== "undefined") {
       if (localStorage.getItem("prev") === "") {
+        console.log("type of window-> ", typeof window);
         setFirstTime(true);
         setFinalStatusFilter(sessionStorage.getItem("finalStatusFilter") || "");
         setReviewStatusFilter(
@@ -231,29 +240,41 @@ const MasterPage = () => {
         setReasonStatusFilter(
           sessionStorage.getItem("reasonStatusFilter") || ""
         );
+
         setReviewByStatusFilter(
           sessionStorage.getItem("reviewByStatusFilter") || ""
         );
+        setUptd_Usr_Cd(sessionStorage.getItem("uptd_Usr_Cd") || "OCR");
         setPodDateFilter(sessionStorage.getItem("podDateFilter") || "");
+        setCreatedDateFilter(sessionStorage.getItem("createdDateFilter") || "");
+        setUpdatedDateFilter(sessionStorage.getItem("updatedDateFilter") || "");
         setPodDateSignatureFilter(
           sessionStorage.getItem("podDateSignatureFilter") || ""
         );
         setJobNameFilter(sessionStorage.getItem("jobNameFilter") || "");
         setBolNumberFilter(sessionStorage.getItem("bolNumberFilter") || "");
       } else {
+        console.log("called->");
         sessionStorage.setItem("finalStatusFilter", "");
         sessionStorage.setItem("reviewStatusFilter", "");
         sessionStorage.setItem("reasonStatusFilter", "");
         sessionStorage.setItem("reviewByStatusFilter", "");
+        sessionStorage.setItem("uptd_Usr_Cd", "OCR");
         sessionStorage.setItem("podDateFilter", "");
+        sessionStorage.setItem("createdDateFilter", "");
+        sessionStorage.setItem("updatedDateFilter", "");
+
         sessionStorage.setItem("podDateSignatureFilter", "");
         sessionStorage.setItem("jobNameFilter", "");
         sessionStorage.setItem("bolNumberFilter", "");
         setFinalStatusFilter("");
         setReviewStatusFilter("");
         setReasonStatusFilter("");
+        setUptd_Usr_Cd("OCR");
         setReviewByStatusFilter("");
         setPodDateFilter("");
+        setCreatedDateFilter("");
+        setUpdatedDateFilter("");
         setPodDateSignatureFilter("");
         setJobNameFilter("");
         setBolNumberFilter("");
@@ -421,7 +442,6 @@ const MasterPage = () => {
 
     fetchOcrApiUrl();
   }, []);
-
 
   const pdfFiles = selectedRows
     .map((rowId) => {
@@ -798,7 +818,11 @@ const MasterPage = () => {
         reviewStatus: sessionStorage.getItem("reviewStatusFilter") || "",
         reasonStatus: sessionStorage.getItem("reasonStatusFilter") || "",
         reviewByStatus: sessionStorage.getItem("reviewByStatusFilter") || "",
+        uptd_Usr_Cd: sessionStorage.getItem("uptd_Usr_Cd") || "",
         podDate: sessionStorage.getItem("podDateFilter") || "",
+        createdDate: sessionStorage.getItem("createdDateFilter") || "",
+        updatedDate: sessionStorage.getItem("updatedDateFilter") || "",
+
         podDateSignature:
           sessionStorage.getItem("podDateSignatureFilter") || "",
         jobName: sessionStorage.getItem("jobNameFilter") || "",
@@ -816,9 +840,13 @@ const MasterPage = () => {
         queryParams.set("reviewStatus", filters.reviewStatus);
       if (filters.reasonStatus)
         queryParams.set("breakdownReason", filters.reasonStatus);
-      if (filters.reviewByStatus)
-        queryParams.set("reviewByStatus", filters.reviewByStatus);
+      if (filters.uptd_Usr_Cd)
+        queryParams.set("uptd_Usr_Cd", filters.uptd_Usr_Cd);
       if (filters.podDate) queryParams.set("podDate", filters.podDate);
+      if (filters.updatedDate)
+        queryParams.set("updatedDate", filters.updatedDate);
+      if (filters.createdDate)
+        queryParams.set("createdDate", filters.createdDate);
       if (filters.podDateSignature)
         queryParams.set("podDateSignature", filters.podDateSignature.trim());
       if (filters.jobName) queryParams.set("jobName", filters.jobName.trim());
@@ -852,6 +880,7 @@ const MasterPage = () => {
       }
 
       const data = await response.json();
+      console.log("data-> ", data);
       setMaster(data.jobs);
       setTotalPages(data.totalPages);
       setTotalJobs(data.totalJobs);
@@ -901,7 +930,11 @@ const MasterPage = () => {
     sessionStorage.setItem("reviewStatusFilter", reviewStatusFilter);
     sessionStorage.setItem("reasonStatusFilter", reasonStatusFilter);
     sessionStorage.setItem("reviewByStatusFilter", reviewByStatusFilter);
+    sessionStorage.setItem("uptd_Usr_Cd", uptd_Usr_Cd);
     sessionStorage.setItem("podDateFilter", podDateFilter);
+    sessionStorage.setItem("createdDateFilter", createdDateFilter);
+    sessionStorage.setItem("updatedDateFilter", updatedDateFilter);
+
     sessionStorage.setItem("podDateSignatureFilter", podDateSignatureFilter);
     sessionStorage.setItem("jobNameFilter", jobNameFilter);
     sessionStorage.setItem("bolNumberFilter", bolNumberFilter);
@@ -913,15 +946,21 @@ const MasterPage = () => {
     sessionStorage.setItem("reviewStatusFilter", "");
     sessionStorage.setItem("reasonStatusFilter", "");
     sessionStorage.setItem("reviewByStatusFilter", "");
+    sessionStorage.setItem("uptd_Usr_Cd", "OCR");
     sessionStorage.setItem("podDateFilter", "");
+    sessionStorage.setItem("createdDateFilter", "");
+    sessionStorage.setItem("updatedDateFilter", "");
     sessionStorage.setItem("podDateSignatureFilter", "");
     sessionStorage.setItem("jobNameFilter", "");
     sessionStorage.setItem("bolNumberFilter", "");
     setFinalStatusFilter("");
     setReviewStatusFilter("");
     setReasonStatusFilter("");
+    setUptd_Usr_Cd("OCR");
     setReviewByStatusFilter("");
     setPodDateFilter("");
+    setCreatedDateFilter("");
+    setUpdatedDateFilter("")
     setPodDateSignatureFilter("");
     setJobNameFilter("");
     setBolNumberFilter("");
@@ -936,7 +975,10 @@ const MasterPage = () => {
         reviewStatusFilter,
         reasonStatusFilter,
         reviewByStatusFilter,
+        uptd_Usr_Cd,
         podDateFilter,
+        createdDateFilter,
+        updatedDateFilter,
         podDateSignatureFilter,
         jobNameFilter,
         bolNumberFilter,
@@ -1398,10 +1440,98 @@ const MasterPage = () => {
                     onChange={(e) => setJobNameFilter(e.target.value)}
                     className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97]"
                   />
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <label
+                  htmlFor="search"
+                  className="text-sm font-semibold text-gray-800"
+                >
+                  Created Date
+                </label>
+                <div className="relative">
+                  <input
+                    id="createdDate"
+                    type="date"
+                    placeholder="YYYY-MM-DD"
+                    value={createdDateFilter}
+                    onChange={(e) => setCreatedDateFilter(e.target.value)}
+                    className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] custom-date-input"
+                    max="9999-12-31"
+                  />
                   <button
                     type="button"
                     className="absolute inset-y-0 right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                  ></button>
+                    onClick={() => {
+                      const createdDate = document.getElementById(
+                        "createdDate"
+                      ) as HTMLInputElement;
+                      if (createdDate) {
+                        createdDate.showPicker();
+                      }
+                    }}
+                  >
+                    <IoCalendar size={20} className="text-[#005B97]" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col">
+                <label
+                  htmlFor="finalStatusFilter"
+                  className="text-sm font-semibold text-gray-800"
+                >
+                  UPTD_USR_CD
+                </label>
+                <div className="relative">
+                  <select
+                    id="finalStatusFilter"
+                    className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none cursor-pointer"
+                    value={uptd_Usr_Cd}
+                    onChange={(e) => setUptd_Usr_Cd(e.target.value)}
+                  >
+                    <option value="">Select</option>
+                    <option value="OCR">OCR</option>
+                  </select>
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-3 top-[25px] transform -translate-y-1/2 text-gray-500 cursor-default"
+                  >
+                    <FaChevronDown size={16} className="text-[#005B97]" />
+                  </button>
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <label
+                  htmlFor="search"
+                  className="text-sm font-semibold text-gray-800"
+                >
+                  Updated Date
+                </label>
+                <div className="relative">
+                  <input
+                    id="updatedDate"
+                    type="date"
+                    placeholder="YYYY-MM-DD"
+                    value={updatedDateFilter}
+                    onChange={(e) => setUpdatedDateFilter(e.target.value)}
+                    className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] custom-date-input"
+                    max="9999-12-31"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                    onClick={() => {
+                      const updatedDate = document.getElementById(
+                        "updatedDate"
+                      ) as HTMLInputElement;
+                      if (updatedDate) {
+                        updatedDate.showPicker();
+                      }
+                    }}
+                  >
+                    <IoCalendar size={20} className="text-[#005B97]" />
+                  </button>
                 </div>
               </div>
 
@@ -1875,7 +2005,10 @@ const MasterPage = () => {
                               </span>
                             </Link>
                           </td>
-                          <FileNameCell pdfUrl={job.pdfUrl} />
+                          <FileNameCell
+                            pdfUrl={job.pdfUrl}
+                            fileId={job.fileId}
+                          />
 
                           {/* <td className="py-2 px-4 border-b text-center sticky left-44 bg-white z-10 min-w-44 max-w-44 truncate">
                             {job.pdfUrl
@@ -1902,7 +2035,7 @@ const MasterPage = () => {
                             {job.stampExists === null ||
                             job.stampExists === undefined ? (
                               <span className="flex justify-center items-center">
-                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                                {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
                               </span>
                             ) : (
                               job.stampExists
@@ -1912,7 +2045,7 @@ const MasterPage = () => {
                             {job.podSignature === null ||
                             job.podSignature === undefined ? (
                               <span className="flex justify-center items-center">
-                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                                {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
                               </span>
                             ) : (
                               job.podSignature
@@ -1922,7 +2055,7 @@ const MasterPage = () => {
                             {job.sealIntact === null ||
                             job.sealIntact === undefined ? (
                               <span className="flex justify-center items-center">
-                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                                {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
                               </span>
                             ) : (
                               job.sealIntact
@@ -1932,7 +2065,7 @@ const MasterPage = () => {
                             {job.totalQty === null ||
                             job.totalQty === undefined ? (
                               <span className="flex justify-center items-center">
-                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                                {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
                               </span>
                             ) : (
                               job.totalQty
@@ -1942,7 +2075,7 @@ const MasterPage = () => {
                             {job.received === null ||
                             job.received === undefined ? (
                               <span className="flex justify-center items-center">
-                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                                {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
                               </span>
                             ) : (
                               job.received
@@ -1952,7 +2085,7 @@ const MasterPage = () => {
                             {job.damaged === null ||
                             job.damaged === undefined ? (
                               <span className="flex justify-center items-center">
-                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                                {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
                               </span>
                             ) : (
                               job.damaged
@@ -1961,7 +2094,7 @@ const MasterPage = () => {
                           <td className="py-2 px-4 border-b text-center">
                             {job.short === null || job.short === undefined ? (
                               <span className="flex justify-center items-center">
-                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                                {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
                               </span>
                             ) : (
                               job.short
@@ -1970,7 +2103,7 @@ const MasterPage = () => {
                           <td className="py-2 px-4 border-b text-center">
                             {job.over === null || job.over === undefined ? (
                               <span className="flex justify-center items-center">
-                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                                {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
                               </span>
                             ) : (
                               job.over
@@ -1980,7 +2113,7 @@ const MasterPage = () => {
                             {job.refused === null ||
                             job.refused === undefined ? (
                               <span className="flex justify-center items-center">
-                                <IoIosInformationCircle className="text-2xl text-red-500" />
+                                {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
                               </span>
                             ) : (
                               job.refused

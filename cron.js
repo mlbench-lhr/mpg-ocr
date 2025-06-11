@@ -36,7 +36,7 @@ async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ fileId: fileData.FILE_ID }),
         });
-
+z
         const filePath = `${baseUrl}/api/access-file?filename=${encodeURIComponent(
           fileData.FILE_NAME
         )}`;
@@ -164,7 +164,7 @@ async function scheduleJobs() {
     const ipData = await ipRes.json();
     const baseUrl = `http://${ipData.secondaryIp}:3000`;
     const ocrUrl = `http://${ipData.ip}:8080/run-ocr`;
-
+      
     const wmsRes = await fetch("http://localhost:3000/api/save-wms-url");
     const {
       wmsUrl,

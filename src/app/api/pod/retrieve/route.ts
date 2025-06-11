@@ -42,17 +42,17 @@ export async function GET(req: NextRequest) {
 
     const result = await connection.execute(
       `SELECT A.FILE_ID, A.FILE_TABLE
-                FROM  ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_T A,
-                     ${process.env.ORACLE_DB_USER_NAME}.XTI_POD_STAMP_REQRD_T B
-                WHERE A.FILE_ID = B.FILE_ID
-                AND TO_CHAR(B.CRTD_DTT, 'YYYYMMDD') = TO_CHAR(SYSDATE - 1, 'YYYYMMDD')
-                FETCH FIRST 1 ROW ONLY
-                `,
+FROM NUMAN.XTI_FILE_POD_T A
+JOIN NUMAN.XTI_POD_STAMP_REQRD_T B ON A.FILE_ID = B.FILE_ID
+WHERE TO_CHAR(B.CRTD_DTT, 'YYYYMMDD') = TO_CHAR(SYSDATE - 1, 'YYYYMMDD')
+AND NOT EXISTS (
+  SELECT * FROM NUMAN.XTI_FILE_POD_OCR_T C WHERE C.FILE_ID = A.FILE_ID
+)`,
       [],
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
 
-
+    console.log("result-> ", result);
     const formattedResult = result.rows ?? [];
 
     return NextResponse.json(formattedResult);
@@ -72,4 +72,3 @@ export async function GET(req: NextRequest) {
     }
   }
 }
-

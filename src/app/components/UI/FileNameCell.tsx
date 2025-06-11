@@ -1,9 +1,15 @@
 import React, { useState } from "react";
 
-const FileNameCell = ({ pdfUrl }: { pdfUrl?: string }) => {
+interface FileNameCellProps {
+  pdfUrl?: string;
+  fileId?: string;
+}
+
+const FileNameCell = ({ pdfUrl, fileId }: FileNameCellProps) => {
   const [showFull, setShowFull] = useState(false);
 
-  const fileName = pdfUrl?.split("/").pop() || "No PDF Available";
+  // Extract file name from either pdfUrl or fileId
+  const fileName = pdfUrl?.split("/").pop() || fileId || "No PDF Available";
 
   const isTruncated = fileName.length > 15 && !showFull;
   const displayName = isTruncated ? fileName.substring(0, 15) + "..." : fileName;
@@ -21,5 +27,4 @@ const FileNameCell = ({ pdfUrl }: { pdfUrl?: string }) => {
   );
 };
 
-
-export default FileNameCell
+export default FileNameCell;

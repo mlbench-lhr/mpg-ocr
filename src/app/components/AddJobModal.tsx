@@ -62,9 +62,7 @@ const AddJobModal: React.FC<AddJobModalProps> = ({ onClose, onSubmit }) => {
     return durations;
   };
 
-  const convertTimeToUtc=()=>{
-    
-  }
+  
   useEffect(() => {
     if (fromTime && toTime) {
       const startTimeInMinutes = timeToMinutes(fromTime);

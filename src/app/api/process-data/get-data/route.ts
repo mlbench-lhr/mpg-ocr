@@ -4,6 +4,27 @@ import { format, parse } from "date-fns";
 import clientPromise from "@/lib/mongodb";
 import oracledb from "oracledb";
 import { getOracleConnection } from "@/lib/oracle";
+type OracleRow = {
+  OCR_BOLNO: string;
+  FILE_ID: string;
+  OCR_STMP_SIGN: string;
+  OCR_ISSQTY: number;
+  OCR_RCVQTY: number;
+  OCR_SYMT_DAMG: string;
+  OCR_SYMT_SHRT: string;
+  OCR_SYMT_ORVG: string;
+  OCR_SYMT_REFS: string;
+  OCR_STMP_POD_DTT: string;
+  CRTD_DTT: Date;
+  OCR_SYMT_SEAL: string;
+  OCR_SYMT_NONE: string;
+  UPTD_USR_CD: string;
+};
+interface PodFile {
+  FILE_ID: string;
+  FILE_TABLE: string;
+}
+
 
 interface Job {
   _id?: ObjectId;
@@ -39,13 +60,14 @@ export async function GET(req: Request) {
       `${origin}/api/oracle/connection-status`
     );
     const connectionStatus = await connectionStatusRes.json();
+    console.log("connection status-> ", connectionStatus);
 
     const url = new URL(req.url);
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const limit = parseInt(url.searchParams.get("limit") || "30", 10);
     const skip = (page - 1) * limit;
 
-    if (connectionStatus === "local") {
+    if (connectionStatus.dataBase === "local") {
       return await getJobsFromMongo(url, skip, limit, page);
     } else {
       return await getJobsFromOracle(url, skip, limit, page);
@@ -77,37 +99,62 @@ async function getJobsFromMongo(
   const reviewStatus = url.searchParams.get("reviewStatus") || "";
   const reviewByStatus = url.searchParams.get("reviewByStatus") || "";
   const breakdownReason = url.searchParams.get("breakdownReason") || "";
+
+  let podDate = url.searchParams.get("podDate") || "";
   const podDateSignature = url.searchParams.get("podDateSignature") || "";
   const bolNumber = url.searchParams.get("bolNumber") || "";
   const jobName = url.searchParams.get("jobName") || "";
   const searchQuery = url.searchParams.get("search") || "";
-  let podDate = url.searchParams.get("podDate") || "";
+  const filter: Filter<Job> = {};
 
-  const sortColumns = (url.searchParams.get("sortColumn") || "").split(",");
-  const sortOrders = (url.searchParams.get("sortOrder") || "asc").split(",");
+  const sortColumnsString = url.searchParams.get("sortColumn");
+  const sortColumns = sortColumnsString ? sortColumnsString.split(",") : [];
+
+  const sortOrderString = url.searchParams.get("sortOrder") || "asc";
+  const sortOrders = sortOrderString.split(",");
 
   const sortQuery: Record<string, 1 | -1> = {};
-  sortColumns.forEach((col, idx) => {
-    sortQuery[col] = sortOrders[idx] === "desc" ? -1 : 1;
+
+  sortColumns.forEach((column, index) => {
+    const order = sortOrders[index] === "desc" ? -1 : 1;
+    sortQuery[column] = order;
   });
 
-  const filter: Filter<Job> = {};
-  if (podDateSignature)
-    filter.podSignature = { $regex: podDateSignature.trim(), $options: "i" };
-  if (bolNumber) {
-    filter.blNumber = /^\d+$/.test(bolNumber)
-      ? parseInt(bolNumber)
-      : { $regex: bolNumber.trim(), $options: "i" };
+  if (sortOrders.length < sortColumns.length) {
+    for (let i = sortOrders.length; i < sortColumns.length; i++) {
+      sortQuery[sortColumns[i]] = 1;
+    }
   }
-  if (jobName) filter.jobName = { $regex: jobName.trim(), $options: "i" };
+
+  console.log("Final Sort Query:", sortQuery);
+
+  if (podDateSignature) {
+    filter.podSignature = { $regex: podDateSignature.trim(), $options: "i" };
+  }
+  // if (bolNumber) {
+  //     filter.blNumber = { $regex: bolNumber.trim(), $options: "i" };
+  // }
+
+  if (bolNumber) {
+    if (/^\d+$/.test(bolNumber)) {
+      filter.blNumber = parseInt(bolNumber, 10);
+    } else {
+      filter.blNumber = { $regex: bolNumber.trim(), $options: "i" };
+    }
+  }
+
+  if (jobName) {
+    filter.jobName = { $regex: jobName.trim(), $options: "i" };
+  }
   if (searchQuery) {
-    const regex = { $regex: searchQuery, $options: "i" };
+    const searchRegex = { $regex: searchQuery, $options: "i" };
     filter.$or = [
-      { blNumber: regex },
-      { jobName: regex },
-      { podSignature: regex },
+      { blNumber: searchRegex },
+      { jobName: searchRegex },
+      { podSignature: searchRegex },
     ];
   }
+
   if (recognitionStatus) filter.recognitionStatus = recognitionStatus;
   if (reviewStatus) filter.reviewStatus = reviewStatus;
   if (reviewByStatus) filter.reviewedBy = reviewByStatus;
@@ -116,8 +163,11 @@ async function getJobsFromMongo(
   if (podDate) {
     try {
       const parsedDate = parse(podDate, "yyyy-MM-dd", new Date());
-      filter.podDate = format(parsedDate, "MM/dd/yy");
-    } catch {}
+      podDate = format(parsedDate, "MM/dd/yy");
+      filter.podDate = podDate;
+    } catch (error) {
+      console.log("Invalid podDate format:", error);
+    }
   }
 
   const jobs = await dataCollection
@@ -133,8 +183,7 @@ async function getJobsFromMongo(
     { status: 200 }
   );
 }
-
-async function getJobsFromOracle(
+ async function getJobsFromOracle(
   url: URL,
   skip: number,
   limit: number,
@@ -142,6 +191,33 @@ async function getJobsFromOracle(
 ) {
   let connection;
   try {
+    const podSignature =
+      url.searchParams.get("podDateSignature")?.trim().toLowerCase() || "";
+    const bolNumber =
+      url.searchParams.get("bolNumber")?.trim().toLowerCase() || "";
+    const createdDate = url.searchParams.get("createdDate") || "";
+    const updatedDate = url.searchParams.get("updatedDate") || "";
+    const uptd_Usr_Cd = url.searchParams.get("uptd_Usr_Cd") || "";
+
+    const isOCR = uptd_Usr_Cd.toLowerCase() === "ocr";
+
+    if (!isOCR) {
+      const apiRes = await fetch("http://localhost:3000/api/pod/retrieve");
+      const apiData: PodFile[] = await apiRes.json();
+      const jobs = apiData.map((row: PodFile) => ({
+        fileId: row.FILE_ID,
+      }));
+      return NextResponse.json(
+        {
+          jobs,
+          totalJobs: apiData.length,
+          page,
+          totalPages: 1,
+        },
+        { status: 200 }
+      );
+    }
+
     connection = await getOracleConnection(
       "numan",
       "numan786$",
@@ -157,12 +233,29 @@ async function getJobsFromOracle(
       );
     }
 
-    const podSignature = url.searchParams.get("podDateSignature")?.trim().toLowerCase() || "";
-    const bolNumber = url.searchParams.get("bolNumber")?.trim().toLowerCase() || "";
+    const tableName = `${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T`;
 
-    // Prepare WHERE clause
     const whereClauses: string[] = [];
-    const filterBinds: Record<string, any> = {};
+    const filterBinds: Record<string, string | Date | number> = {};
+
+    if (uptd_Usr_Cd) {
+      whereClauses.push(`LOWER(UPTD_USR_CD) = :uptd_Usr_Cd`);
+      filterBinds.uptd_Usr_Cd = uptd_Usr_Cd.toLowerCase();
+    }
+
+    if (createdDate) {
+      whereClauses.push(
+        `TRUNC(CRTD_DTT) = TO_DATE(:createdDate, 'YYYY-MM-DD')`
+      );
+      filterBinds.createdDate = createdDate;
+    }
+
+    if (updatedDate) {
+      whereClauses.push(
+        `TRUNC(UPTD_DTT) = TO_DATE(:updatedDate, 'YYYY-MM-DD')`
+      );
+      filterBinds.updatedDate = updatedDate;
+    }
 
     if (podSignature) {
       whereClauses.push(`LOWER(OCR_STMP_SIGN) LIKE :podSignature`);
@@ -177,11 +270,10 @@ async function getJobsFromOracle(
     const whereSQL =
       whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
 
-    // SQL for paginated result
     const sql = `
       SELECT * FROM (
         SELECT t.*, ROW_NUMBER() OVER (ORDER BY CRTD_DTT DESC) AS rn
-        FROM XTI_FILE_POD_OCR_T t
+        FROM ${tableName} t
         ${whereSQL}
       )
       WHERE rn > :offset AND rn <= :maxRow
@@ -197,31 +289,18 @@ async function getJobsFromOracle(
       outFormat: oracledb.OUT_FORMAT_OBJECT,
     });
 
-    // SQL for total count
-    const countSQL = `SELECT COUNT(*) AS TOTAL FROM XTI_FILE_POD_OCR_T ${whereSQL}`;
-    const countResult = await connection.execute(
-      countSQL,
-      filterBinds,
-      { outFormat: oracledb.OUT_FORMAT_OBJECT }
-    );
+    const countSQL = `SELECT COUNT(*) AS TOTAL FROM ${tableName} ${whereSQL}`;
+    const countResult = await connection.execute(countSQL, filterBinds, {
+      outFormat: oracledb.OUT_FORMAT_OBJECT,
+    });
 
-    const totalJobs = (countResult.rows as any)?.[0]?.TOTAL || 0;
+    const totalJobs = (countResult.rows?.[0] as { TOTAL: number })?.TOTAL || 0;
 
-    const rows = result.rows as {
-      OCR_BOLNO: string;
-      OCR_STMP_SIGN: string;
-      OCR_ISSQTY: number;
-      OCR_RCVQTY: number;
-      OCR_SYMT_DAMG: string;
-      OCR_SYMT_SHRT: string;
-      OCR_SYMT_ORVG: string;
-      OCR_SYMT_REFS: string;
-      OCR_STMP_POD_DTT: string;
-      CRTD_DTT: Date;
-    }[];
+    const rows = result.rows as OracleRow[];
 
     const jobs = rows.map((row) => ({
       blNumber: row.OCR_BOLNO,
+      fileId: row.FILE_ID,
       podSignature: row.OCR_STMP_SIGN,
       totalQty: row.OCR_ISSQTY,
       received: row.OCR_RCVQTY,
@@ -231,6 +310,9 @@ async function getJobsFromOracle(
       refused: row.OCR_SYMT_REFS === "Y" ? 1 : 0,
       podDate: row.OCR_STMP_POD_DTT,
       createdAt: row.CRTD_DTT,
+      sealIntact: row.OCR_SYMT_SEAL,
+      stampExists: row.OCR_SYMT_NONE === "N" ? "no" : "yes",
+      reviewedBy: row.UPTD_USR_CD,
     }));
 
     return NextResponse.json(
@@ -244,4 +326,3 @@ async function getJobsFromOracle(
     if (connection) await connection.close();
   }
 }
-
