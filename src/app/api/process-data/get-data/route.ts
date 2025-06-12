@@ -2,29 +2,7 @@ import { NextResponse } from "next/server";
 import { Filter, ObjectId } from "mongodb";
 import { format, parse } from "date-fns";
 import clientPromise from "@/lib/mongodb";
-import oracledb from "oracledb";
-import { getOracleConnection } from "@/lib/oracle";
-type OracleRow = {
-  OCR_BOLNO: string;
-  FILE_ID: string;
-  OCR_STMP_SIGN: string;
-  OCR_ISSQTY: number;
-  OCR_RCVQTY: number;
-  OCR_SYMT_DAMG: string;
-  OCR_SYMT_SHRT: string;
-  OCR_SYMT_ORVG: string;
-  OCR_SYMT_REFS: string;
-  OCR_STMP_POD_DTT: string;
-  CRTD_DTT: Date;
-  OCR_SYMT_SEAL: string;
-  OCR_SYMT_NONE: string;
-  UPTD_USR_CD: string;
-};
-interface PodFile {
-  FILE_ID: string;
-  FILE_TABLE: string;
-}
-
+import { getOracleOCRData } from "@/lib/oracleOCRData";
 
 interface Job {
   _id?: ObjectId;
@@ -70,7 +48,7 @@ export async function GET(req: Request) {
     if (connectionStatus.dataBase === "local") {
       return await getJobsFromMongo(url, skip, limit, page);
     } else {
-      return await getJobsFromOracle(url, skip, limit, page);
+      return await getOracleOCRData(url, skip, limit, page);
     }
   } catch (error) {
     console.error("Error fetching jobs:", error);
@@ -183,146 +161,163 @@ async function getJobsFromMongo(
     { status: 200 }
   );
 }
- async function getJobsFromOracle(
-  url: URL,
-  skip: number,
-  limit: number,
-  page: number
-) {
-  let connection;
-  try {
-    const podSignature =
-      url.searchParams.get("podDateSignature")?.trim().toLowerCase() || "";
-    const bolNumber =
-      url.searchParams.get("bolNumber")?.trim().toLowerCase() || "";
-    const createdDate = url.searchParams.get("createdDate") || "";
-    const updatedDate = url.searchParams.get("updatedDate") || "";
-    const uptd_Usr_Cd = url.searchParams.get("uptd_Usr_Cd") || "";
 
-    const isOCR = uptd_Usr_Cd.toLowerCase() === "ocr";
 
-    if (!isOCR) {
-      const apiRes = await fetch("http://localhost:3000/api/pod/retrieve");
-      const apiData: PodFile[] = await apiRes.json();
-      const jobs = apiData.map((row: PodFile) => ({
-        fileId: row.FILE_ID,
-      }));
-      return NextResponse.json(
-        {
-          jobs,
-          totalJobs: apiData.length,
-          page,
-          totalPages: 1,
-        },
-        { status: 200 }
-      );
-    }
+// async function getJobsFromOracle(
+//   url: URL,
+//   skip: number,
+//   limit: number,
+//   page: number
+// ) {
+//   let connection;
+//   try {
+//     const client = await clientPromise;
+//     const db = client.db("my-next-app");
+//     const connectionsCollection = db.collection("db_connections");
+//     const userDBCredentials = await connectionsCollection.findOne(
+//       {},
+//       { sort: { _id: -1 } }
+//     );
+//     if (!userDBCredentials) {
+//       return NextResponse.json(
+//         { message: "OracleDB credentials not found" },
+//         { status: 404 }
+//       );
+//     }
 
-    connection = await getOracleConnection(
-      "numan",
-      "numan786$",
-      "192.168.0.145",
-      "1539",
-      "ORCLCDB"
-    );
+//     const { userName, password, ipAddress, portNumber, serviceName } =
+//       userDBCredentials;
+//     connection = await getOracleConnection(
+//       userName,
+//       password,
+//       ipAddress,
+//       portNumber,
+//       serviceName
+//     );
 
-    if (!connection) {
-      return NextResponse.json(
-        { error: "Failed to establish OracleDB connection" },
-        { status: 500 }
-      );
-    }
+//     if (!connection) {
+//       return NextResponse.json(
+//         { error: "Failed to establish OracleDB connection" },
+//         { status: 500 }
+//       );
+//     }
+//     const podSignature =
+//       url.searchParams.get("podDateSignature")?.trim().toLowerCase() || "";
+//     const bolNumber =
+//       url.searchParams.get("bolNumber")?.trim().toLowerCase() || "";
+//     const createdDate = url.searchParams.get("createdDate") || "";
+//     const updatedDate = url.searchParams.get("updatedDate") || "";
+//     const uptd_Usr_Cd = url.searchParams.get("uptd_Usr_Cd") || "";
 
-    const tableName = `${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T`;
+//     const isOCR = uptd_Usr_Cd.toLowerCase() === "ocr";
 
-    const whereClauses: string[] = [];
-    const filterBinds: Record<string, string | Date | number> = {};
+//     if (!isOCR) {
+//       const apiRes = await fetch("http://localhost:3000/api/pod/retrieve");
+//       const apiData: PodFile[] = await apiRes.json();
+//       const jobs = apiData.map((row: PodFile) => ({
+//         fileId: row.FILE_ID,
+//       }));
+//       return NextResponse.json(
+//         {
+//           jobs,
+//           totalJobs: apiData.length,
+//           page,
+//           totalPages: 1,
+//         },
+//         { status: 200 }
+//       );
+//     }
 
-    if (uptd_Usr_Cd) {
-      whereClauses.push(`LOWER(UPTD_USR_CD) = :uptd_Usr_Cd`);
-      filterBinds.uptd_Usr_Cd = uptd_Usr_Cd.toLowerCase();
-    }
+//     const tableName = `${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T`;
 
-    if (createdDate) {
-      whereClauses.push(
-        `TRUNC(CRTD_DTT) = TO_DATE(:createdDate, 'YYYY-MM-DD')`
-      );
-      filterBinds.createdDate = createdDate;
-    }
+//     const whereClauses: string[] = [];
+//     const filterBinds: Record<string, string | Date | number> = {};
 
-    if (updatedDate) {
-      whereClauses.push(
-        `TRUNC(UPTD_DTT) = TO_DATE(:updatedDate, 'YYYY-MM-DD')`
-      );
-      filterBinds.updatedDate = updatedDate;
-    }
+//     if (uptd_Usr_Cd) {
+//       whereClauses.push(`LOWER(UPTD_USR_CD) = :uptd_Usr_Cd`);
+//       filterBinds.uptd_Usr_Cd = uptd_Usr_Cd.toLowerCase();
+//     }
 
-    if (podSignature) {
-      whereClauses.push(`LOWER(OCR_STMP_SIGN) LIKE :podSignature`);
-      filterBinds.podSignature = `%${podSignature}%`;
-    }
+//     if (createdDate) {
+//       whereClauses.push(
+//         `TRUNC(CRTD_DTT) = TO_DATE(:createdDate, 'YYYY-MM-DD')`
+//       );
+//       filterBinds.createdDate = createdDate;
+//     }
 
-    if (bolNumber) {
-      whereClauses.push(`LOWER(OCR_BOLNO) LIKE :bolNumber`);
-      filterBinds.bolNumber = `%${bolNumber}%`;
-    }
+//     if (updatedDate) {
+//       whereClauses.push(
+//         `TRUNC(UPTD_DTT) = TO_DATE(:updatedDate, 'YYYY-MM-DD')`
+//       );
+//       filterBinds.updatedDate = updatedDate;
+//     }
 
-    const whereSQL =
-      whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+//     if (podSignature) {
+//       whereClauses.push(`LOWER(OCR_STMP_SIGN) LIKE :podSignature`);
+//       filterBinds.podSignature = `%${podSignature}%`;
+//     }
 
-    const sql = `
-      SELECT * FROM (
-        SELECT t.*, ROW_NUMBER() OVER (ORDER BY CRTD_DTT DESC) AS rn
-        FROM ${tableName} t
-        ${whereSQL}
-      )
-      WHERE rn > :offset AND rn <= :maxRow
-    `;
+//     if (bolNumber) {
+//       whereClauses.push(`LOWER(OCR_BOLNO) LIKE :bolNumber`);
+//       filterBinds.bolNumber = `%${bolNumber}%`;
+//     }
 
-    const resultBinds = {
-      ...filterBinds,
-      offset: skip,
-      maxRow: skip + limit,
-    };
+//     const whereSQL =
+//       whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
 
-    const result = await connection.execute(sql, resultBinds, {
-      outFormat: oracledb.OUT_FORMAT_OBJECT,
-    });
+//     const sql = `
+//       SELECT * FROM (
+//         SELECT t.*, ROW_NUMBER() OVER (ORDER BY CRTD_DTT DESC) AS rn
+//         FROM ${tableName} t
+//         ${whereSQL}
+//       )
+//       WHERE rn > :offset AND rn <= :maxRow
+//     `;
 
-    const countSQL = `SELECT COUNT(*) AS TOTAL FROM ${tableName} ${whereSQL}`;
-    const countResult = await connection.execute(countSQL, filterBinds, {
-      outFormat: oracledb.OUT_FORMAT_OBJECT,
-    });
+//     const resultBinds = {
+//       ...filterBinds,
+//       offset: skip,
+//       maxRow: skip + limit,
+//     };
 
-    const totalJobs = (countResult.rows?.[0] as { TOTAL: number })?.TOTAL || 0;
+//     const result = await connection.execute(sql, resultBinds, {
+//       outFormat: oracledb.OUT_FORMAT_OBJECT,
+//     });
 
-    const rows = result.rows as OracleRow[];
+//     const countSQL = `SELECT COUNT(*) AS TOTAL FROM ${tableName} ${whereSQL}`;
+//     const countResult = await connection.execute(countSQL, filterBinds, {
+//       outFormat: oracledb.OUT_FORMAT_OBJECT,
+//     });
 
-    const jobs = rows.map((row) => ({
-      blNumber: row.OCR_BOLNO,
-      fileId: row.FILE_ID,
-      podSignature: row.OCR_STMP_SIGN,
-      totalQty: row.OCR_ISSQTY,
-      received: row.OCR_RCVQTY,
-      damaged: row.OCR_SYMT_DAMG === "Y" ? 1 : 0,
-      short: row.OCR_SYMT_SHRT === "Y" ? 1 : 0,
-      over: row.OCR_SYMT_ORVG === "Y" ? 1 : 0,
-      refused: row.OCR_SYMT_REFS === "Y" ? 1 : 0,
-      podDate: row.OCR_STMP_POD_DTT,
-      createdAt: row.CRTD_DTT,
-      sealIntact: row.OCR_SYMT_SEAL,
-      stampExists: row.OCR_SYMT_NONE === "N" ? "no" : "yes",
-      reviewedBy: row.UPTD_USR_CD,
-    }));
+//     const totalJobs = (countResult.rows?.[0] as { TOTAL: number })?.TOTAL || 0;
 
-    return NextResponse.json(
-      { jobs, totalJobs, page, totalPages: Math.ceil(totalJobs / limit) },
-      { status: 200 }
-    );
-  } catch (err) {
-    console.error("Oracle DB error:", err);
-    return NextResponse.json({ error: "Oracle DB error" }, { status: 500 });
-  } finally {
-    if (connection) await connection.close();
-  }
-}
+//     const rows = result.rows as OracleRow[];
+
+//     const jobs = rows.map((row) => ({
+//       blNumber: row.OCR_BOLNO,
+//       fileId: row.FILE_ID,
+//       podSignature: row.OCR_STMP_SIGN,
+//       totalQty: row.OCR_ISSQTY,
+//       received: row.OCR_RCVQTY,
+//       damaged: row.OCR_SYMT_DAMG === "Y" ? 1 : 0,
+//       short: row.OCR_SYMT_SHRT === "Y" ? 1 : 0,
+//       over: row.OCR_SYMT_ORVG === "Y" ? 1 : 0,
+//       refused: row.OCR_SYMT_REFS === "Y" ? 1 : 0,
+//       podDate: row.OCR_STMP_POD_DTT,
+//       createdAt: row.CRTD_DTT,
+//       sealIntact: row.OCR_SYMT_SEAL,
+//       stampExists: row.OCR_SYMT_NONE === "N" ? "no" : "yes",
+//       reviewedBy: row.UPTD_USR_CD,
+//     }));
+
+//     return NextResponse.json(
+//       { jobs, totalJobs, page, totalPages: Math.ceil(totalJobs / limit) },
+//       { status: 200 }
+//     );
+//   } catch (err) {
+//     console.error("Oracle DB error:", err);
+//     return NextResponse.json({ error: "Oracle DB error" }, { status: 500 });
+//   } finally {
+//     if (connection) await connection.close();
+//   }
+// }
