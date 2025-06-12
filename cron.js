@@ -4,7 +4,6 @@ const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const isBetween = require("dayjs/plugin/isBetween");
 
-
 dayjs.extend(utc);
 dayjs.extend(isBetween);
 
@@ -30,13 +29,13 @@ async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
         if (!fileRes.ok) continue;
 
         const fileData = await fileRes.json();
-        console.log("filer data-> ", fileData);
+        console.log("file data-> ", fileData);
         await fetch("http://localhost:3000/api/pod/store", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ fileId: fileData.FILE_ID }),
         });
-z
+        
         const filePath = `${baseUrl}/api/access-file?filename=${encodeURIComponent(
           fileData.FILE_NAME
         )}`;
@@ -141,7 +140,8 @@ z
 
         console.log(`✅ File ${fileId} processed.`);
       } catch (err) {
-        console.error("❌ File processing error:", err.message);
+    console.error("❌ File processing error:", err);
+
       }
     }
   } catch (err) {
@@ -164,7 +164,7 @@ async function scheduleJobs() {
     const ipData = await ipRes.json();
     const baseUrl = `http://${ipData.secondaryIp}:3000`;
     const ocrUrl = `http://${ipData.ip}:8080/run-ocr`;
-      
+
     const wmsRes = await fetch("http://localhost:3000/api/save-wms-url");
     const {
       wmsUrl,
