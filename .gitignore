@@ -42,3 +42,7 @@ next-env.d.ts
 /.other_0/
 /.other_1/
 /.other_2/
+config.bat
+temp_auto_push.bat
+temp_interactive_push.bat
+branch_structure.json
