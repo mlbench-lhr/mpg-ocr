@@ -20,7 +20,10 @@ export async function GET() {
     }
 
     // Return only the dataBase field
-    return NextResponse.json({ database: connection.dataBase }, { status: 200 });
+    return NextResponse.json(
+      { database: connection.dataBase, data: connection },
+      { status: 200 }
+    );
   } catch (error) {
     return NextResponse.json(
       {
