@@ -38,7 +38,6 @@ export async function GET(req: Request) {
       `${origin}/api/oracle/connection-status`
     );
     const connectionStatus = await connectionStatusRes.json();
-    console.log("connection status-> ", connectionStatus);
 
     const url = new URL(req.url);
     const page = parseInt(url.searchParams.get("page") || "1", 10);
@@ -63,7 +62,7 @@ export async function OPTIONS() {
   return NextResponse.json({ allowedMethods: ["GET"] });
 }
 
-async function getJobsFromMongo(
+export async function getJobsFromMongo(
   url: URL,
   skip: number,
   limit: number,
@@ -110,9 +109,6 @@ async function getJobsFromMongo(
   if (podDateSignature) {
     filter.podSignature = { $regex: podDateSignature.trim(), $options: "i" };
   }
-  // if (bolNumber) {
-  //     filter.blNumber = { $regex: bolNumber.trim(), $options: "i" };
-  // }
 
   if (bolNumber) {
     if (/^\d+$/.test(bolNumber)) {

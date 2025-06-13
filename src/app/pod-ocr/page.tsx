@@ -42,7 +42,7 @@ export default function Page() {
   const [totalPages, setTotalPages] = useState(1);
   const [applyFilters, setApplyFilters] = useState(false);
   const [resetEnabled, setResetEnabled] = useState(false);
-  const [limit, setLimit] = useState<number | "">(1);
+  const [limit, setLimit] = useState<number | "">(100);
 
   const [filters, setFilters] = useState({
     file_id: "",

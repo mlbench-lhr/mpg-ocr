@@ -368,33 +368,6 @@ const MasterPage = () => {
     );
   };
 
-  // useEffect(() => {
-  //   const fetchStatus = async () => {
-  //     try {
-  //       const response = await fetch("/api/jobs/ocr");
-  //       const data = await response.json();
-  //       setIsOcrRunning(data.status === "start");
-  //     } catch (error) {
-  //       console.error("Error fetching OCR status:", error);
-  //     }
-  //   };
-
-  //   fetchStatus();
-  // }, []);
-
-  // useEffect(() => {
-  //   async function fetchOcrApiUrl() {
-  //     const res = await fetch("/api/ipAddress/ip-address");
-  //     const data = await res.json();
-
-  //     if (data.ip) {
-  //       setOcrApiUrl(`http://${data.ip}:8080/run-ocr`);
-  //     }
-  //   }
-
-  //   fetchOcrApiUrl();
-  // }, []);
-
   useEffect(() => {
     const fetchStatus = async () => {
       try {
@@ -448,8 +421,6 @@ const MasterPage = () => {
       const job = master.find((job) => job._id === rowId);
 
       if (job && (!job.blNumber || !job.podSignature?.trim()) && job.pdfUrl) {
-        // const fileName = job.pdfUrl.split("/").pop() || "";
-        // return { file_url_or_path: `/api/access-file?filename=${fileName}` };
         const fileName = job.pdfUrl.split("/").pop() || "";
         return {
           file_url_or_path: `${baseUrl}/api/access-file?filename=${encodeURIComponent(
@@ -879,7 +850,7 @@ const MasterPage = () => {
       }
 
       const data = await response.json();
-      console.log("data-> ", data);
+      console.log("data job-> ", data);
       setMaster(data.jobs);
       setTotalPages(data.totalPages);
       setTotalJobs(data.totalJobs);

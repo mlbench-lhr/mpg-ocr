@@ -27,7 +27,6 @@ export interface Log {
   status: string;
   timestamp: string;
   connectionResult:string; // ISO string, if using toISOString()
-  submittedAt:string;
 }
 
 export default function Page() {
@@ -45,7 +44,7 @@ export default function Page() {
  const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
  const [master, setMaster] = useState<Log[]>([]);
- const [limit, setLimit] = useState<number | "">(1);
+ const [limit, setLimit] = useState<number | "">(100);
 
 
 
@@ -120,7 +119,7 @@ useEffect(() => {
 
       const filters = {
         fileName: sessionStorage.getItem("fileName") || "",
-        submittedAt: sessionStorage.getItem("submittedFilter") || "",
+        timestamp: sessionStorage.getItem("submittedFilter") || "",
         status: sessionStorage.getItem("statusFilter") || "",
         connectionResult: sessionStorage.getItem("oracleFilter") || "",
        
@@ -130,7 +129,7 @@ useEffect(() => {
       // queryParams.set("page", currentPage.toString());
 
       if (filters.fileName) queryParams.set("fileName", filters.fileName);
-      if (filters.submittedAt) queryParams.set("submittedFilter", filters.submittedAt);
+      if (filters.timestamp) queryParams.set("submittedFilter", filters.timestamp);
       if (filters.status) queryParams.set("statusFilter", filters.status);
       if (filters.connectionResult) queryParams.set("oracleFilter", filters.connectionResult);
 
@@ -144,8 +143,8 @@ useEffect(() => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('data-> ', data)
         setLogs(data.logs);
-        console.log("Type Check",typeof data.logs[0].timestamp)
         setTotalPages(data.totalPages);
         setTotalLogs(data.totalLogs);
       } else {
