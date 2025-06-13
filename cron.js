@@ -82,6 +82,7 @@ async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
             }[d?.Status] || "null",
           breakdownReason: "none",
           reviewedBy: "OCR Engine",
+          uptd_Usr_Cd:"OCR",
           cargoDescription: "Processed from OCR API.",
           none: "N",
           sealIntact: d?.Seal_Intact === "yes" ? "Y" : "N",
