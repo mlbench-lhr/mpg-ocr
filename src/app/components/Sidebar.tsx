@@ -321,6 +321,7 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     return () => clearInterval(interval);
   }, []);
 
+  console.log("status-> ", status)
   const getDotColor = () => {
     switch (status) {
       case "online":

@@ -833,6 +833,8 @@ const MasterPage = () => {
       const queryParams = new URLSearchParams();
       queryParams.set("page", currentPage.toString());
 
+      console.log('querry params-> ', filters)
+
       if (filters.bolNumber) queryParams.set("bolNumber", filters.bolNumber);
       if (filters.finalStatus)
         queryParams.set("recognitionStatus", filters.finalStatus);
@@ -868,6 +870,7 @@ const MasterPage = () => {
       }
 
       // console.log("Query Params:", queryParams.toString());
+
 
       const response = await fetch(
         `/api/process-data/get-data/?${queryParams.toString()}`
@@ -1481,7 +1484,7 @@ const MasterPage = () => {
                   htmlFor="finalStatusFilter"
                   className="text-sm font-semibold text-gray-800"
                 >
-                  UPTD_USR_CD
+                  Update User
                 </label>
                 <div className="relative">
                   <select

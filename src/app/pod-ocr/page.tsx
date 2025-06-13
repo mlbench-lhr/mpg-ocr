@@ -41,6 +41,9 @@ export default function Page() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [applyFilters, setApplyFilters] = useState(false);
+  const [resetEnabled, setResetEnabled] = useState(false);
+  const [limit, setLimit] = useState<number | "">(1);
+
   const [filters, setFilters] = useState({
     file_id: "",
     crtd_usr_cd: "",
@@ -66,11 +69,14 @@ export default function Page() {
   const [filtersApplied, setFiltersApplied] = useState(false);
 
   const handleApplyFilters = () => {
-    const isAnyFilterSet = Object.values(filters).some((val) => val !== "");
-    setFiltersApplied(isAnyFilterSet);
+    const hasFilterData = Object.values(filters).some((v) => v !== "");
 
-    if (isAnyFilterSet) {
-      setApplyFilters(true); // this will trigger fetchPodData via useEffect
+    // Always fetch data when Apply Filter is clicked
+    setApplyFilters(true);
+
+    // Enable Reset button only if there was some filter input
+    if (hasFilterData) {
+      setResetEnabled(true);
     }
   };
 
@@ -81,14 +87,15 @@ export default function Page() {
           Object.keys(prev).map((key) => [key, ""])
         ) as typeof filters
     );
-    setFiltersApplied(false);
-    setApplyFilters(false); // prevents unnecessary fetch
+    setResetEnabled(false); // Disable button after reset
+    setApplyFilters(false);
   };
 
   useEffect(() => {
     const isAny = Object.values(filters).some((v) => v !== "");
-    if (!isAny) setFiltersApplied(false);
+    setFiltersApplied(isAny);
   }, [filters]);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -128,7 +135,7 @@ export default function Page() {
   }, [router]);
 
   const { isExpanded } = useSidebar();
-
+console.log('current page-> ', currentPage)
   const handleSidebarStateChange = (newState: boolean) => {
     // setIsSidebarExpanded(newState);
     return newState;
@@ -142,18 +149,12 @@ export default function Page() {
     try {
       setLoadingTable(true);
 
-      // const searchParam = searchQuery
-      //   ? `&search=${encodeURIComponent(searchQuery)}`
-      //   : "";
-
       const searchParam = Object.entries(filters)
         .filter(([_, value]) => value !== "")
         .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
         .join("&");
-
-      console.log("search params-> ", searchParam);
       const response = await axios.get(
-        `/api/oracle-data?page=${currentPage}${searchParam}`
+        `/api/oracle-data?page=${currentPage}&${searchParam}`
       );
 
       const data = response.data;
@@ -165,13 +166,14 @@ export default function Page() {
     } finally {
       setLoadingTable(false);
     }
-  }, [currentPage, searchQuery]);
-
+  }, [currentPage, filters, limit]);
+  console.log("limit-> ", limit);
   useEffect(() => {
     if (applyFilters) {
       fetchPodData();
+      setApplyFilters(false); // Reset after fetch
     }
-  }, [applyFilters, currentPage, fetchPodData]);
+  }, [applyFilters, fetchPodData]);
 
   if (!isAuthenticated) return <p>Access Denied. Redirecting...</p>;
 
@@ -187,41 +189,65 @@ export default function Page() {
           leftContent="Total POD"
           totalContent={totalPod}
           rightContent={
-            <input
-              type="text"
-              placeholder="Search user..."
-              className="px-4 py-2 rounded-lg border border-gray-300"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            ""
+            // <input
+            //   type="text"
+            //   placeholder="Search user..."
+            //   className="px-4 py-2 rounded-lg border border-gray-300"
+            //   value={searchQuery}
+            //   onChange={(e) => setSearchQuery(e.target.value)}
+            // />
           }
           buttonContent={""}
         />
-        <div>
+        <div className="px-2  bg-[#E6E7EB] rounded-lg mx-2 mb-3 pb-3">
           <PODFilter filters={filters} setFilters={setFilters} />
+          <label className="mb-1 text-sm font-semibold text-gray-800">
+          Maximum No. of Hits
+          </label>
+          <div className="grid grid-cols-3">
+            <input
+              type="text"
+              className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] appearance-none"
+              value={limit}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "") {
+                  setLimit("");
+                } else {
+                  const parsed = parseInt(e.target.value, 10);
+                  if (!isNaN(parsed)) {
+                    setLimit(parsed);
+                  }
+                }
+              }}
+            />
+          </div>
+          <div className="flex justify-end items-center gap-2 col-span-3">
+            <button
+              onClick={handleResetFilters}
+              disabled={!resetEnabled}
+              className={`px-4 py-2 rounded ${
+                resetEnabled
+                  ? "text-[#005B97] underline"
+                  : "text-gray-400 underline cursor-not-allowed"
+              }`}
+            >
+              Reset Filters
+            </button>
+
+            <button
+              onClick={handleApplyFilters}
+              className="px-4 py-2 rounded-lg bg-[#005B97] text-white hover:bg-[#2270a3]"
+            >
+              Apply Filters
+            </button>
+          </div>
         </div>
-        <div className="flex justify-end items-center gap-2 col-span-3">
-          <button
-            onClick={handleResetFilters}
-            disabled={!filtersApplied}
-            className={`underline ${
-              !filtersApplied
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-[#005B97] cursor-pointer"
-            }`}
-          >
-            Reset Filters
-          </button>
-          <button
-            onClick={handleApplyFilters}
-            className="px-4 py-2 rounded-lg bg-[#005B97] text-white hover:bg-[#2270a3]"
-          >
-            Apply Filters
-          </button>
-        </div>
+
         <div className="flex-1 p-4 bg-white">
           {loadingTable ? (
-            <div className="flex justify-center items-center">
+            <div className="flex justify-center ">
               <Spinner />
             </div>
           ) : podData.length === 0 ? (
@@ -250,7 +276,6 @@ export default function Page() {
                       <th className="py-2 px-4 border-b text-center font-medium">
                         CRTD_DTT
                       </th>
-
                       <th className="py-2 px-4 border-b text-center font-medium">
                         SENT_FILE_DTT
                       </th>
