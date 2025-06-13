@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { FilterFields } from '@/types';
 import { IoCalendar } from "react-icons/io5";
 

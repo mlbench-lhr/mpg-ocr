@@ -1,35 +1,8 @@
 import { NextResponse } from "next/server";
-import { Filter, ObjectId } from "mongodb";
-import { format, parse } from "date-fns";
-import clientPromise from "@/lib/mongodb";
+import { getJobsFromMongo } from "@/lib/getJobsFromMongo";
 import { getOracleOCRData } from "@/lib/oracleOCRData";
 
-interface Job {
-  _id?: ObjectId;
-  blNumber: string | number;
-  jobName?: string;
-  podDate?: string;
-  deliveryDate?: Date;
-  podSignature?: string;
-  totalQty?: number;
-  received?: number;
-  damaged?: number;
-  short?: number;
-  over?: number;
-  refused?: number;
-  noOfPages?: number;
-  stampExists?: string;
-  finalStatus?: string;
-  reviewStatus?: string;
-  recognitionStatus?: string;
-  breakdownReason?: string;
-  reviewedBy?: string;
-  cargoDescription?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
 
-const DB_NAME = process.env.DB_NAME || "my-next-app";
 
 export async function GET(req: Request) {
   try {
@@ -62,103 +35,103 @@ export async function OPTIONS() {
   return NextResponse.json({ allowedMethods: ["GET"] });
 }
 
-export async function getJobsFromMongo(
-  url: URL,
-  skip: number,
-  limit: number,
-  page: number
-) {
-  const client = await clientPromise;
-  const db = client.db(DB_NAME);
-  const dataCollection = db.collection<Job>("mockData");
+// export async function getJobsFromMongo(
+//   url: URL,
+//   skip: number,
+//   limit: number,
+//   page: number
+// ) {
+//   const client = await clientPromise;
+//   const db = client.db(DB_NAME);
+//   const dataCollection = db.collection<Job>("mockData");
 
-  const recognitionStatus = url.searchParams.get("recognitionStatus") || "";
-  const reviewStatus = url.searchParams.get("reviewStatus") || "";
-  const reviewByStatus = url.searchParams.get("reviewByStatus") || "";
-  const breakdownReason = url.searchParams.get("breakdownReason") || "";
-  const uptd_Usr_Cd = url.searchParams.get("uptd_Usr_Cd") || "";
+//   const recognitionStatus = url.searchParams.get("recognitionStatus") || "";
+//   const reviewStatus = url.searchParams.get("reviewStatus") || "";
+//   const reviewByStatus = url.searchParams.get("reviewByStatus") || "";
+//   const breakdownReason = url.searchParams.get("breakdownReason") || "";
+//   const uptd_Usr_Cd = url.searchParams.get("uptd_Usr_Cd") || "";
 
-  let podDate = url.searchParams.get("podDate") || "";
-  const podDateSignature = url.searchParams.get("podDateSignature") || "";
-  const bolNumber = url.searchParams.get("bolNumber") || "";
-  const jobName = url.searchParams.get("jobName") || "";
-  const searchQuery = url.searchParams.get("search") || "";
-  const filter: Filter<Job> = {};
+//   let podDate = url.searchParams.get("podDate") || "";
+//   const podDateSignature = url.searchParams.get("podDateSignature") || "";
+//   const bolNumber = url.searchParams.get("bolNumber") || "";
+//   const jobName = url.searchParams.get("jobName") || "";
+//   const searchQuery = url.searchParams.get("search") || "";
+//   const filter: Filter<Job> = {};
 
-  const sortColumnsString = url.searchParams.get("sortColumn");
-  const sortColumns = sortColumnsString ? sortColumnsString.split(",") : [];
+//   const sortColumnsString = url.searchParams.get("sortColumn");
+//   const sortColumns = sortColumnsString ? sortColumnsString.split(",") : [];
 
-  const sortOrderString = url.searchParams.get("sortOrder") || "asc";
-  const sortOrders = sortOrderString.split(",");
+//   const sortOrderString = url.searchParams.get("sortOrder") || "asc";
+//   const sortOrders = sortOrderString.split(",");
 
-  const sortQuery: Record<string, 1 | -1> = {};
+//   const sortQuery: Record<string, 1 | -1> = {};
 
-  sortColumns.forEach((column, index) => {
-    const order = sortOrders[index] === "desc" ? -1 : 1;
-    sortQuery[column] = order;
-  });
+//   sortColumns.forEach((column, index) => {
+//     const order = sortOrders[index] === "desc" ? -1 : 1;
+//     sortQuery[column] = order;
+//   });
 
-  if (sortOrders.length < sortColumns.length) {
-    for (let i = sortOrders.length; i < sortColumns.length; i++) {
-      sortQuery[sortColumns[i]] = 1;
-    }
-  }
+//   if (sortOrders.length < sortColumns.length) {
+//     for (let i = sortOrders.length; i < sortColumns.length; i++) {
+//       sortQuery[sortColumns[i]] = 1;
+//     }
+//   }
 
-  console.log("Final Sort Query:", sortQuery);
+//   console.log("Final Sort Query:", sortQuery);
 
-  if (podDateSignature) {
-    filter.podSignature = { $regex: podDateSignature.trim(), $options: "i" };
-  }
+//   if (podDateSignature) {
+//     filter.podSignature = { $regex: podDateSignature.trim(), $options: "i" };
+//   }
 
-  if (bolNumber) {
-    if (/^\d+$/.test(bolNumber)) {
-      filter.blNumber = parseInt(bolNumber, 10);
-    } else {
-      filter.blNumber = { $regex: bolNumber.trim(), $options: "i" };
-    }
-  }
+//   if (bolNumber) {
+//     if (/^\d+$/.test(bolNumber)) {
+//       filter.blNumber = parseInt(bolNumber, 10);
+//     } else {
+//       filter.blNumber = { $regex: bolNumber.trim(), $options: "i" };
+//     }
+//   }
 
-  if (jobName) {
-    filter.jobName = { $regex: jobName.trim(), $options: "i" };
-  }
+//   if (jobName) {
+//     filter.jobName = { $regex: jobName.trim(), $options: "i" };
+//   }
 
-  if (uptd_Usr_Cd) {
-    filter.uptd_Usr_Cd = { $regex: uptd_Usr_Cd.trim(), $options: "i" };
-  }
-  if (searchQuery) {
-    const searchRegex = { $regex: searchQuery, $options: "i" };
-    filter.$or = [
-      { blNumber: searchRegex },
-      { jobName: searchRegex },
-      { podSignature: searchRegex },
-    ];
-  }
+//   if (uptd_Usr_Cd) {
+//     filter.uptd_Usr_Cd = { $regex: uptd_Usr_Cd.trim(), $options: "i" };
+//   }
+//   if (searchQuery) {
+//     const searchRegex = { $regex: searchQuery, $options: "i" };
+//     filter.$or = [
+//       { blNumber: searchRegex },
+//       { jobName: searchRegex },
+//       { podSignature: searchRegex },
+//     ];
+//   }
 
-  if (recognitionStatus) filter.recognitionStatus = recognitionStatus;
-  if (reviewStatus) filter.reviewStatus = reviewStatus;
-  if (reviewByStatus) filter.reviewedBy = reviewByStatus;
-  if (breakdownReason) filter.breakdownReason = breakdownReason;
+//   if (recognitionStatus) filter.recognitionStatus = recognitionStatus;
+//   if (reviewStatus) filter.reviewStatus = reviewStatus;
+//   if (reviewByStatus) filter.reviewedBy = reviewByStatus;
+//   if (breakdownReason) filter.breakdownReason = breakdownReason;
 
-  if (podDate) {
-    try {
-      const parsedDate = parse(podDate, "yyyy-MM-dd", new Date());
-      podDate = format(parsedDate, "MM/dd/yy");
-      filter.podDate = podDate;
-    } catch (error) {
-      console.log("Invalid podDate format:", error);
-    }
-  }
+//   if (podDate) {
+//     try {
+//       const parsedDate = parse(podDate, "yyyy-MM-dd", new Date());
+//       podDate = format(parsedDate, "MM/dd/yy");
+//       filter.podDate = podDate;
+//     } catch (error) {
+//       console.log("Invalid podDate format:", error);
+//     }
+//   }
 
-  const jobs = await dataCollection
-    .find(filter)
-    .sort(sortQuery)
-    .skip(skip)
-    .limit(limit)
-    .toArray();
-  const totalJobs = await dataCollection.countDocuments(filter);
+//   const jobs = await dataCollection
+//     .find(filter)
+//     .sort(sortQuery)
+//     .skip(skip)
+//     .limit(limit)
+//     .toArray();
+//   const totalJobs = await dataCollection.countDocuments(filter);
 
-  return NextResponse.json(
-    { jobs, totalJobs, page, totalPages: Math.ceil(totalJobs / limit) },
-    { status: 200 }
-  );
-}
+//   return NextResponse.json(
+//     { jobs, totalJobs, page, totalPages: Math.ceil(totalJobs / limit) },
+//     { status: 200 }
+//   );
+// }

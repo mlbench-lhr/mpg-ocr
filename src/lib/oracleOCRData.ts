@@ -5,7 +5,12 @@ import oracledb from "oracledb";
 import clientPromise from "./mongodb";
 import { getOracleConnection } from "./oracle";
 import { OracleRow, PodFile } from "@/type";
-import { getJobsFromMongo } from "@/app/api/process-data/get-data/route";
+import { getJobsFromMongo } from "./getJobsFromMongo";
+
+interface MongoJob {
+  _id: string;
+  pdfUrl: string;
+}
 
 export async function getOracleOCRData(
   url: URL,
@@ -26,6 +31,7 @@ export async function getOracleOCRData(
     const resultMongoDb = await getJobsFromMongo(url, skip, limit, page);
     const data = await resultMongoDb.json();
     console.log("resultMongoDb-> ", data);
+
     if (!userDBCredentials) {
       return NextResponse.json(
         { message: "OracleDB credentials not found" },
@@ -49,6 +55,7 @@ export async function getOracleOCRData(
         { status: 500 }
       );
     }
+
     const podSignature =
       url.searchParams.get("podDateSignature")?.trim().toLowerCase() || "";
     const bolNumber =
@@ -127,19 +134,17 @@ export async function getOracleOCRData(
       maxRow: skip + limit,
     };
 
-    const result = await connection.execute(sql, resultBinds, {
+    const result = await connection.execute<OracleRow>(sql, resultBinds, {
       outFormat: oracledb.OUT_FORMAT_OBJECT,
     });
 
     console.log("result-> ", result);
 
-    // const oracleFileIds = result.rows?.map((data: any) => data.FILE_ID);
-
     const matchedMongoIds = result.rows
-      ?.map((oracleRow: any) => {
+      ?.map((oracleRow: OracleRow) => {
         const fileId = oracleRow.FILE_ID;
 
-        const matchedMongoJob = data.jobs.find((job:any) => {
+        const matchedMongoJob = (data.jobs as MongoJob[]).find((job) => {
           const cleanFileName = job.pdfUrl.replace(".pdf", "");
           return cleanFileName === fileId;
         });
@@ -149,41 +154,44 @@ export async function getOracleOCRData(
       .filter(Boolean);
 
     const countSQL = `SELECT COUNT(*) AS TOTAL FROM ${tableName} ${whereSQL}`;
-    const countResult = await connection.execute(countSQL, filterBinds, {
-      outFormat: oracledb.OUT_FORMAT_OBJECT,
-    });
+    const countResult = await connection.execute(
+      countSQL,
+      filterBinds,
+      {
+        outFormat: oracledb.OUT_FORMAT_OBJECT,
+      }
+    );
 
-    console.log('matchedMongoIds-> ',matchedMongoIds)
+    console.log("matchedMongoIds-> ", matchedMongoIds);
 
     const totalJobs = (countResult.rows?.[0] as { TOTAL: number })?.TOTAL || 0;
 
     const rows = result.rows as OracleRow[];
 
-   const jobs = rows.map((row) => {
-  const matchedMongoJob = data.jobs.find((job: any) => {
-    const cleanFileName = job.pdfUrl.replace(".pdf", "");
-    return cleanFileName === row.FILE_ID;
-  });
+    const jobs = rows.map((row: OracleRow) => {
+      const matchedMongoJob = (data.jobs as MongoJob[]).find((job) => {
+        const cleanFileName = job.pdfUrl.replace(".pdf", "");
+        return cleanFileName === row.FILE_ID;
+      });
 
-  return {
-    _id: matchedMongoJob?._id || null, // Add _id from Mongo
-    blNumber: row.OCR_BOLNO,
-    fileId: row.FILE_ID,
-    podSignature: row.OCR_STMP_SIGN,
-    totalQty: row.OCR_ISSQTY,
-    received: row.OCR_RCVQTY,
-    damaged: row.OCR_SYMT_DAMG === "Y" ? 1 : 0,
-    short: row.OCR_SYMT_SHRT === "Y" ? 1 : 0,
-    over: row.OCR_SYMT_ORVG === "Y" ? 1 : 0,
-    refused: row.OCR_SYMT_REFS === "Y" ? 1 : 0,
-    podDate: row.OCR_STMP_POD_DTT,
-    createdAt: row.CRTD_DTT,
-    sealIntact: row.OCR_SYMT_SEAL,
-    stampExists: row.OCR_SYMT_NONE === "N" ? "no" : "yes",
-    reviewedBy: row.UPTD_USR_CD,
-  };
-});
-
+      return {
+        _id: matchedMongoJob?._id || null,
+        blNumber: row.OCR_BOLNO,
+        fileId: row.FILE_ID,
+        podSignature: row.OCR_STMP_SIGN,
+        totalQty: row.OCR_ISSQTY,
+        received: row.OCR_RCVQTY,
+        damaged: row.OCR_SYMT_DAMG === "Y" ? 1 : 0,
+        short: row.OCR_SYMT_SHRT === "Y" ? 1 : 0,
+        over: row.OCR_SYMT_ORVG === "Y" ? 1 : 0,
+        refused: row.OCR_SYMT_REFS === "Y" ? 1 : 0,
+        podDate: row.OCR_STMP_POD_DTT,
+        createdAt: row.CRTD_DTT,
+        sealIntact: row.OCR_SYMT_SEAL,
+        stampExists: row.OCR_SYMT_NONE === "N" ? "no" : "yes",
+        reviewedBy: row.UPTD_USR_CD,
+      };
+    });
 
     return NextResponse.json(
       { jobs, totalJobs, page, totalPages: Math.ceil(totalJobs / limit) },

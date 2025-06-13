@@ -50,7 +50,7 @@ export async function GET(req: Request) {
 
     // Build WHERE clause and binds
     const whereClauses: string[] = [];
-    const binds: Record<string, any> = {};
+const binds: Record<string, string | number> = {};
 
     for (const [key, value] of Object.entries(filters)) {
       if (dateFields.has(key)) {

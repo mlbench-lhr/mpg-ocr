@@ -15,8 +15,8 @@ export async function getOracleConnection(
       return null;
     }
 
-    const dbData = await dbResponse.json();
-    const dbType = dbData?.database;
+    // const dbData = await dbResponse.json();
+    
 
     // if (dbType !== "remote") {
     //   console.log("Database is not remote. Skipping OracleDB connection.");

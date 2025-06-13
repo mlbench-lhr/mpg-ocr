@@ -91,37 +91,37 @@ export async function GET(req: Request) {
   }
 }
 
-async function getJobsFromMongo(
-  url: URL,
-  skip: number,
-  limit: number,
-  page: number
-) {
-  const client = await clientPromise;
-  const db = client.db(DB_NAME);
-  const dataCollection = db.collection<Log>("mockData");
-  const filter: Filter<Log> = {};
+// async function getJobsFromMongo(
+//   url: URL,
+//   skip: number,
+//   limit: number,
+//   page: number
+// ) {
+//   const client = await clientPromise;
+//   const db = client.db(DB_NAME);
+//   const dataCollection = db.collection<Log>("mockData");
+//   const filter: Filter<Log> = {};
 
-  const fileName = url.searchParams.get("fileName") || "";
+//   const fileName = url.searchParams.get("fileName") || "";
 
-  if (fileName) {
-    filter.fileName = { $regex: fileName.trim(), $options: "i" };
-  }
+//   if (fileName) {
+//     filter.fileName = { $regex: fileName.trim(), $options: "i" };
+//   }
 
-  if (fileName) filter.recognitionStatus = fileName;
+//   if (fileName) filter.recognitionStatus = fileName;
 
-  const logs = await dataCollection
-    .find(filter)
-    .skip(skip)
-    .limit(limit)
-    .toArray();
-  const totalLogs = await dataCollection.countDocuments(filter);
+//   const logs = await dataCollection
+//     .find(filter)
+//     .skip(skip)
+//     .limit(limit)
+//     .toArray();
+//   const totalLogs = await dataCollection.countDocuments(filter);
 
-  return NextResponse.json(
-    { logs, totalLogs, page, totalPages: Math.ceil(totalLogs / limit) },
-    { status: 200 }
-  );
-}
+//   return NextResponse.json(
+//     { logs, totalLogs, page, totalPages: Math.ceil(totalLogs / limit) },
+//     { status: 200 }
+//   );
+// }
 
 export async function OPTIONS() {
   return NextResponse.json({ allowedMethods: ["GET"] });

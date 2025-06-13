@@ -34,7 +34,6 @@ type Log = {
 
 export default function Page() {
   const [totalPod, setTotalPod] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
   const [loadingTable, setLoadingTable] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [podData, setPodData] = useState<Log[]>([]);
@@ -67,6 +66,8 @@ export default function Page() {
   });
   const router = useRouter();
   const [filtersApplied, setFiltersApplied] = useState(false);
+
+  console.log(filtersApplied);
 
   const handleApplyFilters = () => {
     const hasFilterData = Object.values(filters).some((v) => v !== "");
@@ -135,7 +136,7 @@ export default function Page() {
   }, [router]);
 
   const { isExpanded } = useSidebar();
-console.log('current page-> ', currentPage)
+  console.log("current page-> ", currentPage);
   const handleSidebarStateChange = (newState: boolean) => {
     // setIsSidebarExpanded(newState);
     return newState;
@@ -150,9 +151,10 @@ console.log('current page-> ', currentPage)
       setLoadingTable(true);
 
       const searchParam = Object.entries(filters)
-        .filter(([_, value]) => value !== "")
+        .filter(([, value]) => value !== "")
         .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
         .join("&");
+
       const response = await axios.get(
         `/api/oracle-data?page=${currentPage}&${searchParam}`
       );
@@ -203,7 +205,7 @@ console.log('current page-> ', currentPage)
         <div className="px-2  bg-[#E6E7EB] rounded-lg mx-2 mb-3 pb-3">
           <PODFilter filters={filters} setFilters={setFilters} />
           <label className="mb-1 text-sm font-semibold text-gray-800">
-          Maximum No. of Hits
+            Maximum No. of Hits
           </label>
           <div className="grid grid-cols-3">
             <input

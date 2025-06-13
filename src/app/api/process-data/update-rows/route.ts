@@ -90,8 +90,8 @@ export async function PUT(req: Request) {
     console.log("jobs to update-> ", jobsToUpdate);
 
     for (const job of jobsToUpdate) {
-      let { fileId, pdfUrl } = job;
-      console.log("pdfUrl-> ", pdfUrl);
+      let { fileId } = job;
+      
       const file_name = job.pdfUrl.split("/").pop() || "";
       const currentYear = new Date().getFullYear();
       const fileTable = `${process.env.ORACLE_DB_USER_NAME}.XTI_${currentYear}_T`;
