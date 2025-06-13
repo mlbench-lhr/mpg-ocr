@@ -249,7 +249,9 @@ export async function PUT(req: Request) {
         status: log.status,
         message: log.message,
         logDescription: log.logDescription,
+        submittedAt: new Date().toISOString().slice(0, 10),
         timestamp: new Date(),
+      
         connectionResult: connectionResult,
       }))
     );

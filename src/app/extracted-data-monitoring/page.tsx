@@ -868,10 +868,6 @@ const MasterPage = () => {
 
         queryParams.set("sortOrder", sortOrders.join(","));
       }
-
-      // console.log("Query Params:", queryParams.toString());
-
-
       const response = await fetch(
         `/api/process-data/get-data/?${queryParams.toString()}`
       );

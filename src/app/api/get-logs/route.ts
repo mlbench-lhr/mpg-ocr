@@ -1,12 +1,20 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { Filter } from 'mongodb';
+import { timeStamp } from 'console';
+import { format, parse } from "date-fns";
+
 
 
 const DB_NAME = process.env.DB_NAME || 'my-next-app';
 type Log = {
   fileName?: string;
   status?: string;
+  timestamp?: string;
+  connectionResult?:string;
+  submittedAt?: string;
+
+
   // add other fields in your logs document if needed
 };
 
@@ -24,6 +32,14 @@ export async function GET(req: Request) {
 
     const searchQuery = url.searchParams.get("search") || "";
 
+  const fileName = url.searchParams.get("fileName") || "";
+  const status = url.searchParams.get("statusFilter") || "";
+  const connectionResult = url.searchParams.get("oracleFilter") || "";
+  let submittedAt = url.searchParams.get("submittedFilter") || "";
+
+
+    console.log("Search Query", searchQuery);
+
     let filter: Filter<Log> = {};
 
     if (searchQuery) {
@@ -34,6 +50,26 @@ export async function GET(req: Request) {
           { status: regex }
         ]
       };
+    }
+    if (fileName) {
+      filter.fileName = { $regex: fileName.trim(), $options: "i" };
+    }
+    if (status) {
+      filter.status = { $regex: status.trim(), $options: "i" };
+    }
+    if (connectionResult) {
+      filter.connectionResult = { $regex: connectionResult.trim(), $options: "i" };
+    }
+
+
+    if (submittedAt) {
+      try {
+      
+  
+        filter.submittedAt = submittedAt;
+      } catch (error) {
+        console.log("Invalid timestamp format:", error);
+      }
     }
 
     const logs = await logsCollection
@@ -57,6 +93,58 @@ export async function GET(req: Request) {
     );
   }
 }
+
+
+async function getJobsFromMongo(
+  url: URL,
+  skip: number,
+  limit: number,
+  page: number
+) {
+  const client = await clientPromise;
+  const db = client.db(DB_NAME);
+  const dataCollection = db.collection<Log>("mockData");
+    const filter: Filter<Log> = {};
+
+  const fileName = url.searchParams.get("fileName") || "";
+  
+  // if (bolNumber) {
+  //     filter.blNumber = { $regex: bolNumber.trim(), $options: "i" };
+  // }
+
+  // if (bolNumber) {
+  //   if (/^\d+$/.test(bolNumber)) {
+  //     filter.blNumber = parseInt(bolNumber, 10);
+  //   } else {
+  //     filter.blNumber = { $regex: bolNumber.trim(), $options: "i" };
+  //   }
+  // }
+
+  if (fileName) {
+    filter.fileName = { $regex: fileName.trim(), $options: "i" };
+  }
+  
+
+  if (fileName) filter.recognitionStatus = fileName;
+  
+
+ 
+
+  const logs = await dataCollection
+    .find(filter)
+    .skip(skip)
+    .limit(limit)
+    .toArray();
+  const totalLogs = await dataCollection.countDocuments(filter);
+
+  return NextResponse.json(
+    { logs, totalLogs, page, totalPages: Math.ceil(totalLogs / limit) },
+    { status: 200 }
+  );
+}
+
+
+
 
 export async function OPTIONS() {
   return NextResponse.json({ allowedMethods: ['GET'] });
