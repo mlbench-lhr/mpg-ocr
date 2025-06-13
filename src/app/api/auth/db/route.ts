@@ -215,7 +215,6 @@ export async function GET(req: NextRequest) {
     }
 
     const { password, ...connectionWithoutPassword } = connection;
-    console.log(password)
 
     return NextResponse.json(
       { success: true, data: connectionWithoutPassword },
