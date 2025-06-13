@@ -868,7 +868,7 @@ const MasterPage = () => {
       }
 
       // console.log("Query Params:", queryParams.toString());
-
+      console.log("Query Parms",queryParams.toString());
       const response = await fetch(
         `/api/process-data/get-data/?${queryParams.toString()}`
       );
