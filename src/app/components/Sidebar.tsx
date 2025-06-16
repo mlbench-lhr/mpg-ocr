@@ -58,7 +58,6 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
   const [status, setStatus] = useState<"online" | "offline" | "loading">(
     "loading"
   );
-  console.log(dataBase);
 
   useEffect(() => {
     const fetchExistingData = async () => {
@@ -321,7 +320,6 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     return () => clearInterval(interval);
   }, []);
 
-  console.log("status-> ", status)
   const getDotColor = () => {
     switch (status) {
       case "online":

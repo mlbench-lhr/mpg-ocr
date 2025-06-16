@@ -24,6 +24,7 @@ import TableSpinner from "../components/TableSpinner";
 import UploadModal from "../components/UploadModal";
 import { FiUpload } from "react-icons/fi";
 import FileNameCell from "../components/UI/FileNameCell";
+import axios from "axios";
 
 type FinalStatus =
   | "new"
@@ -54,7 +55,7 @@ type ResultItem = {
 
 interface Job {
   _id: string;
-  fileId?: string;
+  fileName?: string;
   blNumber: string;
   pdfUrl?: string;
   jobName: string;
@@ -79,6 +80,22 @@ interface Job {
   createdAt: string;
   updatedAt?: string;
   customerOrderNum?: string | string[] | null;
+}
+
+interface OcrJob {
+  _id: string;
+  B_L_Number: string;
+  Signature_Exists: string;
+  Issued_Qty: number;
+  Received_Qty: number;
+  Damage_Qty: number;
+  Short_Qty: number;
+  Over_Qty: number;
+  Refused_Qty: number;
+  POD_Date: string;
+  Seal_Intact: string;
+  Stamp_Exists: string;
+  Customer_Order_Num?: string;
 }
 
 type LogEntry = {
@@ -138,6 +155,9 @@ const MasterPage = () => {
   const [dropdownStatesFirst, setDropdownStatesFirst] = useState<string | null>(
     null
   );
+  const [selectedFileName, setSelectedFileName] = useState<string | undefined>(
+    undefined
+  );
   const [dropdownStatesSecond, setDropdownStatesSecond] = useState<
     string | null
   >(null);
@@ -162,6 +182,9 @@ const MasterPage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const [db, setDb] = useState<string>();
+
+
 
   const finalOptions = [
     { status: "new", color: "text-blue-600", bgColor: "bg-blue-100" },
@@ -227,7 +250,20 @@ const MasterPage = () => {
       sessionStorage.getItem("bolNumberFilter")
     );
   };
- 
+
+  useEffect(() => {
+    const fetchDBType = async () => {
+      const dbRes = await axios.get("/api/oracle/connection-status");
+      setDb(dbRes.data.dataBase);
+    };
+    fetchDBType();
+  }, [db]);
+
+
+  useEffect(()=>{
+    console.log('dbType->>> ', db)
+  },[db])
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       if (localStorage.getItem("prev") === "") {
@@ -415,27 +451,72 @@ const MasterPage = () => {
 
     fetchOcrApiUrl();
   }, []);
-
   const pdfFiles = selectedRows
     .map((rowId) => {
-      const job = master.find((job) => job._id === rowId);
+      const job = master.find((job) => {
+        return job._id === rowId;
+      });
+      console.log("job-> ", job);
+      if (
+        (job && (!job.blNumber || !job.podSignature?.trim()) && job.pdfUrl) ||
+        job?.fileName
+      ) {
+        let fileName: string | undefined | number;
 
-      if (job && (!job.blNumber || !job.podSignature?.trim()) && job.pdfUrl) {
-        const fileName = job.pdfUrl.split("/").pop() || "";
+        if (job.pdfUrl) {
+          fileName = job.pdfUrl.split("/").pop() || "";
+        } else {
+          fileName = job?.fileName;
+        }
+        if (!fileName) return null;
         return {
           file_url_or_path: `${baseUrl}/api/access-file?filename=${encodeURIComponent(
             fileName
           )}`,
+          _id: job?._id,
         };
       }
 
       return null;
     })
     .filter(Boolean);
+  const mergeOcrDataIntoMaster = (ocrData: OcrJob[]) => {
+    setMaster((prevMaster) => {
+      const updated = prevMaster.map((item) => {
+        const ocrItem = ocrData.find((ocr) => ocr._id === item._id);
+
+        if (!ocrItem) return item;
+
+        const updatedItem = {
+          ...item,
+          blNumber: ocrItem.B_L_Number,
+          fileId: ocrItem._id,
+          podSignature: ocrItem.Signature_Exists,
+          totalQty: ocrItem.Issued_Qty,
+          received: ocrItem.Received_Qty,
+          damaged: ocrItem.Damage_Qty,
+          short: ocrItem.Short_Qty,
+          over: ocrItem.Over_Qty,
+          refused: ocrItem.Refused_Qty,
+          podDate: ocrItem.POD_Date,
+          createdAt: new Date().toISOString(),
+          sealIntact: ocrItem.Seal_Intact === "yes" ? "Y" : "N",
+          stampExists: ocrItem.Stamp_Exists,
+          reviewedBy: "OCR Engine",
+        };
+
+        console.log("🔄 merging item:", item._id, "->", updatedItem);
+
+        return updatedItem;
+      });
+
+      console.log("✅ updated master before setMaster:", updated);
+      return updated;
+    });
+  };
 
   const handleOcrToggle = async () => {
     // if (selectedRows.length === 0 && !isOcrRunning) return;
-
     if (!ocrApiUrl) {
       Swal.fire({
         icon: "warning",
@@ -487,8 +568,8 @@ const MasterPage = () => {
     async function processPdfsSequentially() {
       for (const pdfFile of pdfFiles) {
         if (!pdfFile?.file_url_or_path) continue;
-
         const filePath = pdfFile.file_url_or_path;
+        const fileId = pdfFile._id;
 
         setProgress((prev) => ({
           ...prev,
@@ -496,12 +577,10 @@ const MasterPage = () => {
         }));
 
         try {
-          // const OCR_API_URL = process.env.NEXT_PUBLIC_OCR_API_URL ?? "";
-
           const ocrResponse = await fetch(ocrApiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ file_url_or_path: filePath }),
+            body: JSON.stringify({ _id: fileId, file_url_or_path: filePath }),
             signal: abortController.signal,
           });
 
@@ -509,10 +588,13 @@ const MasterPage = () => {
             const errorData = await ocrResponse.json().catch(() => null);
             throw new Error(errorData?.error || "Failed to process OCR");
           }
-
           const ocrData = await ocrResponse.json();
+          console.log("ocrdata-> ", ocrData);
 
           if (ocrData && Array.isArray(ocrData)) {
+            if (db === "remote") {
+              mergeOcrDataIntoMaster(ocrData);
+            }
             const processedDataArray = ocrData.map((data) => {
               const recognitionStatusMap: Record<
                 "failed" | "partially valid" | "valid" | "null",
@@ -523,7 +605,6 @@ const MasterPage = () => {
                 valid: "valid",
                 null: "null",
               };
-
               const status =
                 (data?.Status as keyof typeof recognitionStatusMap) || "null";
               const recognitionStatus = recognitionStatusMap[status] || "null";
@@ -535,6 +616,8 @@ const MasterPage = () => {
               return {
                 jobId: null,
                 pdfUrl: decodedFilePath,
+           
+                fileId: data?._id,
                 deliveryDate: new Date().toISOString().split("T")[0],
                 noOfPages: 1,
                 blNumber: data?.B_L_Number || "",
@@ -560,6 +643,7 @@ const MasterPage = () => {
                     : data?.Stamp_Exists === "no"
                     ? "no"
                     : data?.Stamp_Exists,
+                uptd_Usr_Cd:"OCR",
                 finalStatus: "valid",
                 reviewStatus: "unConfirmed",
                 recognitionStatus: recognitionStatus,
@@ -580,6 +664,7 @@ const MasterPage = () => {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(processedDataArray),
             });
+            const data = await saveResponse.json();
 
             if (!saveResponse.ok) {
               console.error("Error saving data:", await saveResponse.json());
@@ -629,11 +714,16 @@ const MasterPage = () => {
       setIsProcessModalOpen(false);
       setSelectedRows([]);
       setProgress({});
-      fetchJobs();
+      if (db !== "remote") {
+        fetchJobs();
+      }
     }
 
     await processPdfsSequentially();
   };
+  useEffect(() => {
+    console.log("✅ Master updated:", master);
+  }, [master]);
 
   const handleSelectAll = () => {
     if (selectedRows.length === master.length) {
@@ -696,7 +786,6 @@ const MasterPage = () => {
       console.log("Error updating status:", error);
     }
   };
-
   const handleDelete = async () => {
     Swal.fire({
       title: "Delete Files",
@@ -804,7 +893,7 @@ const MasterPage = () => {
       const queryParams = new URLSearchParams();
       queryParams.set("page", currentPage.toString());
 
-      console.log('querry params-> ', filters)
+      console.log("querry params-> ", filters);
 
       if (filters.bolNumber) queryParams.set("bolNumber", filters.bolNumber);
       if (filters.finalStatus)
@@ -850,7 +939,6 @@ const MasterPage = () => {
       }
 
       const data = await response.json();
-      console.log("data job-> ", data);
       setMaster(data.jobs);
       setTotalPages(data.totalPages);
       setTotalJobs(data.totalJobs);
@@ -859,32 +947,7 @@ const MasterPage = () => {
     } finally {
       setLoadingTable(false);
     }
-  }, [
-    currentPage,
-    sortColumn,
-    sortOrder,
-    // bolNumberFilter,
-    // finalStatusFilter,
-    // reviewStatusFilter,
-    // reasonStatusFilter,
-    // reviewByStatusFilter,
-    // podDateFilter,
-    // podDateSignatureFilter,
-    // jobNameFilter,
-    // carrierFilter,
-  ]);
-
-  // const toggleSort = (column: string) => {
-  //   if (sortColumn === column) {
-  //     setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-  //   } else {
-  //     setSortColumn(column);
-  //     setSortOrder("asc");
-  //   }
-  //   sessionStorage.setItem("sortColumn", column);
-  //   sessionStorage.setItem("sortOrder", sortOrder === "asc" ? "desc" : "asc");
-  //   fetchJobs();
-  // };
+  }, [currentPage, sortColumn, sortOrder]);
 
   useEffect(() => {
     if (firstTime) {
@@ -930,7 +993,7 @@ const MasterPage = () => {
     setReviewByStatusFilter("");
     setPodDateFilter("");
     setCreatedDateFilter("");
-    setUpdatedDateFilter("")
+    setUpdatedDateFilter("");
     setPodDateSignatureFilter("");
     setJobNameFilter("");
     setBolNumberFilter("");
@@ -1012,7 +1075,7 @@ const MasterPage = () => {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ ids: selectedRows }),
+            body: JSON.stringify({ ids: selectedRows, dbType: db }),
           });
 
           const result = await response.json();
@@ -1100,7 +1163,9 @@ const MasterPage = () => {
       setIsProcessModalOpen(false);
       setSelectedRows([]);
       setProgress({});
-      fetchJobs();
+      if (db !== "remote") {
+        fetchJobs();
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isProcessModalOpen]);
@@ -1872,7 +1937,7 @@ const MasterPage = () => {
                         BL Number
                       </th>
                       <th className="py-2 px-4 border-b text-center min-w-44 max-w-44 sticky left-44 bg-white z-10">
-                        Uploaded File
+                       File Name
                       </th>
                       <th className="py-2 px-4 border-b text-center min-w-44 max-w-44 sticky left-[22rem] bg-white z-10">
                         Job Name
@@ -1977,7 +2042,7 @@ const MasterPage = () => {
                           </td>
                           <FileNameCell
                             pdfUrl={job.pdfUrl}
-                            fileId={job.fileId}
+                            fileId={job.fileName}
                           />
 
                           {/* <td className="py-2 px-4 border-b text-center sticky left-44 bg-white z-10 min-w-44 max-w-44 truncate">

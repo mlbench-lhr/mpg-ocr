@@ -39,22 +39,24 @@ export async function GET(req: NextRequest) {
         { status: 500 }
       );
     }
+    oracledb.fetchAsString = [oracledb.CLOB];
+  const result = await connection.execute(
+  `SELECT A.FILE_ID AS FILE_ID, A.FILE_TABLE AS FILE_TABLE, A.FILE_NAME AS FILE_NAME
+   FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_T A
+   JOIN ${process.env.ORACLE_DB_USER_NAME}.XTI_POD_STAMP_REQRD_T B 
+     ON A.FILE_ID = B.FILE_ID
+   WHERE TO_CHAR(B.CRTD_DTT, 'YYYYMMDD') = TO_CHAR(SYSDATE - 1, 'YYYYMMDD')
+     AND NOT EXISTS (
+       SELECT * FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T C 
+       WHERE C.FILE_ID = A.FILE_ID
+     )`,
+  [],
+  { outFormat: oracledb.OUT_FORMAT_OBJECT }
+);
 
-    const result = await connection.execute(
-      `SELECT A.FILE_ID, A.FILE_TABLE
-FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_T A
-JOIN ${process.env.ORACLE_DB_USER_NAME}.XTI_POD_STAMP_REQRD_T B ON A.FILE_ID = B.FILE_ID
-WHERE TO_CHAR(B.CRTD_DTT, 'YYYYMMDD') = TO_CHAR(SYSDATE - 1, 'YYYYMMDD')
-AND NOT EXISTS (
-  SELECT * FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T C WHERE C.FILE_ID = A.FILE_ID
-)`,
-      [],
-      { outFormat: oracledb.OUT_FORMAT_OBJECT }
-    );
-
-    console.log("result-> ", result);
+    console.log("result.rows-> ", result.rows);
     const formattedResult = result.rows ?? [];
-
+    console.log("result-> ", formattedResult);
     return NextResponse.json(formattedResult);
   } catch (err) {
     console.error("Error retrieving data from OracleDB:", err);

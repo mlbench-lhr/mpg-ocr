@@ -68,9 +68,12 @@ export async function getOracleOCRData(
 
     if (!isOCR) {
       const apiRes = await fetch("http://localhost:3000/api/pod/retrieve");
+      
       const apiData: PodFile[] = await apiRes.json();
+      console.log('apiRes-> ', apiData)
       const jobs = apiData.map((row: PodFile) => ({
-        fileId: row.FILE_ID,
+        fileName: row.FILE_NAME,
+        _id: row.FILE_ID,
       }));
       return NextResponse.json(
         {
@@ -154,13 +157,9 @@ export async function getOracleOCRData(
       .filter(Boolean);
 
     const countSQL = `SELECT COUNT(*) AS TOTAL FROM ${tableName} ${whereSQL}`;
-    const countResult = await connection.execute(
-      countSQL,
-      filterBinds,
-      {
-        outFormat: oracledb.OUT_FORMAT_OBJECT,
-      }
-    );
+    const countResult = await connection.execute(countSQL, filterBinds, {
+      outFormat: oracledb.OUT_FORMAT_OBJECT,
+    });
 
     console.log("matchedMongoIds-> ", matchedMongoIds);
 
@@ -174,8 +173,9 @@ export async function getOracleOCRData(
         return cleanFileName === row.FILE_ID;
       });
 
+      console.log("file id-> ", row.FILE_ID);
       return {
-        _id: matchedMongoJob?._id || null,
+        _id: matchedMongoJob?._id || `${row.FILE_ID}`,
         blNumber: row.OCR_BOLNO,
         fileId: row.FILE_ID,
         podSignature: row.OCR_STMP_SIGN,

@@ -13,8 +13,9 @@ export interface OracleRow {
   OCR_SYMT_SEAL: string;
   OCR_SYMT_NONE: string;
   UPTD_USR_CD: string;
-};
+}
 export interface PodFile {
   FILE_ID: string;
   FILE_TABLE: string;
+  FILE_NAME: string;
 }

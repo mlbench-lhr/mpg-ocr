@@ -22,7 +22,7 @@ export async function PUT(req: Request) {
 
   try {
     let connectionResult;
-    const { ids } = await req.json();
+    const { ids, dbType } = await req.json();
 
     if (!Array.isArray(ids) || ids.length === 0) {
       return NextResponse.json(
@@ -31,7 +31,7 @@ export async function PUT(req: Request) {
       );
     }
 
-    console.log("all ids-> ", ids);
+    console.log("all ids-> ", ids, "dbType-> ", dbType);
 
     const client = await clientPromise;
     const db = client.db("my-next-app");
@@ -82,16 +82,29 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: connectionResult }, { status: 500 });
     }
     const conn: oracledb.Connection = connection;
-    const objectIds = ids.map((id) => new ObjectId(id));
+    let objectIds;
+    if (dbType !== "remote") {
+      objectIds = ids.map((id) => new ObjectId(id));
+    }
 
-    const jobsToUpdate = await jobCollection
-      .find({ _id: { $in: objectIds } })
-      .toArray();
-    console.log("jobs to update-> ", jobsToUpdate);
+    console.log("dbType-> ", dbType);
+    let jobsToUpdate;
+    if (dbType === "remote") {
+      console.log("if part executed");
+      jobsToUpdate = await jobCollection
+        .find({ fileId: { $in: ids } })
+        .toArray();
+    } else {
+      console.log("else part executed");
+      jobsToUpdate = await jobCollection
+        .find({ _id: { $in: objectIds } })
+        .toArray();
+    }
 
+    console.log("jobs t update-> ", jobsToUpdate, "");
     for (const job of jobsToUpdate) {
       let { fileId } = job;
-      
+
       const file_name = job.pdfUrl.split("/").pop() || "";
       const currentYear = new Date().getFullYear();
       const fileTable = `${process.env.ORACLE_DB_USER_NAME}.XTI_${currentYear}_T`;

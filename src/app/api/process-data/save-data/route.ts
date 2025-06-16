@@ -16,6 +16,7 @@ export async function POST(req: Request) {
     }
 
     const requiredFields = [
+      "fileId",
       "blNumber",
       "jobId",
       "pdfUrl",
