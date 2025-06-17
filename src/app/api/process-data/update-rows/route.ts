@@ -31,8 +31,6 @@ export async function PUT(req: Request) {
       );
     }
 
-    console.log("all ids-> ", ids, "dbType-> ", dbType);
-
     const client = await clientPromise;
     const db = client.db("my-next-app");
     const connectionsCollection = db.collection("db_connections");
@@ -87,29 +85,23 @@ export async function PUT(req: Request) {
       objectIds = ids.map((id) => new ObjectId(id));
     }
 
-    console.log("dbType-> ", dbType);
     let jobsToUpdate;
     if (dbType === "remote") {
-      console.log("if part executed");
       jobsToUpdate = await jobCollection
         .find({ fileId: { $in: ids } })
         .toArray();
     } else {
-      console.log("else part executed");
       jobsToUpdate = await jobCollection
         .find({ _id: { $in: objectIds } })
         .toArray();
     }
 
-    console.log("jobs t update-> ", jobsToUpdate, "");
     for (const job of jobsToUpdate) {
       let { fileId } = job;
 
       const file_name = job.pdfUrl.split("/").pop() || "";
       const currentYear = new Date().getFullYear();
       const fileTable = `${process.env.ORACLE_DB_USER_NAME}.XTI_${currentYear}_T`;
-
-      console.log("file id-> ", fileId);
 
       if (!fileId) {
         const currentYear = new Date().getFullYear();
@@ -120,13 +112,13 @@ export async function PUT(req: Request) {
 
         const query = `
     SELECT FILE_ID, 'XTI_${currentYear}_T' as FILE_TABLE
-    FROM ${fileTableCurrent}
+    FROM ${process.env.ORACLE_DB_USER_NAME}.${fileTableCurrent}
     WHERE FILE_NAME = :file_name
 
     UNION ALL
 
     SELECT FILE_ID, 'XTI_${previousYear}_T' as FILE_TABLE
-    FROM ${fileTablePrevious}
+    FROM ${process.env.ORACLE_DB_USER_NAME}.${fileTablePrevious}
     WHERE FILE_NAME = :file_name
   `;
 

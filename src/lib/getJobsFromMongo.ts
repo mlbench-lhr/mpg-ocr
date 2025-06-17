@@ -8,6 +8,7 @@ interface Job {
   blNumber: string | number;
   jobName?: string;
   podDate?: string;
+  fileName?: string;
   deliveryDate?: Date;
   podSignature?: string;
   totalQty?: number;
@@ -24,7 +25,7 @@ interface Job {
   breakdownReason?: string;
   reviewedBy?: string;
   cargoDescription?: string;
-  createdAt?: string;
+  createdAt?: Date;
   updatedAt?: string;
   uptd_Usr_Cd?: string;
 }
@@ -48,6 +49,9 @@ export async function getJobsFromMongo(
   const uptd_Usr_Cd = url.searchParams.get("uptd_Usr_Cd") || "";
 
   let podDate = url.searchParams.get("podDate") || "";
+  const createdDate = url.searchParams.get("createdDate") || "";
+
+  const fileName = url.searchParams.get("fileName") || "";
   const podDateSignature = url.searchParams.get("podDateSignature") || "";
   const bolNumber = url.searchParams.get("bolNumber") || "";
   const jobName = url.searchParams.get("jobName") || "";
@@ -115,6 +119,28 @@ export async function getJobsFromMongo(
     } catch (error) {
       console.log("Invalid podDate format:", error);
     }
+  }
+  let createdAt;
+
+  if (createdDate) {
+    const parsed = new Date(createdDate);
+    if (!isNaN(parsed.getTime())) {
+      createdAt = parsed;
+    }
+  }
+  if (createdAt) {
+  const nextDay = new Date(createdAt);
+  nextDay.setDate(nextDay.getDate() + 1);
+
+  filter.createdAt = {
+    $gte: createdAt,
+    $lt: nextDay,
+  };
+}
+  console.log("fileName-> ", fileName);
+  if (fileName) {
+    const fileNameRegex = new RegExp(fileName.trim(), "i");
+    filter.pdfUrl = { $regex: fileNameRegex };
   }
 
   const jobs = await dataCollection

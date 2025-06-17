@@ -69,14 +69,11 @@ export async function GET(req: NextRequest) {
         { status: 400 }
       );
     }
-console.log('file table data-> ', fileTable)
     const result = await connection.execute<FileRow>(
       `SELECT FILE_ID, FILE_DATA FROM ${process.env.ORACLE_DB_USER_NAME}.${fileTable} WHERE FILE_ID = :fileId`,
       { fileId },
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
-
-    console.log('file fetched-> ', result)
 
     const row = result.rows?.[0] as FileRow | undefined;
 

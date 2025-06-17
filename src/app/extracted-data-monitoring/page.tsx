@@ -150,14 +150,13 @@ const MasterPage = () => {
   const [updatedDateFilter, setUpdatedDateFilter] = useState("");
   const [podDateSignatureFilter, setPodDateSignatureFilter] = useState("");
   const [jobNameFilter, setJobNameFilter] = useState("");
+  const [fileNameFilter, setFileNameFilter] = useState("");
   const [bolNumberFilter, setBolNumberFilter] = useState("");
   const [dropdownStates, setDropdownStates] = useState<string | null>(null);
   const [dropdownStatesFirst, setDropdownStatesFirst] = useState<string | null>(
     null
   );
-  const [selectedFileName, setSelectedFileName] = useState<string | undefined>(
-    undefined
-  );
+
   const [dropdownStatesSecond, setDropdownStatesSecond] = useState<
     string | null
   >(null);
@@ -183,8 +182,6 @@ const MasterPage = () => {
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [db, setDb] = useState<string>();
-
-
 
   const finalOptions = [
     { status: "new", color: "text-blue-600", bgColor: "bg-blue-100" },
@@ -247,6 +244,7 @@ const MasterPage = () => {
       sessionStorage.getItem("updatedDateFilter") ||
       sessionStorage.getItem("podDateSignatureFilter") ||
       sessionStorage.getItem("jobNameFilter") ||
+      sessionStorage.getItem("fileNameFilter") ||
       sessionStorage.getItem("bolNumberFilter")
     );
   };
@@ -259,10 +257,9 @@ const MasterPage = () => {
     fetchDBType();
   }, [db]);
 
-
-  useEffect(()=>{
-    console.log('dbType->>> ', db)
-  },[db])
+  useEffect(() => {
+    console.log("dbType->>> ", db);
+  }, [db]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -288,6 +285,7 @@ const MasterPage = () => {
           sessionStorage.getItem("podDateSignatureFilter") || ""
         );
         setJobNameFilter(sessionStorage.getItem("jobNameFilter") || "");
+        setFileNameFilter(sessionStorage.getItem("fileNameFilter") || "");
         setBolNumberFilter(sessionStorage.getItem("bolNumberFilter") || "");
       } else {
         console.log("called->");
@@ -302,6 +300,7 @@ const MasterPage = () => {
 
         sessionStorage.setItem("podDateSignatureFilter", "");
         sessionStorage.setItem("jobNameFilter", "");
+        sessionStorage.setItem("fileNameFilter", "");
         sessionStorage.setItem("bolNumberFilter", "");
         setFinalStatusFilter("");
         setReviewStatusFilter("");
@@ -313,6 +312,7 @@ const MasterPage = () => {
         setUpdatedDateFilter("");
         setPodDateSignatureFilter("");
         setJobNameFilter("");
+        setFileNameFilter("");
         setBolNumberFilter("");
         setFirstTime(false);
       }
@@ -616,7 +616,7 @@ const MasterPage = () => {
               return {
                 jobId: null,
                 pdfUrl: decodedFilePath,
-           
+
                 fileId: data?._id,
                 deliveryDate: new Date().toISOString().split("T")[0],
                 noOfPages: 1,
@@ -643,7 +643,7 @@ const MasterPage = () => {
                     : data?.Stamp_Exists === "no"
                     ? "no"
                     : data?.Stamp_Exists,
-                uptd_Usr_Cd:"OCR",
+                uptd_Usr_Cd: "OCR",
                 finalStatus: "valid",
                 reviewStatus: "unConfirmed",
                 recognitionStatus: recognitionStatus,
@@ -664,7 +664,7 @@ const MasterPage = () => {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(processedDataArray),
             });
-            const data = await saveResponse.json();
+            // const data = await saveResponse.json();
 
             if (!saveResponse.ok) {
               console.error("Error saving data:", await saveResponse.json());
@@ -882,10 +882,10 @@ const MasterPage = () => {
         podDate: sessionStorage.getItem("podDateFilter") || "",
         createdDate: sessionStorage.getItem("createdDateFilter") || "",
         updatedDate: sessionStorage.getItem("updatedDateFilter") || "",
-
         podDateSignature:
           sessionStorage.getItem("podDateSignatureFilter") || "",
         jobName: sessionStorage.getItem("jobNameFilter") || "",
+        fileName: sessionStorage.getItem("fileNameFilter") || "",
         sortColumn,
         sortOrder,
       };
@@ -912,6 +912,8 @@ const MasterPage = () => {
       if (filters.podDateSignature)
         queryParams.set("podDateSignature", filters.podDateSignature.trim());
       if (filters.jobName) queryParams.set("jobName", filters.jobName.trim());
+      if (filters.fileName) queryParams.set("fileName", filters.fileName.trim());
+
 
       if (filters.sortColumn.length) {
         queryParams.set("sortColumn", filters.sortColumn.join(","));
@@ -970,6 +972,8 @@ const MasterPage = () => {
 
     sessionStorage.setItem("podDateSignatureFilter", podDateSignatureFilter);
     sessionStorage.setItem("jobNameFilter", jobNameFilter);
+    sessionStorage.setItem("fileNameFilter", fileNameFilter);
+
     sessionStorage.setItem("bolNumberFilter", bolNumberFilter);
     fetchJobs();
   };
@@ -985,6 +989,7 @@ const MasterPage = () => {
     sessionStorage.setItem("updatedDateFilter", "");
     sessionStorage.setItem("podDateSignatureFilter", "");
     sessionStorage.setItem("jobNameFilter", "");
+    sessionStorage.setItem("fileNameFilter", "");
     sessionStorage.setItem("bolNumberFilter", "");
     setFinalStatusFilter("");
     setReviewStatusFilter("");
@@ -996,6 +1001,7 @@ const MasterPage = () => {
     setUpdatedDateFilter("");
     setPodDateSignatureFilter("");
     setJobNameFilter("");
+    setFileNameFilter("");
     setBolNumberFilter("");
     setMaster([]);
     await fetchJobs();
@@ -1014,6 +1020,7 @@ const MasterPage = () => {
         updatedDateFilter,
         podDateSignatureFilter,
         jobNameFilter,
+        fileNameFilter,
         bolNumberFilter,
       };
       Object.entries(filters).forEach(([key, value]) => {
@@ -1131,7 +1138,7 @@ const MasterPage = () => {
       }
     });
   };
-
+  console.log("master data-> ", master);
   useEffect(() => {
     setShowButton(selectedRows.length > 0);
   }, [selectedRows]);
@@ -1570,6 +1577,24 @@ const MasterPage = () => {
                 </div>
               </div>
 
+              <div className="flex flex-col">
+                <label
+                  htmlFor="search"
+                  className="text-sm font-semibold text-gray-800"
+                >
+                  File Name
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="File name"
+                    value={fileNameFilter}
+                    onChange={(e) => setFileNameFilter(e.target.value)}
+                    className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97]"
+                  />
+                </div>
+              </div>
+
               <div className="flex justify-end items-center gap-2 col-span-3">
                 <button
                   className={`text-[#005B97] underline ${
@@ -1937,7 +1962,7 @@ const MasterPage = () => {
                         BL Number
                       </th>
                       <th className="py-2 px-4 border-b text-center min-w-44 max-w-44 sticky left-44 bg-white z-10">
-                       File Name
+                        File Name
                       </th>
                       <th className="py-2 px-4 border-b text-center min-w-44 max-w-44 sticky left-[22rem] bg-white z-10">
                         Job Name

@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { Filter } from "mongodb";
 
-
 const DB_NAME = process.env.DB_NAME || "my-next-app";
 type Log = {
   fileName?: string;
@@ -59,15 +58,14 @@ export async function GET(req: Request) {
     }
 
     if (timestamp) {
-  const nextDay = new Date(timestamp);
-  nextDay.setDate(nextDay.getDate() + 1);
+      const nextDay = new Date(timestamp);
+      nextDay.setDate(nextDay.getDate() + 1);
 
-  filter.timestamp = {
-    $gte: timestamp,
-    $lt: nextDay,
-  };
-}
-
+      filter.timestamp = {
+        $gte: timestamp,
+        $lt: nextDay,
+      };
+    }
 
     const logs = await logsCollection
       .find(filter)
@@ -90,38 +88,6 @@ export async function GET(req: Request) {
     );
   }
 }
-
-// async function getJobsFromMongo(
-//   url: URL,
-//   skip: number,
-//   limit: number,
-//   page: number
-// ) {
-//   const client = await clientPromise;
-//   const db = client.db(DB_NAME);
-//   const dataCollection = db.collection<Log>("mockData");
-//   const filter: Filter<Log> = {};
-
-//   const fileName = url.searchParams.get("fileName") || "";
-
-//   if (fileName) {
-//     filter.fileName = { $regex: fileName.trim(), $options: "i" };
-//   }
-
-//   if (fileName) filter.recognitionStatus = fileName;
-
-//   const logs = await dataCollection
-//     .find(filter)
-//     .skip(skip)
-//     .limit(limit)
-//     .toArray();
-//   const totalLogs = await dataCollection.countDocuments(filter);
-
-//   return NextResponse.json(
-//     { logs, totalLogs, page, totalPages: Math.ceil(totalLogs / limit) },
-//     { status: 200 }
-//   );
-// }
 
 export async function OPTIONS() {
   return NextResponse.json({ allowedMethods: ["GET"] });

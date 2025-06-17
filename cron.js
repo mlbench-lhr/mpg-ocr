@@ -29,7 +29,7 @@ async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
         if (!fileRes.ok) continue;
 
         const fileData = await fileRes.json();
-        console.log("file data-> ", fileData);
+        
         await fetch("http://localhost:3000/api/pod/store", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -74,6 +74,7 @@ async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
           stampExists: d?.Stamp_Exists,
           finalStatus: "valid",
           reviewStatus: "unConfirmed",
+         
           recognitionStatus:
             {
               failed: "failure",

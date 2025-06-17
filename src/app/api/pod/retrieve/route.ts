@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
     }
     oracledb.fetchAsString = [oracledb.CLOB];
   const result = await connection.execute(
-  `SELECT A.FILE_ID AS FILE_ID, A.FILE_TABLE AS FILE_TABLE, A.FILE_NAME AS FILE_NAME
+  `SELECT A.FILE_ID AS FILE_ID, A.FILE_TABLE AS FILE_TABLE, A.FILE_NAME AS FILE_NAME, A.CRTD_DTT AS CRTD_DTT 
    FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_T A
    JOIN ${process.env.ORACLE_DB_USER_NAME}.XTI_POD_STAMP_REQRD_T B 
      ON A.FILE_ID = B.FILE_ID
