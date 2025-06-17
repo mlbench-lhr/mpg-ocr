@@ -3,6 +3,8 @@ const fetch = require("node-fetch");
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const isBetween = require("dayjs/plugin/isBetween");
+const fs = require("fs");
+const path = require("path");
 
 dayjs.extend(utc);
 dayjs.extend(isBetween);
@@ -10,9 +12,30 @@ dayjs.extend(isBetween);
 let cronJobCounter = 1;
 console.log("✅ OCR Cron Job Script Initialized");
 
+const getDBConnectionType = () => {
+  try {
+    const filePath = path.join(__dirname, "db-config.json");
+
+    if (!fs.existsSync(filePath)) {
+      console.error("❌ db-config.json not found.");
+      return;
+    }
+
+    const raw = fs.readFileSync(filePath, "utf-8");
+    const config = JSON.parse(raw);
+
+    const dbType = config.dbType;
+    console.log("✅ DB Type:", dbType);
+    return dbType;
+  } catch (err) {
+    console.error("❌ Error reading DB config:", err.message);
+  }
+};
+
 async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
   console.log("ocr script started.");
-
+  const dbConnectionType = getDBConnectionType();
+  console.log("db connection-> ", dbConnectionType);
   try {
     const retrieveRes = await fetch("http://localhost:3000/api/pod/retrieve");
 
@@ -29,13 +52,13 @@ async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
         if (!fileRes.ok) continue;
 
         const fileData = await fileRes.json();
-        
+
         await fetch("http://localhost:3000/api/pod/store", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ fileId: fileData.FILE_ID }),
         });
-        
+
         const filePath = `${baseUrl}/api/access-file?filename=${encodeURIComponent(
           fileData.FILE_NAME
         )}`;
@@ -55,7 +78,9 @@ async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
         if (!Array.isArray(ocrData)) continue;
 
         const processed = ocrData.map((d) => ({
+          _id: fileId,
           jobId: job._id,
+          fileId:fileId,
           pdfUrl: decodeURIComponent(
             new URL(filePath).searchParams.get("filename") || ""
           ),
@@ -74,7 +99,7 @@ async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
           stampExists: d?.Stamp_Exists,
           finalStatus: "valid",
           reviewStatus: "unConfirmed",
-         
+
           recognitionStatus:
             {
               failed: "failure",
@@ -83,13 +108,14 @@ async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
             }[d?.Status] || "null",
           breakdownReason: "none",
           reviewedBy: "OCR Engine",
-          uptd_Usr_Cd:"OCR",
+          uptd_Usr_Cd: "OCR",
           cargoDescription: "Processed from OCR API.",
           none: "N",
           sealIntact: d?.Seal_Intact === "yes" ? "Y" : "N",
         }));
 
         const single = processed[0];
+      
 
         // SAP BOL matching
         try {
@@ -142,8 +168,7 @@ async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
 
         console.log(`✅ File ${fileId} processed.`);
       } catch (err) {
-    console.error("❌ File processing error:", err);
-
+        console.error("❌ File processing error:", err);
       }
     }
   } catch (err) {

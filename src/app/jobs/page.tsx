@@ -14,6 +14,7 @@ import { MdDelete } from "react-icons/md";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import Image from "next/image";
 import { Job } from "../../types";
+import { useDBConnection } from "../context/DBConnectionContext";
 
 
 const JobPage = () => {
@@ -24,6 +25,8 @@ const JobPage = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [totalJobs, setTotalJobs] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const {db}=useDBConnection()
+  console.log('db connection context-> ', db)
   const jobsPerPage = 10;
   const [totalPages, setTotalPages] = useState(1);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);

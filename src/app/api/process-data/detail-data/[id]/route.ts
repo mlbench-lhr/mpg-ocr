@@ -6,8 +6,8 @@ import clientPromise from "@/lib/mongodb";
 import { getFileExtension } from "@/lib/getMimeType";
 import { NextResponse } from "next/server";
 import oracledb from "oracledb";
-import { getOracleConnection } from "@/lib/oracle"; // your DB helper
-
+import { getOracleConnection } from "@/lib/oracle"; 
+import {getDBConnectionType} from "@/lib/JsonDBConfig/getDBConnectionType"; 
 interface FileRow {
   FILE_ID: string;
   FILE_NAME?: string;
@@ -46,7 +46,7 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const id = url.pathname.split("/").pop();
-    const dbType = url.searchParams.get("dbType");
+    const dbType = getDBConnectionType();
 
     if (!id) {
       return NextResponse.json(
@@ -113,7 +113,6 @@ export async function GET(req: Request) {
       const fileTable = fileTableRow?.FILE_TABLE;
       const fileName = fileTableRow?.FILE_NAME;
 
-      console.log("filtable-> ", fileTable);
 
       if (!fileTable || !fileName) {
         return NextResponse.json(

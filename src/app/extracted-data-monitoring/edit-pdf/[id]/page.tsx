@@ -65,7 +65,6 @@ const JobDetail = () => {
   const { isExpanded } = useSidebar();
   const [base64Data, setBase64Data] = useState("");
   const [mimeType, setMimeType] = useState();
-console.log(isLoading)
   const handleSidebarStateChange = (newState: boolean) => {
     // setIsSidebarExpanded(newState);
     return newState;
@@ -133,8 +132,7 @@ console.log(isLoading)
   useEffect(() => {
     if (id && db) {
       setLoading(true);
-      console.log("api called..");
-      fetch(`/api/process-data/detail-data/${id}?dbType=${db}`)
+      fetch(`/api/process-data/detail-data/${id}`)
         .then((res) => res.json())
         .then((data) => {
           if (data.error) {
@@ -167,7 +165,7 @@ console.log(isLoading)
           setLoading(false);
         });
     }
-  }, []);
+  }, [id, db]);
 
   const mimeTypeSafe = mimeType ?? "application/pdf";
   const fileExtension = getFileExtension(mimeTypeSafe);
@@ -210,19 +208,6 @@ console.log(isLoading)
       }));
       return;
     }
-
-    // if (numericFields.includes(name)) {
-
-    //     const isValidNumeric = /^(0|[1-9][0-9]{0,4})$/.test(value) || value === "";
-
-    //     if (isValidNumeric) {
-    //         setFormData((prev) => ({
-    //             ...prev,
-    //             [name]: value,
-    //         }));
-    //     }
-    // }
-
     if (nonNumericFields.includes(name)) {
       const isValidNonNumeric =
         value === "" ||
@@ -257,7 +242,7 @@ console.log(isLoading)
         podDate: formatDateForDB(formData.podDate),
       };
 
-      const response = await fetch(`/api/process-data/detail-data/${id}?dbType=${db}`, {
+      const response = await fetch(`/api/process-data/detail-data/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -326,14 +311,6 @@ console.log(isLoading)
                 View Pdf
               </button>
             </Link>
-
-            {/* <Link href={job.pdfUrl} target='_blank'>
-                            <button
-                                className="bg-[#005B97] rounded-lg py-2 px-10 text-white md:mt-0 w-60 md:w-auto"
-                            >
-                                View Pdf
-                            </button>
-                        </Link> */}
           </div>
         </div>
         {loading ? (
@@ -342,12 +319,6 @@ console.log(isLoading)
           <>
             <div className="mx-5 flex bg-white pt-3 h-5/6">
               <div className="flex-auto xl:h-[calc(143vh-6rem)] 2xl:h-screen bg-white relative">
-                {/* {isLoading && (
-                  <div className="absolute inset-0 flex items-start justify-center mt-10 bg-white z-10">
-                    <div className="loader text-gray-800">Loading...</div>
-                  </div>
-                )} */}
-
                 <iframe
                   src={`data:application/pdf;base64,${base64Data}`}
                   className="w-full h-screen"
@@ -355,9 +326,11 @@ console.log(isLoading)
                 />
                 {db === "local" ? (
                   <>
+                    <p>local</p>
                     {fileName && isSupportedFormat(fileName) ? (
                       <iframe
-                        src={`/api/access-file?filename=${fileName}#toolbar=0`}
+                        src={`${job.pdfUrl}#toolbar=0`}
+                        // src={`/api/access-file?filename=${fileName}#toolbar=0`}
                         className="w-11/12 h-full bg-white"
                         loading="lazy"
                         onLoad={handleIframeLoad}
@@ -369,24 +342,19 @@ console.log(isLoading)
                     )}
                   </>
                 ) : db === "remote" ? (
-                  <iframe
-                    src={`data:${fileExtension};base64,${base64Data}`}
-                    className="w-full h-screen"
-                    title="PDF Preview"
-                  />
+                  <>
+                    <p>remote</p>
+                    <iframe
+                      src={`data:${fileExtension};base64,${base64Data}`}
+                      className="w-full h-screen"
+                      title="PDF Preview"
+                    />
+                  </>
                 ) : (
                   <div className="text-center text-red-500">
                     Preview not available or filename is missing.
                   </div>
                 )}
-
-                {/* <iframe
-                                    // src={`${job.pdfUrl}#toolbar=0`}
-                                    src={`/api/access-file?filename=${fileName}#toolbar=0`}
-                                    className="w-11/12 h-full bg-white"
-                                    loading="lazy"
-                                    onLoad={handleIframeLoad}
-                                /> */}
               </div>
               <div className="flex-1 bg-gray-100 rounded-xl p-6 flex flex-col  xl:h-[calc(170vh-6rem)] 2xl:h-[calc(130vh-6rem)]">
                 <div className="flex justify-between items-center mb-4">

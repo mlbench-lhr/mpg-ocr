@@ -1,40 +1,48 @@
 "use client";
 
-import axios from "axios";
 import React, { createContext, useContext, useState, useEffect } from "react";
+import axios from "axios";
+import { usePathname } from "next/navigation"; // 👈 to track route changes
 
-interface SidebarContextProps {
-  db?: string;
+interface DBConnectionContextType {
+  db: string | null;
+  setDB: (db: string) => void;
 }
 
-const DBConnectionContext = createContext<SidebarContextProps | undefined>(
-  undefined
-);
+const DBConnectionContext = createContext<DBConnectionContextType>({
+  db: null,
+  setDB: () => {},
+});
 
-export const DBConnectionProvider: React.FC<{ children: React.ReactNode }> = ({
+export const DBConnectionProvider = ({
   children,
+}: {
+  children: React.ReactNode;
 }) => {
-  const [db, setDb] = useState<string>();
+  const [db, setDB] = useState<string | null>(null);
+  const pathname = usePathname(); // 👈 get current route
 
   useEffect(() => {
-    const fetchDBType = async () => {
-      const dbRes = await axios.get("/api/oracle/connection-status");
-      setDb(dbRes.data.dataBase);
+    const fetchDBConnectionType = async () => {
+      try {
+        const response = await axios.get("/api/oracle/connection-status");
+        console.log('db type-> ', response.data.dataBase)
+        if (response.data.dataBase) {
+          setDB(response.data.dataBase);
+        }
+      } catch (error) {
+        console.error("Error fetching DB connection type:", error);
+      }
     };
-    fetchDBType();
-  }, []);
+
+    fetchDBConnectionType();
+  }, [pathname]);
 
   return (
-    <DBConnectionContext.Provider value={{ db }}>
+    <DBConnectionContext.Provider value={{ db, setDB }}>
       {children}
     </DBConnectionContext.Provider>
   );
 };
 
-export const useDBConnection = () => {
-  const context = useContext(DBConnectionContext);
-  if (!context) {
-    throw new Error("DBConnection must be used within a DBConnectionProvider");
-  }
-  return context;
-};
+export const useDBConnection = () => useContext(DBConnectionContext);

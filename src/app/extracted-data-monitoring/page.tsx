@@ -942,6 +942,7 @@ const MasterPage = () => {
 
       const data = await response.json();
       setMaster(data.jobs);
+      console.log('extracted data-> ', data)
       setTotalPages(data.totalPages);
       setTotalJobs(data.totalJobs);
     } catch (error) {

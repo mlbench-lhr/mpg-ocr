@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { ObjectId } from "mongodb";
-import oracledb from "oracledb";
+import oracledb, { DbType } from "oracledb";
 import clientPromise from "@/lib/mongodb";
+import { jsonDBConnectionHandler } from "@/lib/JsonDBConfig/jsonDBConnectionHandler";
 
 const SECRET_KEY = process.env.JWT_SECRET as string;
 const DB_NAME = process.env.DB_NAME || "my-next-app";
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
     const client = await clientPromise;
     const db = client.db(DB_NAME);
     const connectionsCollection = db.collection("db_connections");
-
+    await jsonDBConnectionHandler(dataBase);
     const userObjId = new ObjectId(userId);
     let oracleMessage = "Unknown status";
 
