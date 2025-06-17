@@ -22,7 +22,7 @@ export async function PUT(req: Request) {
 
   try {
     let connectionResult;
-    const { ids } = await req.json();
+    const { ids, dbType } = await req.json();
 
     if (!Array.isArray(ids) || ids.length === 0) {
       return NextResponse.json(
@@ -80,25 +80,54 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: connectionResult }, { status: 500 });
     }
     const conn: oracledb.Connection = connection;
-    const objectIds = ids.map((id) => new ObjectId(id));
+    let objectIds;
+    if (dbType !== "remote") {
+      objectIds = ids.map((id) => new ObjectId(id));
+    }
 
-    const jobsToUpdate = await jobCollection
-      .find({ _id: { $in: objectIds } })
-      .toArray();
-
+    let jobsToUpdate;
+    if (dbType === "remote") {
+      jobsToUpdate = await jobCollection
+        .find({ fileId: { $in: ids } })
+        .toArray();
+    } else {
+      jobsToUpdate = await jobCollection
+        .find({ _id: { $in: objectIds } })
+        .toArray();
+    }
 
     for (const job of jobsToUpdate) {
       let { fileId } = job;
+
       const file_name = job.pdfUrl.split("/").pop() || "";
       const currentYear = new Date().getFullYear();
-      const fileTable = `XTI_${currentYear}_T`;
+      const fileTable = `${process.env.ORACLE_DB_USER_NAME}.XTI_${currentYear}_T`;
 
       if (!fileId) {
+        const currentYear = new Date().getFullYear();
+        const previousYear = currentYear - 1;
+
+        const fileTableCurrent = `${process.env.ORACLE_DB_USER_NAME}.XTI_${currentYear}_T`;
+        const fileTablePrevious = `${process.env.ORACLE_DB_USER_NAME}.XTI_${previousYear}_T`;
+
+        const query = `
+    SELECT FILE_ID, 'XTI_${currentYear}_T' as FILE_TABLE
+    FROM ${process.env.ORACLE_DB_USER_NAME}.${fileTableCurrent}
+    WHERE FILE_NAME = :file_name
+
+    UNION ALL
+
+    SELECT FILE_ID, 'XTI_${previousYear}_T' as FILE_TABLE
+    FROM ${process.env.ORACLE_DB_USER_NAME}.${fileTablePrevious}
+    WHERE FILE_NAME = :file_name
+  `;
+
         const result = await conn.execute<FileRow>(
-          `SELECT FILE_ID FROM ${fileTable} WHERE FILE_NAME = :file_name`,
+          query,
           { file_name },
           { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
+
         const row = result.rows?.[0] as FileRow | undefined;
         fileId = row?.FILE_ID;
       }
@@ -225,7 +254,9 @@ export async function PUT(req: Request) {
         status: log.status,
         message: log.message,
         logDescription: log.logDescription,
+        submittedAt: new Date().toISOString().slice(0, 10),
         timestamp: new Date(),
+
         connectionResult: connectionResult,
       }))
     );

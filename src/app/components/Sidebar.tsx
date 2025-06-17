@@ -55,10 +55,10 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
 
   const [isInputActive, setIsInputActive] = useState(false); // Track input foc
   const [dataBase, setDataBase] = useState("local");
+  console.log(dataBase)
   const [status, setStatus] = useState<"online" | "offline" | "loading">(
     "loading"
   );
-  console.log(dataBase);
 
   useEffect(() => {
     const fetchExistingData = async () => {

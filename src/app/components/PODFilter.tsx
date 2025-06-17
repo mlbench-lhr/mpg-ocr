@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { FilterFields } from '@/types';
 import { IoCalendar } from "react-icons/io5";
 
@@ -9,7 +9,7 @@ type Props = {
 
 const PODFilter: React.FC<Props> = ({ filters, setFilters }) => {
 
-  // Human-readable labels
+
 const filterFieldLabels: { key: keyof FilterFields; label: string; type?: 'date' | 'text' }[] = [
   { key: 'file_id', label: 'File ID' },
   { key: 'crtd_usr_cd', label: 'Created By' },
@@ -29,16 +29,17 @@ const filterFieldLabels: { key: keyof FilterFields; label: string; type?: 'date'
   { key: 'uptd_usr_cd', label: 'Updated By' },
   { key: 'uptd_dtt', label: 'Updated Date', type: 'date' },
   { key: 'ocr_stmp_pod_dtt', label: 'POD Date', type: 'date' },
-  { key: 'rnum', label: 'RNUM' },
+  // { key: 'rnum', label: 'RNUM' },
 ];
 
 console.log('filters-> ', filters)
 
   return (
    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+
       {filterFieldLabels.map(({ key, label, type }) => (
         <div key={key}>
-           <label htmlFor={key} className="mb-1 text-sm font-semibold text-gray-700">
+           <label htmlFor={key} >
             {label}
           </label>
 
