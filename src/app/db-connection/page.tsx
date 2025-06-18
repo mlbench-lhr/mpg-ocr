@@ -95,21 +95,48 @@ export default function DBConnectionPage() {
   };
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+  
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("You are not authenticated. Please log in again.");
+      return;
+    }
+  
     if (!checkbox) {
       setButttonLoading(true);
       router.push("/jobs");
-
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        setError("You are not authenticated. Please log in again.");
-        return;
-      }
-
-      console.log("api called");
-      console.log("db-> ", dataBase);
-
+  
+      await fetch("/api/auth/db", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          systemID,
+          userName,
+          password,
+          ipAddress,
+          portNumber,
+          serviceName,
+          dataBase,
+          checkbox,
+        }),
+      });
+  
+      return;
+    }
+  
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+  
+    try {
+      setIsLoading(true);
+      setError(null);
+  
       const res = await fetch("/api/auth/db", {
         method: "POST",
         headers: {
@@ -127,119 +154,39 @@ export default function DBConnectionPage() {
           checkbox,
         }),
       });
-
-      await res.json();
-
-      // if (!res.ok) {
-      //     throw new Error(data.message || "Failed to connect to the database");
-      // }
-      return;
-    }
-
-    if (checkbox) {
-      const validationError = validateForm();
-      if (validationError) {
-        setError(validationError);
-        return;
+  
+      const data = await res.json();
+  
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to connect to the database");
       }
+  
+      Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: "Database connection saved successfully!",
+        timer: 3000,
+        showConfirmButton: false,
+      });
+  
+      router.push("/jobs");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Unexpected error occurred");
+      Swal.fire({
+        icon: "error",
+        title: "DB connection failed",
+        text: err instanceof Error ? err.message : "An error occurred",
+        confirmButtonColor: "#005B97",
+        confirmButtonText: "Try Again",
+      });
+    } finally {
+      setIsLoading(false);
     }
-
-    // Start progress bar
-    setIsLoading(true);
-    setPercentage(0);
-    setLoadingComplete(false);
   };
+  
 
-  useEffect(() => {
-    if (isLoading) {
-      let progress = 0;
-      const interval = setInterval(() => {
-        if (progress < 100) {
-          progress += 10;
-          setPercentage(progress);
-        } else {
-          clearInterval(interval);
-          setLoadingComplete(true);
-        }
-      }, 800);
+ 
 
-      return () => clearInterval(interval);
-    }
-  }, [isLoading]);
-
-  // API call AFTER progress reaches 100%
-  useEffect(() => {
-    if (loadingComplete) {
-      // console.log("⏳ Sending data to backend...");
-
-      const sendDBConnection = async () => {
-        try {
-          setError(null);
-          const token = localStorage.getItem("token");
-
-          if (!token) {
-            setError("You are not authenticated. Please log in again.");
-            return;
-          }
-
-          const res = await fetch("/api/auth/db", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              systemID,
-              userName,
-              password,
-              ipAddress,
-              portNumber,
-              serviceName,
-              dataBase,
-              checkbox,
-            }),
-          });
-
-          const data = await res.json();
-
-          if (!res.ok) {
-            throw new Error(
-              data.message || "Failed to connect to the database"
-            );
-          }
-
-          Swal.fire({
-            icon: "success",
-            title: "Success",
-            text: "Database connection saved successfully!",
-            timer: 3000,
-            showConfirmButton: false,
-          });
-
-          router.push("/jobs");
-        } catch (err: unknown) {
-          setError(
-            err instanceof Error ? err.message : "An unexpected error occurred"
-          );
-
-          Swal.fire({
-            icon: "error",
-            title: "DB connection fails",
-            text:
-              err instanceof Error
-                ? err.message
-                : "An error occurred while connecting to your DB.",
-            confirmButtonColor: "#005B97",
-            confirmButtonText: "Try Again",
-          });
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      sendDBConnection();
-    }
-  }, [loadingComplete]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[url('/images/bg.jpg')] bg-cover bg-center">
@@ -248,7 +195,7 @@ export default function DBConnectionPage() {
           DB Connection
         </h1>
         {isLoading ? (
-          <LoadingSpinner percentage={percentage} />
+         <p>Loading...</p>
         ) : (
           <form onSubmit={handleSubmit}>
             {/* <div className="mb-3 text-center text-gray-400">

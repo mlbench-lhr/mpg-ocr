@@ -173,24 +173,38 @@ export async function getOracleOCRData(
         const cleanFileName = job.pdfUrl.replace(".pdf", "");
         return cleanFileName === row.FILE_ID;
       });
-
+    
+      // Auto-copy all fields from Oracle row
+      
+    
+      // Add/override with extra custom fields
       return {
-        _id: matchedMongoJob?._id || null,
-        blNumber: row.OCR_BOLNO,
-        fileId: row.FILE_ID,
-        podSignature: row.OCR_STMP_SIGN,
-        totalQty: row.OCR_ISSQTY,
-        received: row.OCR_RCVQTY,
-        damaged: row.OCR_SYMT_DAMG === "Y" ? 1 : 0,
-        short: row.OCR_SYMT_SHRT === "Y" ? 1 : 0,
-        over: row.OCR_SYMT_ORVG === "Y" ? 1 : 0,
-        refused: row.OCR_SYMT_REFS === "Y" ? 1 : 0,
-        podDate: row.OCR_STMP_POD_DTT,
-        createdAt: row.CRTD_DTT,
-        sealIntact: row.OCR_SYMT_SEAL,
-        stampExists: row.OCR_SYMT_NONE === "N" ? "no" : "yes",
-        reviewedBy: row.UPTD_USR_CD,
-      };
+        _id: matchedMongoJob?._id || row.FILE_ID,
+      
+        OCR_BOLNO: row.OCR_BOLNO,
+        FILE_ID: row.FILE_ID,
+        OCR_STMP_SIGN: row.OCR_STMP_SIGN,
+        OCR_ISSQTY: row.OCR_ISSQTY ,
+        OCR_RCVQTY: row.OCR_RCVQTY,
+      
+        OCR_SYMT_DAMG: row.OCR_SYMT_DAMG === "Y" ? 1 : 0,
+        OCR_SYMT_SHRT: row.OCR_SYMT_SHRT === "Y" ? 1 : 0,
+        OCR_SYMT_ORVG: row.OCR_SYMT_ORVG === "Y" ? 1 : 0,
+        OCR_SYMT_REFS: row.OCR_SYMT_REFS === "Y" ? 1 : 0,
+        OCR_STMP_POD_DTT: row.OCR_STMP_POD_DTT,
+        CRTD_DTT: row.CRTD_DTT,
+        OCR_SYMT_SEAL: row.OCR_SYMT_SEAL,
+        OCR_SYMT_NONE: row.OCR_SYMT_NONE,
+        UPTD_USR_CD: row.UPTD_USR_CD,
+        customerOrderNum:"NULL",
+        finalStatus : "NULL",
+    reviewStatus : "NULL",
+    recognitionStatus : "NULL",
+    breakdownReason : "NULL",
+
+
+      }
+      
     });
 
     return NextResponse.json(

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { FileData, FileDataProps } from "@/lib/FileData";
 
 const DB_NAME = process.env.DB_NAME || "my-next-app";
 
@@ -15,35 +16,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const requiredFields = [
-      "blNumber",
-      "jobId",
-      "pdfUrl",
-      "podDate",
-      "podSignature",
-      "totalQty",
-      "received",
-      "damaged",
-      "short",
-      "over",
-      "refused",
-      "customerOrderNum",
-      "stampExists",
-      "finalStatus",
-      "reviewStatus",
-      "recognitionStatus",
-      "breakdownReason",
-      "reviewedBy",
-      "uptd_Usr_Cd",
-      "cargoDescription",
-    ];
-
     const client = await clientPromise;
     const db = client.db(DB_NAME);
 
+    const pdfUrls = dataArray.map((d) => d.pdfUrl);
     const existingRecords = await db
       .collection("mockData")
-      .find({ pdfUrl: { $in: dataArray.map((d) => d.pdfUrl) } })
+      .find({ pdfUrl: { $in: pdfUrls } })
       .toArray();
 
     const existingMap = new Map(
@@ -52,63 +31,72 @@ export async function POST(req: Request) {
 
     const bulkOps = [];
 
-    for (const data of dataArray) {
-      for (const field of requiredFields) {
-        if (typeof data[field] === "string") {
-          data[field] = data[field].trim();
+    for (const rawData of dataArray) {
+      // Trim string fields
+      for (const key in rawData) {
+        if (typeof rawData[key] === "string") {
+          rawData[key] = rawData[key].trim();
         }
       }
 
+      // Convert numeric fields if needed
       const intFields = [
-        "totalQty",
-        "received",
-        "damaged",
-        "short",
-        "over",
-        "refused",
+        "OCR_ISSQTY",
+        "OCR_RCVQTY",
+        "OCR_SYMT_DAMG",
+        "OCR_SYMT_SHRT",
+        "OCR_SYMT_ORVG",
+        "OCR_SYMT_REFS",
       ];
       for (const field of intFields) {
-        const value = data[field];
-        if (typeof value === "string" && /^\d+$/.test(value)) {
-          data[field] = parseInt(value, 10);
+        const val = rawData[field];
+        if (typeof val === "string" && /^\d+$/.test(val)) {
+          rawData[field] = parseInt(val, 10);
         }
       }
 
-      const { jobId, pdfUrl } = data;
-
-      // Ensure jobId is properly assigned
-      if (!jobId || jobId.trim() === "") {
-        data.jobId = "";
-        data.jobName = "";
+      // Assign job name if jobId is provided
+      if (!rawData.jobId || rawData.jobId.trim() === "") {
+        rawData.jobId = "";
+        rawData.jobName = "";
       } else {
         const job = await db
           .collection("jobs")
-          .findOne({ _id: new ObjectId(jobId) });
-        data.jobName = job ? job.jobName : "";
+          .findOne({ _id: new ObjectId(rawData.jobId) });
+        rawData.jobName = job ? job.jobName : "";
       }
 
-      // if (typeof data.blNumber === "number") {
-      //   data.blNumber = data.blNumber.toString();
-      // }
-
-      if (typeof data.blNumber === "string" && /^\d+$/.test(data.blNumber)) {
-        data.blNumber = parseInt(data.blNumber, 10);
+      // Convert blNumber to number if it's numeric string
+      if (typeof rawData.blNumber === "string" && /^\d+$/.test(rawData.blNumber)) {
+        rawData.blNumber = parseInt(rawData.blNumber, 10);
       }
 
-      // If pdfUrl already exists, update it instead of inserting a new record
+      // Ensure FILE_ID is auto-filled if missing
+      if (!rawData.FILE_ID && rawData.pdfUrl) {
+        const filename = rawData.pdfUrl.split("/").pop() || "";
+        rawData.FILE_ID = filename.replace(/\.[^/.]+$/, ""); // Remove extension
+      }
+
+      // Build file data object
+      const fileData: FileDataProps = FileData.fromPartial({
+        ...rawData,
+        uptd_Usr_Cd: rawData.uptd_Usr_Cd || "OCR",
+      });
+
+      const { pdfUrl } = fileData;
+
       if (existingMap.has(pdfUrl)) {
         bulkOps.push({
           updateOne: {
             filter: { pdfUrl },
-            update: { $set: { ...data } },
-            // update: { $set: { ...data, updatedAt: new Date() } }
+            update: { $set: fileData },
           },
         });
       } else {
         bulkOps.push({
           insertOne: {
             document: {
-              ...data,
+              ...fileData,
               createdAt: new Date(),
             },
           },

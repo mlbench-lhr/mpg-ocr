@@ -54,29 +54,30 @@ type ResultItem = {
 
 interface Job {
   _id: string;
-  fileId?: string;
-  blNumber: string;
+  FILE_ID?: string;
+  OCR_BOLNO: string;
   pdfUrl?: string;
   jobName: string;
-  podDate: string;
+  OCR_STMP_POD_DTT: string;
   deliveryDate: Date;
-  podSignature: string;
-  totalQty: number;
-  received: number;
-  damaged: number;
-  short: number;
-  over: number;
-  refused: number;
+  OCR_STMP_SIGN: string;
+  OCR_ISSQTY: number;
+  OCR_RCVQTY: number;
+  OCR_SYMT_DAMG: number;
+  OCR_SYMT_SHRT: number;
+  OCR_SYMT_ORVG: number;
+  OCR_SYMT_REFS: number;
   noOfPages: number;
-  stampExists: string;
+  OCR_SYMT_NONE: string;
   finalStatus: FinalStatus;
   reviewStatus: ReviewStatus;
   recognitionStatus: RecognitionStatus;
   breakdownReason: BreakdownReason;
   reviewedBy: string;
-  sealIntact: string;
+  UPTD_USR_CD: string;
+  OCR_SYMT_SEAL: string;
   cargoDescription: string;
-  createdAt: string;
+  CRTD_DTT: string;
   updatedAt?: string;
   customerOrderNum?: string | string[] | null;
 }
@@ -420,7 +421,7 @@ const MasterPage = () => {
     .map((rowId) => {
       const job = master.find((job) => job._id === rowId);
 
-      if (job && (!job.blNumber || !job.podSignature?.trim()) && job.pdfUrl) {
+      if (job && (!job.OCR_BOLNO || !job.OCR_STMP_SIGN?.trim()) && job.pdfUrl) {
         const fileName = job.pdfUrl.split("/").pop() || "";
         return {
           file_url_or_path: `${baseUrl}/api/access-file?filename=${encodeURIComponent(
@@ -535,26 +536,28 @@ const MasterPage = () => {
               return {
                 jobId: null,
                 pdfUrl: decodedFilePath,
+                FILE_ID: data?._id,
+                FILE_NAME: filename,
                 deliveryDate: new Date().toISOString().split("T")[0],
                 noOfPages: 1,
-                blNumber: data?.B_L_Number || "",
-                podDate: data?.POD_Date || "",
-                podSignature:
+                OCR_BOLNO: data?.B_L_Number || "",
+                OCR_STMP_POD_DTT: data?.POD_Date || "",
+                OCR_STMP_SIGN:
                   data?.Signature_Exists === "yes"
                     ? "yes"
                     : data?.Signature_Exists === "no"
                     ? "no"
                     : data?.Signature_Exists,
-                totalQty: isNaN(data?.Issued_Qty)
+                    OCR_ISSQTY: isNaN(data?.Issued_Qty)
                   ? data?.Issued_Qty
                   : Number(data?.Issued_Qty),
-                received: data?.Received_Qty,
-                damaged: data?.Damage_Qty,
-                short: data?.Short_Qty,
-                over: data?.Over_Qty,
-                refused: data?.Refused_Qty,
+                  OCR_RCVQTY: data?.Received_Qty,
+                  OCR_SYMT_DAMG: data?.Damage_Qty,
+                  OCR_SYMT_SHRT: data?.Short_Qty,
+                  OCR_SYMT_ORVG: data?.Over_Qty,
+                  OCR_SYMT_REFS: data?.Refused_Qty,
                 customerOrderNum: data?.Customer_Order_Num,
-                stampExists:
+                OCR_SYMT_NONE:
                   data?.Stamp_Exists === "yes"
                     ? "yes"
                     : data?.Stamp_Exists === "no"
@@ -564,9 +567,9 @@ const MasterPage = () => {
                 reviewStatus: "unConfirmed",
                 recognitionStatus: recognitionStatus,
                 breakdownReason: "none",
-                reviewedBy: "OCR Engine",
+                UPTD_USR_CD: "OCR Engine",
                 cargoDescription: "Processed from OCR API.",
-                sealIntact:
+                OCR_SYMT_SEAL:
                   data?.Seal_Intact === "yes"
                     ? "Y"
                     : data?.Seal_Intact === "no"
@@ -1713,7 +1716,7 @@ const MasterPage = () => {
                         .filter((rowId) => {
                           const job = master.find((job) => job._id === rowId);
                           return (
-                            job && (!job.blNumber || !job.podSignature?.trim())
+                            job && (!job.OCR_BOLNO || !job.OCR_STMP_POD_DTT?.trim())
                           );
                         })
                         .map((rowId) => {
@@ -1827,20 +1830,7 @@ const MasterPage = () => {
             </div>
           )}
 
-          {/* {isOcrRunning && (
-            <div className="flex items-center justify-between gap-5">
-              <div className="w-full">
-                <div className="w-full bg-gray-200 rounded-full h-4">
-                  <div className="bg-[#005B97] h-4 rounded-full" style={{ width: `${progress}%` }}></div>
-                </div>
-              </div>
-              <div>
-                <p className="text-2xl text-[#005B97] font-semibold">
-                  {progress}/<span className="text-black">100(%)</span>
-                </p>
-              </div>
-            </div>
-          )} */}
+         
 
           <div className="py-3 mx-auto z-10">
             {master.length === 0 && !loadingTable ? (
@@ -1971,13 +1961,13 @@ const MasterPage = () => {
                               className="group"
                             >
                               <span className="text-[#005B97] underline group-hover:text-blue-500 transition-all duration-500 transform group-hover:scale-110">
-                                {job.blNumber}
+                                {job.OCR_BOLNO}
                               </span>
                             </Link>
                           </td>
                           <FileNameCell
                             pdfUrl={job.pdfUrl}
-                            fileId={job.fileId}
+                            fileId={job.FILE_ID}
                           />
 
                           {/* <td className="py-2 px-4 border-b text-center sticky left-44 bg-white z-10 min-w-44 max-w-44 truncate">
@@ -1999,94 +1989,94 @@ const MasterPage = () => {
                             {job.jobName}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.podDate}
+                            {job.OCR_STMP_POD_DTT}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.stampExists === null ||
-                            job.stampExists === undefined ? (
+                            {job.OCR_SYMT_NONE === null ||
+                            job.OCR_SYMT_NONE === undefined ? (
                               <span className="flex justify-center items-center">
                                 {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
                               </span>
                             ) : (
-                              job.stampExists
+                              job.OCR_SYMT_NONE
                             )}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.podSignature === null ||
-                            job.podSignature === undefined ? (
+                            {job.OCR_STMP_SIGN === null ||
+                            job.OCR_STMP_SIGN === undefined ? (
                               <span className="flex justify-center items-center">
                                 {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
                               </span>
                             ) : (
-                              job.podSignature
+                              job.OCR_STMP_SIGN
                             )}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.sealIntact === null ||
-                            job.sealIntact === undefined ? (
+                            {job.OCR_SYMT_SEAL === null ||
+                            job.OCR_SYMT_SEAL === undefined ? (
                               <span className="flex justify-center items-center">
                                 {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
                               </span>
                             ) : (
-                              job.sealIntact
+                              job.OCR_SYMT_SEAL
                             )}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.totalQty === null ||
-                            job.totalQty === undefined ? (
+                            {job.OCR_ISSQTY === null ||
+                            job.OCR_ISSQTY === undefined ? (
                               <span className="flex justify-center items-center">
                                 {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
                               </span>
                             ) : (
-                              job.totalQty
+                              job.OCR_ISSQTY
                             )}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.received === null ||
-                            job.received === undefined ? (
+                            {job.OCR_RCVQTY === null ||
+                            job.OCR_RCVQTY === undefined ? (
                               <span className="flex justify-center items-center">
                                 {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
                               </span>
                             ) : (
-                              job.received
+                              job.OCR_RCVQTY
                             )}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.damaged === null ||
-                            job.damaged === undefined ? (
+                            {job.OCR_SYMT_DAMG === null ||
+                            job.OCR_SYMT_DAMG === undefined ? (
                               <span className="flex justify-center items-center">
                                 {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
                               </span>
                             ) : (
-                              job.damaged
+                              job.OCR_SYMT_DAMG
                             )}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.short === null || job.short === undefined ? (
+                            {job.OCR_SYMT_SHRT === null || job.OCR_SYMT_SHRT === undefined ? (
                               <span className="flex justify-center items-center">
                                 {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
                               </span>
                             ) : (
-                              job.short
+                              job.OCR_SYMT_SHRT
                             )}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.over === null || job.over === undefined ? (
+                            {job.OCR_SYMT_ORVG === null || job.OCR_SYMT_ORVG === undefined ? (
                               <span className="flex justify-center items-center">
                                 {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
                               </span>
                             ) : (
-                              job.over
+                              job.OCR_SYMT_ORVG
                             )}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.refused === null ||
-                            job.refused === undefined ? (
+                            {job.OCR_SYMT_REFS === null ||
+                            job.OCR_SYMT_REFS === undefined ? (
                               <span className="flex justify-center items-center">
                                 {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
                               </span>
                             ) : (
-                              job.refused
+                              job.OCR_SYMT_REFS
                             )}
                           </td>
                           <td className="py-2 px-4 border-b text-center">
@@ -2417,7 +2407,7 @@ const MasterPage = () => {
                             </Tippy>
                           </td>
                           <td className="py-2 px-4 border-b text-center">
-                            {job.reviewedBy}
+                            {job.UPTD_USR_CD}
                           </td>
                           <td className="py-2 px-6 border-b text-center">
                             <Link

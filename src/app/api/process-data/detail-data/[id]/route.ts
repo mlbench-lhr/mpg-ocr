@@ -1,34 +1,9 @@
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
-
-interface Job {
-  _id: ObjectId;
-  blNumber: string;
-  jobName: string;
-  podDate: string;
-  deliveryDate: Date;
-  podSignature: string;
-  totalQty: number;
-  received: number;
-  damaged: number;
-  short: number;
-  over: number;
-  refused: number;
-  noOfPages: number;
-  stampExists: string;
-  finalStatus: string;
-  reviewStatus: string;
-  recognitionStatus: string;
-  breakdownReason: string;
-  reviewedBy: string;
-  cargoDescription: string;
-  createdAt: string;
-  updatedAt?: string;
-}
+import { FileData, FileDataProps } from "@/lib/FileData";
 
 const DB_NAME = process.env.DB_NAME || "my-next-app";
-
 
 export async function GET(req: Request) {
   try {
@@ -41,8 +16,7 @@ export async function GET(req: Request) {
 
     const client = await clientPromise;
     const db = client.db(DB_NAME);
-
-    const dataCollection = db.collection<Job>("mockData");
+    const dataCollection = db.collection<FileDataProps>("mockData");
 
     const job = await dataCollection.findOne({ _id: new ObjectId(id) });
 
@@ -52,7 +26,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json(job, { status: 200 });
   } catch (error) {
-    console.log("Error fetching job by ID:", error);
+    console.error("Error fetching job by ID:", error);
     return NextResponse.json({ error: "Failed to fetch job." }, { status: 500 });
   }
 }
@@ -66,13 +40,17 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Job ID is required" }, { status: 400 });
     }
 
-    const updatedJobData = await req.json();
+    const rawBody = await req.json();
 
-    const intFields = ["blNumber", "totalQty", "received", "damaged", "short", "over", "refused"];
+    // Convert numeric fields from strings
+    const intFields = [
+      "totalQty", "received", "damaged", "short", "over", "refused",
+    ];
+
     for (const field of intFields) {
-      const value = updatedJobData[field];
-      if (typeof value === "string" && /^\d+$/.test(value)) {
-        updatedJobData[field] = parseInt(value, 10);
+      const val = rawBody[field];
+      if (typeof val === "string" && /^\d+$/.test(val)) {
+        rawBody[field] = parseInt(val, 10);
       }
     }
 
@@ -82,7 +60,7 @@ export async function PATCH(req: Request) {
     const client = await clientPromise;
     const db = client.db(DB_NAME);
 
-    const dataCollection = db.collection("mockData");
+    const dataCollection = db.collection<FileDataProps>("mockData");
     const historyCollection = db.collection("jobHistory");
 
     const existingJob = await dataCollection.findOne({ _id: new ObjectId(id) });
@@ -91,16 +69,30 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
+    // Remove _id from body before processing
+    if ("_id" in rawBody) {
+      delete rawBody._id;
+    }
+
+    // Create structured FileData object
+    const updatedJobData: FileDataProps = FileData.fromPartial({
+      ...rawBody,
+      updatedAt: new Date(),
+    });
+
     const historyEntries = [];
-    for (const [key, newValue] of Object.entries(updatedJobData)) {
-      const oldValue = existingJob[key];
+
+    for (const key in updatedJobData) {
+      const newValue = updatedJobData[key as keyof FileDataProps];
+      const oldValue = existingJob[key as keyof FileDataProps];
+
       if (oldValue != newValue) {
         historyEntries.push({
           jobId: new ObjectId(id),
           field: key,
-          oldValue: oldValue,
-          newValue: newValue,
-          changedBy: changedBy,
+          oldValue,
+          newValue,
+          changedBy,
           changedOn: new Date(),
         });
       }
@@ -110,13 +102,9 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ message: "No changes detected." }, { status: 200 });
     }
 
-    updatedJobData.updatedAt = new Date();
-
     const result = await dataCollection.updateOne(
       { _id: new ObjectId(id) },
-      {
-        $set: updatedJobData,
-      }
+      { $set: updatedJobData }
     );
 
     if (result.modifiedCount === 0) {
@@ -129,7 +117,7 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json({ message: "Job updated successfully" }, { status: 200 });
   } catch (error) {
-    console.log("Error updating job:", error);
+    console.error("Error updating job:", error);
     return NextResponse.json({ error: "Failed to update job." }, { status: 500 });
   }
 }
