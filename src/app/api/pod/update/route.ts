@@ -7,6 +7,8 @@ export async function PUT(req: Request) {
   try {
     const { fileId, ocrData } = await req.json();
 
+    console.log("ócr dat-> ",	ocrData)
+
     if (!fileId || !ocrData) {
       return NextResponse.json(
         { error: "fileId and ocrData are required" },
@@ -64,17 +66,17 @@ export async function PUT(req: Request) {
                 UPTD_DTT = SYSDATE
             WHERE FILE_ID = :fileId`,
       {
-        bolNo: ocrData.blNumber,
-        issQty: ocrData.totalQty,
-        rcvQty: ocrData.received,
-        podDate: ocrData.podDate,
-        sign: ocrData.podSignature,
-        symtNone: ocrData.none,
-        symtDamg: ocrData.damaged,
-        symtShrt: ocrData.short,
-        symtOrvg: ocrData.over,
-        symtRefs: ocrData.refused,
-        symtSeal: ocrData.sealIntact,
+        bolNo: ocrData.OCR_BOLNO,
+        issQty: ocrData.OCR_ISSQTY,
+        rcvQty: ocrData.OCR_RCVQTY,
+        podDate: ocrData.OCR_STMP_POD_DTT,
+        sign: ocrData.OCR_STMP_SIGN,
+        symtNone: ocrData.OCR_SYMT_NONE === 'yes' ? 'Y' : 'N',
+        symtDamg: ocrData.OCR_SYMT_DAMG,
+        symtShrt: ocrData.OCR_SYMT_SHRT,
+        symtOrvg: ocrData.OCR_SYMT_ORVG,
+        symtRefs: ocrData.OCR_SYMT_REFS,
+        symtSeal: ocrData.OCR_SYMT_SEAL === 'yes' ? 'Y' : 'N',
         fileId: fileId,
       }
     );

@@ -24,6 +24,8 @@ import TableSpinner from "../components/TableSpinner";
 import UploadModal from "../components/UploadModal";
 import { FiUpload } from "react-icons/fi";
 import FileNameCell from "../components/UI/FileNameCell";
+// import { convertFileToBase64 } from "@/lib/fileUtils";
+
 
 type FinalStatus =
   | "new"
@@ -512,6 +514,7 @@ const MasterPage = () => {
           }
 
           const ocrData = await ocrResponse.json();
+          // const fileBase64 = await convertFileToBase64(filePath);
 
           if (ocrData && Array.isArray(ocrData)) {
             const processedDataArray = ocrData.map((data) => {
@@ -532,8 +535,11 @@ const MasterPage = () => {
               const urlObj = new URL(filePath);
               const filename = urlObj.searchParams.get("filename") || "";
               const decodedFilePath = `/file/${decodeURIComponent(filename)}`;
+              
+            
 
               return {
+               
                 jobId: null,
                 pdfUrl: decodedFilePath,
                 FILE_ID: data?._id,
@@ -2411,7 +2417,7 @@ const MasterPage = () => {
                           </td>
                           <td className="py-2 px-6 border-b text-center">
                             <Link
-                              href={`/extracted-data-monitoring/edit-pdf/${job._id}`}
+                              href={`/extracted-data-monitoring/edit-pdf/${job.FILE_ID}`}
                               onClick={() => {
                                 handleRouteChange();
                                 localStorage.setItem("prev", "");

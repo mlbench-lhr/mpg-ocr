@@ -499,6 +499,7 @@ const JobDetail = () => {
       fetch(`/api/process-data/detail-data/${id}`)
         .then((res) => res.json())
         .then((data) => {
+          console.log("Data PDF ->",data)
           if (data.error) {
             setError(data.error);
           } else {

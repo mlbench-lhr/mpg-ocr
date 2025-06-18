@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
     const client = await clientPromise;
     const db = client.db(DB_NAME);
-
+console.log("data array-> ", dataArray);
     const pdfUrls = dataArray.map((d) => d.pdfUrl);
     const existingRecords = await db
       .collection("mockData")
@@ -80,6 +80,7 @@ export async function POST(req: Request) {
       // Build file data object
       const fileData: FileDataProps = FileData.fromPartial({
         ...rawData,
+    
         uptd_Usr_Cd: rawData.uptd_Usr_Cd || "OCR",
       });
 

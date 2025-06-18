@@ -35,7 +35,7 @@ async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ fileId: fileData.FILE_ID }),
         });
-        
+
         const filePath = `${baseUrl}/api/access-file?filename=${encodeURIComponent(
           fileData.FILE_NAME
         )}`;
@@ -61,17 +61,17 @@ async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
           ),
           deliveryDate: new Date().toISOString().split("T")[0],
           noOfPages: 1,
-          blNumber: String(d?.B_L_Number || ""),
-          podDate: d?.POD_Date || "",
-          podSignature: d?.Signature_Exists || "unknown",
-          totalQty: Number(d?.Issued_Qty) || 0,
-          received: Number(d?.Received_Qty) || 0,
-          damaged: d?.Damage_Qty,
-          short: d?.Short_Qty,
-          over: d?.Over_Qty,
-          refused: d?.Refused_Qty,
+          OCR_BOLNO: String(d?.B_L_Number || ""),
+          OCR_STMP_POD_DTT: d?.POD_Date || "",
+          OCR_STMP_SIGN: d?.Signature_Exists || "unknown",
+          OCR_ISSQTY: Number(d?.Issued_Qty) || 0,
+          OCR_RCVQTY: Number(d?.Received_Qty) || 0,
+          OCR_SYMT_DAMG: d?.Damage_Qty,
+          OCR_SYMT_SHRT: d?.Short_Qty,
+          OCR_SYMT_ORVG: d?.Over_Qty,
+          OCR_SYMT_REFS: d?.Refused_Qty,
           customerOrderNum: d?.Customer_Order_Num,
-          stampExists: d?.Stamp_Exists,
+          OCR_SYMT_NONE: d?.Stamp_Exists,
           finalStatus: "valid",
           reviewStatus: "unConfirmed",
           recognitionStatus:
@@ -82,14 +82,14 @@ async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
             }[d?.Status] || "null",
           breakdownReason: "none",
           reviewedBy: "OCR Engine",
-          uptd_Usr_Cd:"OCR",
+          uptd_Usr_Cd: "OCR",
           cargoDescription: "Processed from OCR API.",
           none: "N",
-          sealIntact: d?.Seal_Intact === "yes" ? "Y" : "N",
+          OCR_SYMT_SEAL: d?.Seal_Intact === "yes" ? "Y" : "N",
         }));
 
         const single = processed[0];
-
+        console.log("single1-> ", single);
         // SAP BOL matching
         try {
           const basicAuth = Buffer.from(`${userName}:${passWord}`).toString(
@@ -116,7 +116,7 @@ async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
         } catch (err) {
           console.error("SAP check error:", err.message);
         }
-
+        console.log("single-> ", single);
         const confirmRes = await fetch(
           "http://localhost:3000/api/settings/auto-confirmation"
         );
@@ -141,8 +141,7 @@ async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
 
         console.log(`✅ File ${fileId} processed.`);
       } catch (err) {
-    console.error("❌ File processing error:", err);
-
+        console.error("❌ File processing error:", err);
       }
     }
   } catch (err) {
