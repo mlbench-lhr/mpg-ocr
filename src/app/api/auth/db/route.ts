@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { ObjectId } from "mongodb";
-import oracledb, { DbType } from "oracledb";
+import oracledb from "oracledb";
 import clientPromise from "@/lib/mongodb";
 import { jsonDBConnectionHandler } from "@/lib/JsonDBConfig/jsonDBConnectionHandler";
 

@@ -65,26 +65,28 @@ export async function getOracleOCRData(
     const isOCR = uptd_Usr_Cd.toLowerCase() === "ocr";
 
     if (!isOCR) {
-      const apiRes = await fetch("http://localhost:3000/api/pod/retrieve");
-      const apiData: PodFile[] = await apiRes.json();
+    const result = await connection.execute(
+  `SELECT A.FILE_ID AS FILE_ID, A.FILE_TABLE AS FILE_TABLE, A.FILE_NAME AS FILE_NAME, A.CRTD_DTT AS CRTD_DTT 
+   FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_T A
+   JOIN ${process.env.ORACLE_DB_USER_NAME}.XTI_POD_STAMP_REQRD_T B 
+     ON A.FILE_ID = B.FILE_ID
+   WHERE TO_CHAR(B.CRTD_DTT, 'YYYYMMDD') = TO_CHAR(
+     NVL(TO_DATE(:createdDate, 'YYYY-MM-DD'), SYSDATE) - 1,
+     'YYYYMMDD'
+   )
+     AND NOT EXISTS (
+       SELECT * FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T C 
+       WHERE C.FILE_ID = A.FILE_ID
+     )`,
+  { createdDate: createdDate || null }, // Pass null if not available
+  { outFormat: oracledb.OUT_FORMAT_OBJECT }
+);
+
+      console.log("result-> ", result);
       console.log("created-> ", createdDate);
 
-      let filteredData = apiData;
-      if (createdDate) {
-        filteredData = apiData.filter((row) => {
-          if (!row.CRTD_DTT) return false;
-
-          const date = new Date(row.CRTD_DTT);
-          if (isNaN(date.getTime())) return false;
-
-          // 'en-CA' gives us YYYY-MM-DD format
-          const created = date.toLocaleDateString("en-CA"); // e.g., "2025-06-16"
-          return created === createdDate;
-        });
-      }
-
-      console.log("filteredData-> ", filteredData);
-
+      const filteredData = (result?.rows ?? []) as PodFile[];
+      console.log("filteredData -> ", filteredData);
       const jobs = filteredData.map((row: PodFile) => ({
         fileName: row.FILE_NAME,
         _id: row.FILE_ID,
@@ -158,7 +160,6 @@ export async function getOracleOCRData(
       outFormat: oracledb.OUT_FORMAT_OBJECT,
     });
 
-    
     const countSQL = `SELECT COUNT(*) AS TOTAL FROM ${tableName} ocr ${whereSQL}`;
     const countResult = await connection.execute(countSQL, filterBinds, {
       outFormat: oracledb.OUT_FORMAT_OBJECT,

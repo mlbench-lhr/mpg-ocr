@@ -53,10 +53,7 @@ export async function GET(req: NextRequest) {
   [],
   { outFormat: oracledb.OUT_FORMAT_OBJECT }
 );
-
-    console.log("result.rows-> ", result.rows);
     const formattedResult = result.rows ?? [];
-    console.log("result-> ", formattedResult);
     return NextResponse.json(formattedResult);
   } catch (err) {
     console.error("Error retrieving data from OracleDB:", err);

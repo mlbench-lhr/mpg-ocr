@@ -6,8 +6,8 @@ import clientPromise from "@/lib/mongodb";
 import { getFileExtension } from "@/lib/getMimeType";
 import { NextResponse } from "next/server";
 import oracledb from "oracledb";
-import { getOracleConnection } from "@/lib/oracle"; 
-import {getDBConnectionType} from "@/lib/JsonDBConfig/getDBConnectionType"; 
+import { getOracleConnection } from "@/lib/oracle";
+import { getDBConnectionType } from "@/lib/JsonDBConfig/getDBConnectionType";
 interface FileRow {
   FILE_ID: string;
   FILE_NAME?: string;
@@ -47,20 +47,20 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const id = url.pathname.split("/").pop();
     const dbType = getDBConnectionType();
-
+  console.log("db type-> ", dbType);
     if (!id) {
       return NextResponse.json(
         { error: "Job ID is required" },
         { status: 400 }
       );
     }
+  
 
     const client = await clientPromise;
     const db = client.db(DB_NAME);
     let job;
     let mimeType;
     let base64Data;
-
     const dataCollection = db.collection<Job>("mockData");
     if (dbType !== "remote") {
       job = await dataCollection.findOne({ _id: new ObjectId(id) });
@@ -113,7 +113,6 @@ export async function GET(req: Request) {
       const fileTable = fileTableRow?.FILE_TABLE;
       const fileName = fileTableRow?.FILE_NAME;
 
-
       if (!fileTable || !fileName) {
         return NextResponse.json(
           { error: "File table or fileName not found" },
@@ -162,7 +161,7 @@ export async function GET(req: Request) {
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
-
+    console.log("connection2-> ", dbType);
     return NextResponse.json(
       {
         job,
@@ -182,7 +181,7 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-const url = new URL(req.url);
+    const url = new URL(req.url);
     const id = url.pathname.split("/").pop();
     const dbType = url.searchParams.get("dbType");
 
@@ -230,35 +229,35 @@ const url = new URL(req.url);
     }
 
     const historyEntries = [];
-    if(dbType!=='remote'){
-    for (const [key, newValue] of Object.entries(updatedJobData)) {
-      const oldValue = existingJob[key];
-      if (oldValue != newValue) {
-        historyEntries.push({
-          jobId: new ObjectId(id),
-          field: key,
-          oldValue: oldValue,
-          newValue: newValue,
-          changedBy: changedBy,
-          changedOn: new Date(),
-        });
-      }
-    }
-  }else{
+    if (dbType !== "remote") {
       for (const [key, newValue] of Object.entries(updatedJobData)) {
-      const oldValue = existingJob[key];
-      if (oldValue != newValue) {
-        historyEntries.push({
-          jobId: id,
-          field: key,
-          oldValue: oldValue,
-          newValue: newValue,
-          changedBy: changedBy,
-          changedOn: new Date(),
-        });
+        const oldValue = existingJob[key];
+        if (oldValue != newValue) {
+          historyEntries.push({
+            jobId: new ObjectId(id),
+            field: key,
+            oldValue: oldValue,
+            newValue: newValue,
+            changedBy: changedBy,
+            changedOn: new Date(),
+          });
+        }
+      }
+    } else {
+      for (const [key, newValue] of Object.entries(updatedJobData)) {
+        const oldValue = existingJob[key];
+        if (oldValue != newValue) {
+          historyEntries.push({
+            jobId: id,
+            field: key,
+            oldValue: oldValue,
+            newValue: newValue,
+            changedBy: changedBy,
+            changedOn: new Date(),
+          });
+        }
       }
     }
-  }
 
     if (historyEntries.length === 0) {
       return NextResponse.json(
@@ -268,15 +267,12 @@ const url = new URL(req.url);
     }
 
     updatedJobData.updatedAt = new Date();
-const filter = ObjectId.isValid(id)
-  ? { _id: new ObjectId(id) }
-  : { fileId: id }; // fallback when ID is not ObjectId
-    const result = await dataCollection.updateOne(
-      filter,
-      {
-        $set: updatedJobData,
-      }
-    );
+    const filter = ObjectId.isValid(id)
+      ? { _id: new ObjectId(id) }
+      : { fileId: id }; // fallback when ID is not ObjectId
+    const result = await dataCollection.updateOne(filter, {
+      $set: updatedJobData,
+    });
 
     if (result.modifiedCount === 0) {
       return NextResponse.json({ error: "No changes made" }, { status: 400 });

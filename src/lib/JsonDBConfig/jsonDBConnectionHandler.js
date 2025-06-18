@@ -6,7 +6,7 @@ export const jsonDBConnectionHandler = async (dbType) => {
   try {
     await fs.writeFile(filePath, JSON.stringify({ dbType }, null, 2));
     console.log("DB type saved successfully");
-  } catch (error) {
-    console.log("Failed to write file for db connection json");
-  }
+  } catch {
+  console.log("Failed to write file for db connection json");
+}
 };

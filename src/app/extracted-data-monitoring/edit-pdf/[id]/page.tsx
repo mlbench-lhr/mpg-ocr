@@ -70,6 +70,9 @@ const JobDetail = () => {
     return newState;
   };
 
+  console.log(isLoading)
+  
+
   const isSupportedFormat = (fileName: string) => {
     const ext = fileName.toLowerCase().split(".").pop();
     return ["pdf", "jpg", "jpeg", "png", "bmp"].includes(ext || "");
