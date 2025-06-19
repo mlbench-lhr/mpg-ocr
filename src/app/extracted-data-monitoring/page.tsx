@@ -25,9 +25,8 @@ import UploadModal from "../components/UploadModal";
 import { FiUpload } from "react-icons/fi";
 import FileNameCell from "../components/UI/FileNameCell";
 import { FileData } from "@/lib/FileData";
-import ExtractedDataTable from "../components/ExtractedDataTable";
+import ExtractedDataTable from "../components/Tables/ExtractedData/ExtractedDataTable";
 // import { convertFileToBase64 } from "@/lib/fileUtils";
-
 
 type FinalStatus =
   | "new"
@@ -232,7 +231,7 @@ const MasterPage = () => {
       sessionStorage.getItem("bolNumberFilter")
     );
   };
- 
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       if (localStorage.getItem("prev") === "") {
@@ -420,7 +419,6 @@ const MasterPage = () => {
 
     fetchOcrApiUrl();
   }, []);
-  
 
   const pdfFiles = selectedRows
     .map((rowId) => {
@@ -483,7 +481,6 @@ const MasterPage = () => {
     setIsProcessModalOpen(true);
     setProgress({});
 
-
     async function processPdfsSequentially() {
       for (const pdfFile of pdfFiles) {
         if (!pdfFile?.file_url_or_path) continue;
@@ -533,11 +530,8 @@ const MasterPage = () => {
               const urlObj = new URL(filePath);
               const filename = urlObj.searchParams.get("filename") || "";
               const decodedFilePath = `/file/${decodeURIComponent(filename)}`;
-              
-            
-              
+
               return {
-               
                 jobId: null,
                 pdfUrl: decodedFilePath,
                 FILE_ID: data?._id,
@@ -552,14 +546,14 @@ const MasterPage = () => {
                     : data?.Signature_Exists === "no"
                     ? "no"
                     : data?.Signature_Exists,
-                    OCR_ISSQTY: isNaN(data?.Issued_Qty)
+                OCR_ISSQTY: isNaN(data?.Issued_Qty)
                   ? data?.Issued_Qty
                   : Number(data?.Issued_Qty),
-                  OCR_RCVQTY: data?.Received_Qty,
-                  OCR_SYMT_DAMG: data?.Damage_Qty,
-                  OCR_SYMT_SHRT: data?.Short_Qty,
-                  OCR_SYMT_ORVG: data?.Over_Qty,
-                  OCR_SYMT_REFS: data?.Refused_Qty,
+                OCR_RCVQTY: data?.Received_Qty,
+                OCR_SYMT_DAMG: data?.Damage_Qty,
+                OCR_SYMT_SHRT: data?.Short_Qty,
+                OCR_SYMT_ORVG: data?.Over_Qty,
+                OCR_SYMT_REFS: data?.Refused_Qty,
                 customerOrderNum: data?.Customer_Order_Num,
                 OCR_SYMT_NONE:
                   data?.Stamp_Exists === "yes"
@@ -791,17 +785,17 @@ const MasterPage = () => {
     try {
       setLoadingTable(true);
       const filters = {
-        bolNumber: sessionStorage.getItem("bolNumberFilter") || "",
+        OCR_BOLNO: sessionStorage.getItem("bolNumberFilter") || "",
         finalStatus: sessionStorage.getItem("finalStatusFilter") || "",
         reviewStatus: sessionStorage.getItem("reviewStatusFilter") || "",
         reasonStatus: sessionStorage.getItem("reasonStatusFilter") || "",
         reviewByStatus: sessionStorage.getItem("reviewByStatusFilter") || "",
         uptd_Usr_Cd: sessionStorage.getItem("uptd_Usr_Cd") || "",
-        podDate: sessionStorage.getItem("podDateFilter") || "",
-        createdDate: sessionStorage.getItem("createdDateFilter") || "",
+        OCR_STMP_POD_DTT: sessionStorage.getItem("podDateFilter") || "",
+        CRTD_DTT: sessionStorage.getItem("createdDateFilter") || "",
         updatedDate: sessionStorage.getItem("updatedDateFilter") || "",
 
-        podDateSignature:
+        OCR_STMP_SIGN:
           sessionStorage.getItem("podDateSignatureFilter") || "",
         jobName: sessionStorage.getItem("jobNameFilter") || "",
         sortColumn,
@@ -811,9 +805,9 @@ const MasterPage = () => {
       const queryParams = new URLSearchParams();
       queryParams.set("page", currentPage.toString());
 
-      console.log('querry params-> ', filters)
+      console.log("querry params-> ", filters);
 
-      if (filters.bolNumber) queryParams.set("bolNumber", filters.bolNumber);
+      if (filters.OCR_BOLNO) queryParams.set("bolNumber", filters.OCR_BOLNO);
       if (filters.finalStatus)
         queryParams.set("recognitionStatus", filters.finalStatus);
       if (filters.reviewStatus)
@@ -822,13 +816,13 @@ const MasterPage = () => {
         queryParams.set("breakdownReason", filters.reasonStatus);
       if (filters.uptd_Usr_Cd)
         queryParams.set("uptd_Usr_Cd", filters.uptd_Usr_Cd);
-      if (filters.podDate) queryParams.set("podDate", filters.podDate);
+      if (filters.OCR_STMP_POD_DTT) queryParams.set("podDate", filters.OCR_STMP_POD_DTT);
       if (filters.updatedDate)
         queryParams.set("updatedDate", filters.updatedDate);
-      if (filters.createdDate)
-        queryParams.set("createdDate", filters.createdDate);
-      if (filters.podDateSignature)
-        queryParams.set("podDateSignature", filters.podDateSignature.trim());
+      if (filters.CRTD_DTT)
+        queryParams.set("createdDate", filters.CRTD_DTT);
+      if (filters.OCR_STMP_SIGN)
+        queryParams.set("podDateSignature", filters.OCR_STMP_SIGN.trim());
       if (filters.jobName) queryParams.set("jobName", filters.jobName.trim());
 
       if (filters.sortColumn.length) {
@@ -937,7 +931,7 @@ const MasterPage = () => {
     setReviewByStatusFilter("");
     setPodDateFilter("");
     setCreatedDateFilter("");
-    setUpdatedDateFilter("")
+    setUpdatedDateFilter("");
     setPodDateSignatureFilter("");
     setJobNameFilter("");
     setBolNumberFilter("");
@@ -1720,7 +1714,8 @@ const MasterPage = () => {
                         .filter((rowId) => {
                           const job = master.find((job) => job._id === rowId);
                           return (
-                            job && (!job.OCR_BOLNO || !job.OCR_STMP_POD_DTT?.trim())
+                            job &&
+                            (!job.OCR_BOLNO || !job.OCR_STMP_POD_DTT?.trim())
                           );
                         })
                         .map((rowId) => {
@@ -1834,40 +1829,38 @@ const MasterPage = () => {
             </div>
           )}
 
-<ExtractedDataTable
-isFilterDropDownOpen={isFilterDropDownOpen}
-  master={master}
-  selectedRows={selectedRows}
-  handleRowSelection={handleRowSelection}
-  handlePageChange={handlePageChange}
-  currentPage={currentPage}
-  totalPages={totalPages}
-  loadingTable={loadingTable}
-  isAllSelected={isAllSelected}
-  handleSelectAll={handleSelectAll}
-  handleRouteChange={handleRouteChange}
-  updateStatus={updateStatus}
-  name={name}
-  userRole={userRole}
-  finalOptions={finalOptions}
-  reviewOptions={reviewOptions}
-  recognitionOptions={recognitionOptions}
-  breakdownOptions={breakdownOptions}
-  dropdownStates={dropdownStates}
-  setDropdownStates={setDropdownStates}
-  dropdownStatesFirst={dropdownStatesFirst}
-  setDropdownStatesFirst={setDropdownStatesFirst}
-  dropdownStatesSecond={dropdownStatesSecond}
-  setDropdownStatesSecond={setDropdownStatesSecond}
-  dropdownStatesThird={dropdownStatesThird}
-  setDropdownStatesThird={setDropdownStatesThird}
-  parentRefFinal={parentRefFinal}
-  parentRefReview={parentRefReview}
-  parentRefRecognition={parentRefRecognition}
-  parentRefBreakdown={parentRefBreakdown}
-/>
-
-          
+          <ExtractedDataTable
+            isFilterDropDownOpen={isFilterDropDownOpen}
+            master={master}
+            selectedRows={selectedRows}
+            handleRowSelection={handleRowSelection}
+            handlePageChange={handlePageChange}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            loadingTable={loadingTable}
+            isAllSelected={isAllSelected}
+            handleSelectAll={handleSelectAll}
+            handleRouteChange={handleRouteChange}
+            updateStatus={updateStatus}
+            name={name}
+            userRole={userRole}
+            finalOptions={finalOptions}
+            reviewOptions={reviewOptions}
+            recognitionOptions={recognitionOptions}
+            breakdownOptions={breakdownOptions}
+            dropdownStates={dropdownStates}
+            setDropdownStates={setDropdownStates}
+            dropdownStatesFirst={dropdownStatesFirst}
+            setDropdownStatesFirst={setDropdownStatesFirst}
+            dropdownStatesSecond={dropdownStatesSecond}
+            setDropdownStatesSecond={setDropdownStatesSecond}
+            dropdownStatesThird={dropdownStatesThird}
+            setDropdownStatesThird={setDropdownStatesThird}
+            parentRefFinal={parentRefFinal}
+            parentRefReview={parentRefReview}
+            parentRefRecognition={parentRefRecognition}
+            parentRefBreakdown={parentRefBreakdown}
+          />
         </div>
       </div>
     </div>

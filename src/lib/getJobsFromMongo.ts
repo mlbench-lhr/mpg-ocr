@@ -5,26 +5,26 @@ import { NextResponse } from "next/server";
 
 interface Job {
   _id?: ObjectId;
-  blNumber: string | number;
+  OCR_BOLNO: string | number;
   jobName?: string;
-  podDate?: string;
+  OCR_STMP_POD_DTT?: string;
   deliveryDate?: Date;
-  podSignature?: string;
-  totalQty?: number;
-  received?: number;
-  damaged?: number;
-  short?: number;
-  over?: number;
-  refused?: number;
+  OCR_STMP_SIGN?: string;
+  OCR_ISSQTY?: number;
+  OCR_RCVQTY?: number;
+  OCR_SYMT_DAMG?: number;
+  OCR_SYMT_SHRT?: number;
+  OCR_SYMT_ORVG?: number;
+  OCR_SYMT_REFS?: number;
   noOfPages?: number;
-  stampExists?: string;
+  OCR_SYMT_NONE?: string;
   finalStatus?: string;
   reviewStatus?: string;
   recognitionStatus?: string;
   breakdownReason?: string;
   reviewedBy?: string;
   cargoDescription?: string;
-  createdAt?: string;
+  CRTD_DTT?: string;
   updatedAt?: string;
   uptd_Usr_Cd?: string;
 }
@@ -74,14 +74,14 @@ export async function getJobsFromMongo(
   }
 
   if (podDateSignature) {
-    filter.podSignature = { $regex: podDateSignature.trim(), $options: "i" };
+    filter.OCR_STMP_SIGN = { $regex: podDateSignature.trim(), $options: "i" };
   }
 
   if (bolNumber) {
     if (/^\d+$/.test(bolNumber)) {
-      filter.blNumber = parseInt(bolNumber, 10);
+      filter.OCR_BOLNO = parseInt(bolNumber, 10);
     } else {
-      filter.blNumber = { $regex: bolNumber.trim(), $options: "i" };
+      filter.OCR_BOLNO = { $regex: bolNumber.trim(), $options: "i" };
     }
   }
 
@@ -96,9 +96,9 @@ export async function getJobsFromMongo(
   if (searchQuery) {
     const searchRegex = { $regex: searchQuery, $options: "i" };
     filter.$or = [
-      { blNumber: searchRegex },
+      { OCR_BOLNO: searchRegex },
       { jobName: searchRegex },
-      { podSignature: searchRegex },
+      { OCR_STMP_SIGN: searchRegex },
     ];
   }
 
@@ -111,7 +111,7 @@ export async function getJobsFromMongo(
     try {
       const parsedDate = parse(podDate, "yyyy-MM-dd", new Date());
       podDate = format(parsedDate, "MM/dd/yy");
-      filter.podDate = podDate;
+      filter.OCR_STMP_POD_DTT = podDate;
     } catch (error) {
       console.log("Invalid podDate format:", error);
     }

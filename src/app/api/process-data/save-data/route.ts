@@ -8,7 +8,6 @@ const DB_NAME = process.env.DB_NAME || "my-next-app";
 export async function POST(req: Request) {
   try {
     const dataArray = await req.json();
-    console.log("Data Array ->",dataArray);
     if (!Array.isArray(dataArray)) {
       return NextResponse.json(
         { error: "Input must be an array of objects" },
@@ -18,7 +17,7 @@ export async function POST(req: Request) {
 
     const client = await clientPromise;
     const db = client.db(DB_NAME);
-console.log("data array-> ", dataArray);
+
     const pdfUrls = dataArray.map((d) => d.pdfUrl);
     const existingRecords = await db
       .collection("mockData")
@@ -39,7 +38,7 @@ console.log("data array-> ", dataArray);
         }
       }
 
-      // Convert numeric fields if needed
+      // Convert numeric fields
       const intFields = [
         "OCR_ISSQTY",
         "OCR_RCVQTY",
@@ -55,7 +54,7 @@ console.log("data array-> ", dataArray);
         }
       }
 
-      // Assign job name if jobId is provided
+      // Resolve job name if jobId is given
       if (!rawData.jobId || rawData.jobId.trim() === "") {
         rawData.jobId = "";
         rawData.jobName = "";
@@ -66,32 +65,40 @@ console.log("data array-> ", dataArray);
         rawData.jobName = job ? job.jobName : "";
       }
 
-      // Convert blNumber to number if it's numeric string
+      // Convert blNumber
       if (typeof rawData.blNumber === "string" && /^\d+$/.test(rawData.blNumber)) {
         rawData.blNumber = parseInt(rawData.blNumber, 10);
       }
 
-      // Ensure FILE_ID is auto-filled if missing
+      // Set FILE_ID if missing
       if (!rawData.FILE_ID && rawData.pdfUrl) {
         const filename = rawData.pdfUrl.split("/").pop() || "";
-        rawData.FILE_ID = filename.replace(/\.[^/.]+$/, ""); // Remove extension
+        rawData.FILE_ID = filename.replace(/\.[^/.]+$/, "");
       }
-       
+
       // Build file data object
       const fileData: FileDataProps = FileData.fromMongoDB({
         ...rawData,
-    
         uptd_Usr_Cd: rawData.uptd_Usr_Cd || "OCR",
       });
-      console.log("File Data ->", fileData);
 
       const { pdfUrl } = fileData;
 
+      // 🛡️ Preserve FILE_DATA if record already exists
       if (existingMap.has(pdfUrl)) {
+        const existing = existingMap.get(pdfUrl);
+
+        console.log("Check FILE_DATA", existing);
+      
+        const mergedData = {
+          ...fileData,
+          FILE_DATA: existing?.FILE_DATA ?? "", // ✅ Safe optional access
+        };
+      
         bulkOps.push({
           updateOne: {
             filter: { pdfUrl },
-            update: { $set: fileData },
+            update: { $set: mergedData },
           },
         });
       } else {

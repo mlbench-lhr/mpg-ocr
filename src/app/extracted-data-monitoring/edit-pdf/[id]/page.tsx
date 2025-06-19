@@ -426,6 +426,15 @@ const JobDetail = () => {
   const [name, setName] = useState("");
   const [openedViaButton, setOpenedViaButton] = useState(false);
 
+const numericKeys: (keyof FileDataProps)[] = [
+  "OCR_RCVQTY",
+  "OCR_SYMT_DAMG",
+  "OCR_SYMT_SHRT",
+  "OCR_SYMT_ORVG",
+  "OCR_SYMT_REFS",
+  "OCR_BOLNO",
+  "OCR_ISSQTY",
+];
 
 
   const { isExpanded } = useSidebar();
@@ -503,7 +512,7 @@ const JobDetail = () => {
           if (data.error) {
             setError(data.error);
           } else {
-            const cleanData = FileData.fromPartial(data);
+            const cleanData = FileData.fromMongoDB(data);
             setJob(cleanData);
             setFormData({
               ...cleanData,
@@ -536,35 +545,47 @@ const JobDetail = () => {
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   };
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const formattedReviewedBy = capitalizeFirstLetter(name);
-      const formattedData = {
-        ...formData,
-        reviewedBy: formattedReviewedBy,
-        OCR_STMP_POD_DTT: formatDateForDB(formData.OCR_STMP_POD_DTT || ""),
-      };
-      const response = await fetch(`/api/process-data/detail-data/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formattedData),
-      });
+const handleSave = async () => {
+  setSaving(true);
+  try {
+    const formattedReviewedBy = capitalizeFirstLetter(name);
 
-      if (response.ok) {
-        setIsEditMode(false);
-      } else {
-        setIsEditMode(false);
-        setSaving(false);
+    const processedData: FileDataProps = { ...formData };
+
+    numericKeys.forEach((key) => {
+      const value = formData[key];
+      if (value !== undefined && value !== null) {
+        (processedData[key] as any) = Number(value);
       }
-    } catch (error) {
-      console.log("Error saving data:", error);
-    } finally {
+    });
+
+    const formattedData = {
+      ...processedData,
+      reviewedBy: formattedReviewedBy,
+      OCR_STMP_POD_DTT: formatDateForDB(formData.OCR_STMP_POD_DTT || ""),
+    };
+
+    const response = await fetch(`/api/process-data/detail-data/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formattedData),
+    });
+
+    if (response.ok) {
+      setIsEditMode(false);
+    } else {
+      console.error("Save failed:", await response.text());
       setSaving(false);
     }
-  };
+  } catch (error) {
+    console.log("Error saving data:", error);
+  } finally {
+    setSaving(false);
+  }
+};
+
 
   const handleEditClick = () => setIsEditMode(true);
 
