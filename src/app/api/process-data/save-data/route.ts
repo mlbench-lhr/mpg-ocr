@@ -7,6 +7,7 @@ const DB_NAME = process.env.DB_NAME || "my-next-app";
 export async function POST(req: Request) {
   try {
     const dataArray = await req.json();
+    console.log('data ara-> ', dataArray)
 
     if (!Array.isArray(dataArray)) {
       return NextResponse.json(

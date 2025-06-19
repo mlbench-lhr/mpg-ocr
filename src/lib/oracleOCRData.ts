@@ -28,7 +28,6 @@ export async function getOracleOCRData(
 
     const resultMongoDb = await getJobsFromMongo(url, skip, limit, page);
     const data = await resultMongoDb.json();
-    console.log("resultMongoDb-> ", data);
 
     if (!userDBCredentials) {
       return NextResponse.json(
