@@ -16,6 +16,10 @@ import { MdDelete } from "react-icons/md";
 import { FiSearch } from "react-icons/fi";
 import { FaChevronDown } from "react-icons/fa";
 import { IoCalendar } from "react-icons/io5";
+import NoData from "../components/pod/NoData";
+import LogPagination from "../components/log/LogPgination";
+import LogTable from "../components/Tables/LogData/LogDataTable";
+import TableSpinner from "../components/TableSpinner";
 
 export interface Log {
   _id: string; // MongoDB ObjectId as string
@@ -28,9 +32,6 @@ export interface Log {
 
 export default function Page() {
   const [isFilterDropDownOpen, setIsFilterDropDownOpen] = useState(true);
-
-  // States For Filteration
-
   const [fileNameFilter, setFileNameFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [oracleFilter, setOracleFilter] = useState("");
@@ -47,7 +48,7 @@ export default function Page() {
   const router = useRouter();
 
   useEffect(() => {
-    const fullUrl = window.location.href; // includes protocol, hostname, port, and path
+    const fullUrl = window.location.href;
     console.log(fullUrl);
   }, []);
 
@@ -122,16 +123,12 @@ export default function Page() {
         queryParams.set("oracleFilter", filters.connectionResult);
 
       console.log(queryParams.toString());
-      // const searchParam = searchQuery
-      //   ? `&search=${encodeURIComponent(searchQuery)}`
-      //   : "";
       const response = await fetch(
         `/api/get-logs/?${PageParam}&${queryParams.toString()}&limit=${limit}`
       );
 
       if (response.ok) {
         const data = await response.json();
-        console.log("data-> ", data);
         setLogs(data.logs);
         setTotalPages(data.totalPages);
         setTotalLogs(data.totalLogs);
@@ -169,8 +166,8 @@ export default function Page() {
     console.log("Filters applied:", fileNameFilter);
     sessionStorage.setItem("fileName", fileNameFilter);
     sessionStorage.setItem("statusFilter", statusFilter);
-      sessionStorage.setItem("submittedFilter", submittedFilter);
-      sessionStorage.setItem("oracleFilter", oracleFilter);
+    sessionStorage.setItem("submittedFilter", submittedFilter);
+    sessionStorage.setItem("oracleFilter", oracleFilter);
 
     fetchUsers();
   };
@@ -178,8 +175,8 @@ export default function Page() {
   const resetFiltersAndFetch = async () => {
     sessionStorage.setItem("fileName", "");
     sessionStorage.setItem("statusFilter", "");
-      sessionStorage.setItem("submittedFilter", "");
-      sessionStorage.setItem("oracleFilter", "");
+    sessionStorage.setItem("submittedFilter", "");
+    sessionStorage.setItem("oracleFilter", "");
     setFileNameFilter("");
     setStatusFilter("");
     setSubmittedFilter("");
@@ -187,19 +184,6 @@ export default function Page() {
     await fetchUsers();
   };
 
-  const handleRouteChange = () => {
-    if (typeof window !== "undefined") {
-      const filters = {
-        fileNameFilter,
-        statusFilter,
-        submittedFilter,
-        oracleFilter,
-      };
-      Object.entries(filters).forEach(([key, value]) => {
-        sessionStorage.setItem(key, value);
-      });
-    }
-  };
 
   const handleRowSelection = (id: string) => {
     setSelectedRows((prevSelectedRows) =>
@@ -510,132 +494,26 @@ export default function Page() {
 
           {loadingTable ? (
             <div className="flex justify-center items-center">
-              <Spinner />
+              <TableSpinner />
             </div>
           ) : logs.length === 0 ? (
-            <div className="flex flex-col items-center mt-20">
-              <Image
-                src="/images/no_request.svg"
-                alt="No jobs found"
-                width={200}
-                height={200}
-                priority
-                style={{ width: "auto", height: "auto" }}
-              />
-            </div>
+            <NoData />
           ) : (
-            <table className="min-w-full bg-white border-gray-300">
-              <thead>
-                <tr className="text-xl text-gray-800">
-                  <th className="py-2 px-4 border-b text-start min-w-44 max-w-44 sticky left-0 bg-white z-20">
-                    <span className="mr-3">
-                      <input
-                        type="checkbox"
-                        checked={isAllSelected}
-                        onChange={handleSelectAll}
-                      />
-                    </span>
-                    File Name
-                  </th>
-                  <th className="py-2 px-4 border-b text-center font-medium">
-                    Message
-                  </th>
-                  <th className="py-2 px-4 border-b text-center font-medium">
-                    Submitted At
-                  </th>
-                  <th className="py-2 px-4 border-b text-center font-medium">
-                    Oracle Connection
-                  </th>
-
-                  <th className="py-2 px-4 border-b text-center font-medium">
-                    Status
-                  </th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {logs.map((logs: Log) => (
-                  <tr key={logs._id} className="text-gray-600">
-                    <td className="py-2 px-4 border-b text-start m-0 sticky left-0 bg-white z-10">
-                      <span className="mr-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedRows.includes(logs._id)}
-                          onChange={() => handleRowSelection(logs._id)}
-                        />
-                      </span>
-                      <Link
-                        href={`/extracted-data-monitoring/${logs._id}`}
-                        onClick={() => {
-                          handleRouteChange();
-                          localStorage.setItem("prev", "");
-                        }}
-                        className="group"
-                      >
-                        <span className="text-[#005B97] underline group-hover:text-blue-500 transition-all duration-500 transform group-hover:scale-110">
-                          {logs.fileName}
-                        </span>
-                      </Link>
-                    </td>
-
-                    <td className="py-1 px-4 border-b text-center">
-                      {logs.message}
-                    </td>
-                    <td className="py-1 px-4 border-b text-center text-gray-500">
-                      {new Date(logs.timestamp).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </td>
-                    <td className="py-1 px-4 border-b text-center">
-                      {logs.connectionResult}
-                    </td>
-                    <td className="py-1 px-4 border-b text-center">
-                      {logs.status}
-                    </td>
-                    <td className="py-1 px-4 border-b text-center ">
-                      <Link
-                        href={`/logs/${logs?._id}`}
-                        className="text-[#005B97] hover:underline"
-                      >
-                        Details
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <LogTable
+              logs={logs}
+              selectedRows={selectedRows}
+              onRowSelect={handleRowSelection}
+              onSelectAll={handleSelectAll}
+              allSelected={isAllSelected}
+            />
           )}
 
-          {loadingTable || totalPages === 0 || logs.length === 0 ? null : (
-            <div className="mt-4 flex justify-end items-center gap-4 text-gray-800">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`px-4 py-2 rounded-md ${
-                  currentPage === 1
-                    ? "bg-gray-300 cursor-not-allowed"
-                    : "bg-blue-500 text-white hover:bg-blue-600"
-                }`}
-              >
-                Previous
-              </button>
-              <span>
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className={`px-4 py-2 rounded-md ${
-                  currentPage === totalPages
-                    ? "bg-gray-300 cursor-not-allowed"
-                    : "bg-blue-500 text-white hover:bg-blue-600"
-                }`}
-              >
-                Next
-              </button>
-            </div>
+          {!loadingTable && totalPages > 0 && logs.length > 0 && (
+            <LogPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
           )}
         </div>
       </div>
