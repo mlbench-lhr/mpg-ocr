@@ -26,21 +26,28 @@ export async function GET(req: Request) {
     }
 
     const url = new URL(req.url);
-    const page = parseInt(url.searchParams.get("page") || "1", 10);
-    const limit = parseInt(url.searchParams.get("limit") || "10", 10);
+
+    // Safe page parsing
+    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
+
+    // ✅ Safe limit parsing with default fallback to 100
+    let limit = parseInt(url.searchParams.get("limit") || "", 10);
+    if (isNaN(limit) || limit <= 0) limit = 100;
+
     const offset = (page - 1) * limit;
 
-    // Extract all query parameters as filters
+    // Extract all filters
     const filters: Record<string, string> = {};
     url.searchParams.forEach((value, key) => {
-      if (key !== "page" && key !== "limit" && value !== "") {
+      if (!["page", "limit"].includes(key) && value !== "") {
         filters[key] = value;
       }
     });
 
     console.log("✅ Received Filters:", filters);
+    console.log("✅ Page:", page, "| Limit:", limit, "| Offset:", offset);
 
-    // Define which fields are DATE in the Oracle table
+    // Define date fields
     const dateFields = new Set([
       "crtd_dtt",
       "sent_file_dtt",
@@ -48,9 +55,9 @@ export async function GET(req: Request) {
       "uptd_dtt"
     ]);
 
-    // Build WHERE clause and binds
+    // WHERE clause and binds
     const whereClauses: string[] = [];
-const binds: Record<string, string | number> = {};
+    const binds: Record<string, string | number> = {};
 
     for (const [key, value] of Object.entries(filters)) {
       if (dateFields.has(key)) {

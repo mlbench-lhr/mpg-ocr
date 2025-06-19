@@ -1,0 +1,21 @@
+export type POD = {
+  FILE_ID: string;
+  CRTD_USR_CD: string;
+  CRTD_DTT: string;
+  SENT_FILE_DTT: string;
+  OCR_BOLNO: string;
+  OCR_ISSQTY: number;
+  OCR_RCVQTY: number;
+  OCR_STMP_SIGN: string;
+  OCR_SYMT_NONE: string;
+  OCR_SYMT_DAMG: string;
+  OCR_SYMT_SHRT: string;
+  OCR_SYMT_ORVG: string;
+  OCR_SYMT_REFS: string;
+  RECV_DATA_DTT: string;
+  UPTD_USR_CD: string;
+  UPTD_DTT: string;
+  OCR_STMP_POD_DTT: string;
+  RNUM: number;
+  OCR_SYMT_SEAL: string;
+};

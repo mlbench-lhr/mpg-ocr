@@ -91,7 +91,7 @@ export async function PUT(req: Request) {
 
     for (const job of jobsToUpdate) {
       let { fileId } = job;
-      
+
       const file_name = job.pdfUrl.split("/").pop() || "";
       const currentYear = new Date().getFullYear();
       const fileTable = `${process.env.ORACLE_DB_USER_NAME}.XTI_${currentYear}_T`;
@@ -140,7 +140,7 @@ export async function PUT(req: Request) {
 
       // handle podDate formatting...
       let podDateValue = null;
-      if (job.podDate) {
+      if (job.OCR_STMP_POD_DTT) {
         const columnTypeQuery = await conn.execute(
           `SELECT DATA_TYPE 
          FROM ALL_TAB_COLUMNS 
@@ -153,7 +153,9 @@ export async function PUT(req: Request) {
           | undefined;
         const columnType = rows?.[0]?.DATA_TYPE ?? null;
         podDateValue =
-          columnType === "DATE" ? new Date(job.podDate) : job.podDate;
+          columnType === "DATE"
+            ? new Date(job.OCR_STMP_POD_DTT)
+            : job.OCR_STMP_POD_DTT;
       }
 
       // check for existing record in OCR table
@@ -183,17 +185,17 @@ export async function PUT(req: Request) {
              UPTD_DTT = SYSDATE
          WHERE FILE_ID = :fileId`,
           {
-            bolNo: job.blNumber,
-            issQty: job.totalQty,
-            rcvQty: job.received,
-            podDate: podDateValue,
-            sign: job.podSignature,
-            symtNone: "N",
-            symtDamg: job.damaged,
-            symtShrt: job.short,
-            symtOrvg: job.over,
-            symtRefs: job.refused,
-            symtSeal: job.sealIntact,
+            bolNo: job.OCR_BOLNO,
+            issQty: job.OCR_ISSQTY,
+            rcvQty: job.OCR_RCVQTY,
+            podDate: job.OCR_STMP_POD_DTT,
+            sign: job.OCR_STMP_SIGN,
+            symtNone: job.OCR_SYMT_NONE === "yes" ? "Y" : "N",
+            symtDamg: job.OCR_SYMT_DAMG,
+            symtShrt: job.OCR_SYMT_SHRT,
+            symtOrvg: job.OCR_SYMT_ORVG,
+            symtRefs: job.OCR_SYMT_REFS,
+            symtSeal: job.OCR_SYMT_SEAL === "yes" ? "Y" : "N",
             fileId,
           }
         );
@@ -216,17 +218,17 @@ export async function PUT(req: Request) {
            SYSDATE, 'OCR', SYSDATE)`,
           {
             fileId,
-            bolNo: job.blNumber,
-            issQty: job.totalQty,
-            rcvQty: job.received,
+            bolNo: job.OCR_BOLNO,
+            issQty: job.OCR_ISSQTY,
+            rcvQty: job.OCR_RCVQTY,
             podDate: podDateValue,
-            sign: job.podSignature,
-            symtNone: "N",
-            symtDamg: job.damaged,
-            symtShrt: job.short,
-            symtOrvg: job.over,
-            symtRefs: job.refused,
-            symtSeal: job.sealIntact,
+            sign: job.OCR_STMP_SIGN,
+            symtNone: job.OCR_SYMT_NONE === "yes" ? "Y" : "N",
+            symtDamg: job.OCR_SYMT_DAMG,
+            symtShrt: job.OCR_SYMT_SHRT,
+            symtOrvg: job.OCR_SYMT_ORVG,
+            symtRefs: job.OCR_SYMT_REFS,
+            symtSeal: job.OCR_SYMT_SEAL === "yes" ? "Y" : "N",
           }
         );
         logs.push({
