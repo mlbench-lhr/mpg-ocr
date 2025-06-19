@@ -31,7 +31,7 @@ export async function GET() {
     // Close the connection
     await connection.close();
 
-    return NextResponse.json({ status: "z" }, { status: 200 });
+    return NextResponse.json({ status: "online" }, { status: 200 });
 
   } catch (error) {
     if (error instanceof Error) {

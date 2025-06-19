@@ -10,6 +10,7 @@ const FileNameCell = ({ pdfUrl, fileId }: FileNameCellProps) => {
 
   // Extract file name from either pdfUrl or fileId
   const fileName = pdfUrl?.split("/").pop() || fileId || "No PDF Available";
+  console.log("Filename ->",fileName);
 
   const isTruncated = fileName.length > 15 && !showFull;
   const displayName = isTruncated ? fileName.substring(0, 15) + "..." : fileName;

@@ -1,173 +1,114 @@
-// import { NextResponse } from 'next/server';
-// import clientPromise from "@/lib/mongodb";
-// import { ObjectId, WithId } from "mongodb";
-// import { Document } from 'bson';
-
-
-// export async function POST(req: Request) {
-//     try {
-//         const dataArray = await req.json();
-
-//         if (!Array.isArray(dataArray)) {
-//             return NextResponse.json({ error: "Input must be an array of objects" }, { status: 400 });
-//         }
-
-//         const requiredFields = [
-//             "blNumber", "jobId", "pdfUrl", "podDate", "podSignature", "totalQty",
-//             "received", "damaged", "short", "over", "refused", "customerOrderNum", "stampExists",
-//             "finalStatus", "reviewStatus", "recognitionStatus", "breakdownReason", "reviewedBy", "cargoDescription"
-//         ];
-
-//         const client = await clientPromise;
-//         const db = client.db(DB_NAME);
-
-//         const bulkOps = [];
-//         const jobIds = Array.from(new Set(dataArray.map(data => data.jobId).filter(jobId => !!jobId))).map(id => new ObjectId(id));
-
-//         const jobs = await db.collection("jobs").find({ _id: { $in: jobIds } }).toArray();
-//         const jobMap = jobs.reduce<Record<string, WithId<Document>>>((map, job) => {
-//             map[job._id.toString()] = job;
-//             return map;
-//         }, {});
-
-
-
-//         for (const data of dataArray) {
-//             for (const field of requiredFields) {
-//                 // if (!(field in data)) {
-//                 //     return NextResponse.json({ error: `${field} is missing in one of the objects` }, { status: 400 });
-//                 // }
-
-//                 if (typeof data[field] === "string") {
-//                     data[field] = data[field].trim();
-//                 }
-//             }
-
-//             const { jobId } = data;
-//             if (!jobId) {
-//                 return NextResponse.json({ error: "jobId is missing in one of the objects" }, { status: 400 });
-//             }
-
-//             const job = jobMap[jobId];
-
-//             if (!job) {
-//                 return NextResponse.json({ error: `Job not found for jobId: ${jobId}` }, { status: 404 });
-//             }
-
-//             data.jobName = job.jobName;
-
-//             if (typeof data.blNumber === "number") {
-//                 data.blNumber = data.blNumber.toString();
-//             }
-
-//             bulkOps.push({
-//                 insertOne: {
-//                     document: {
-//                         ...data,
-//                         createdAt: new Date(),
-//                         // updatedAt: new Date(),
-//                     },
-//                 },
-//             });
-//         }
-
-//         if (bulkOps.length > 0) {
-//             const result = await db.collection("mockData").bulkWrite(bulkOps);
-//             return NextResponse.json({ message: "Data saved successfully", insertedCount: result.insertedCount }, { status: 200 });
-//         } else {
-//             return NextResponse.json({ error: "No valid data to save" }, { status: 400 });
-//         }
-//     } catch (error) {
-//         console.log("Error saving mock data:", error);
-//         return NextResponse.json({ error: "Failed to save mock data" }, { status: 500 });
-//     }
-// }
-
-
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { FileData, FileDataProps } from "@/lib/FileData";
 
 const DB_NAME = process.env.DB_NAME || "my-next-app";
 
 export async function POST(req: Request) {
   try {
     const dataArray = await req.json();
-
     if (!Array.isArray(dataArray)) {
-      return NextResponse.json({ error: "Input must be an array of objects" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Input must be an array of objects" },
+        { status: 400 }
+      );
     }
-
-    const requiredFields = [
-      "blNumber", "jobId", "pdfUrl", "podDate", "podSignature", "totalQty",
-      "received", "damaged", "short", "over", "refused", "customerOrderNum", "stampExists",
-      "finalStatus", "reviewStatus", "recognitionStatus", "breakdownReason", "reviewedBy", "cargoDescription"
-    ];
 
     const client = await clientPromise;
     const db = client.db(DB_NAME);
 
-    // Fetch existing documents with the same pdfUrl to avoid duplicate entries
-    const existingRecords = await db.collection("mockData").find(
-      { pdfUrl: { $in: dataArray.map(d => d.pdfUrl) } }
-    ).toArray();
+    const pdfUrls = dataArray.map((d) => d.pdfUrl);
+    const existingRecords = await db
+      .collection("mockData")
+      .find({ pdfUrl: { $in: pdfUrls } })
+      .toArray();
 
-    // Create a map of existing pdfUrls
-    const existingMap = new Map(existingRecords.map(record => [record.pdfUrl, record]));
+    const existingMap = new Map(
+      existingRecords.map((record) => [record.pdfUrl, record])
+    );
 
     const bulkOps = [];
 
-    for (const data of dataArray) {
-      for (const field of requiredFields) {
-        if (typeof data[field] === "string") {
-          data[field] = data[field].trim();
+    for (const rawData of dataArray) {
+      // Trim string fields
+      for (const key in rawData) {
+        if (typeof rawData[key] === "string") {
+          rawData[key] = rawData[key].trim();
         }
       }
 
-      const intFields = ["totalQty", "received", "damaged", "short", "over", "refused"];
+      // Convert numeric fields
+      const intFields = [
+        "OCR_ISSQTY",
+        "OCR_RCVQTY",
+        "OCR_SYMT_DAMG",
+        "OCR_SYMT_SHRT",
+        "OCR_SYMT_ORVG",
+        "OCR_SYMT_REFS",
+      ];
       for (const field of intFields) {
-        const value = data[field];
-        if (typeof value === "string" && /^\d+$/.test(value)) {
-          data[field] = parseInt(value, 10);
+        const val = rawData[field];
+        if (typeof val === "string" && /^\d+$/.test(val)) {
+          rawData[field] = parseInt(val, 10);
         }
       }
-      
-      const { jobId, pdfUrl } = data;
 
-      // Ensure jobId is properly assigned
-      if (!jobId || jobId.trim() === "") {
-        data.jobId = "";
-        data.jobName = "";
+      // Resolve job name if jobId is given
+      if (!rawData.jobId || rawData.jobId.trim() === "") {
+        rawData.jobId = "";
+        rawData.jobName = "";
       } else {
-        const job = await db.collection("jobs").findOne({ _id: new ObjectId(jobId) });
-        data.jobName = job ? job.jobName : "";
+        const job = await db
+          .collection("jobs")
+          .findOne({ _id: new ObjectId(rawData.jobId) });
+        rawData.jobName = job ? job.jobName : "";
       }
 
-      // if (typeof data.blNumber === "number") {
-      //   data.blNumber = data.blNumber.toString();
-      // }
-
-      if (typeof data.blNumber === "string" && /^\d+$/.test(data.blNumber)) {
-        data.blNumber = parseInt(data.blNumber, 10);
+      // Convert blNumber
+      if (typeof rawData.blNumber === "string" && /^\d+$/.test(rawData.blNumber)) {
+        rawData.blNumber = parseInt(rawData.blNumber, 10);
       }
 
-      // If pdfUrl already exists, update it instead of inserting a new record
+      // Set FILE_ID if missing
+      if (!rawData.FILE_ID && rawData.pdfUrl) {
+        const filename = rawData.pdfUrl.split("/").pop() || "";
+        rawData.FILE_ID = filename.replace(/\.[^/.]+$/, "");
+      }
+
+      // Build file data object
+      const fileData: FileDataProps = FileData.fromMongoDB({
+        ...rawData,
+        uptd_Usr_Cd: rawData.uptd_Usr_Cd || "OCR",
+      });
+
+      const { pdfUrl } = fileData;
+
+      // 🛡️ Preserve FILE_DATA if record already exists
       if (existingMap.has(pdfUrl)) {
+        const existing = existingMap.get(pdfUrl);
+
+        console.log("Check FILE_DATA", existing);
+      
+        const mergedData = {
+          ...fileData,
+          FILE_DATA: existing?.FILE_DATA ?? "", // ✅ Safe optional access
+        };
+      
         bulkOps.push({
           updateOne: {
             filter: { pdfUrl },
-            update: { $set: { ...data } }
-            // update: { $set: { ...data, updatedAt: new Date() } }
-          }
+            update: { $set: mergedData },
+          },
         });
       } else {
         bulkOps.push({
           insertOne: {
             document: {
-              ...data,
+              ...fileData,
               createdAt: new Date(),
-            }
-          }
+            },
+          },
         });
       }
     }
@@ -175,16 +116,24 @@ export async function POST(req: Request) {
     if (bulkOps.length > 0) {
       const result = await db.collection("mockData").bulkWrite(bulkOps);
       return NextResponse.json(
-        { message: "Data processed successfully", modifiedCount: result.modifiedCount, insertedCount: result.insertedCount },
+        {
+          message: "Data processed successfully",
+          modifiedCount: result.modifiedCount,
+          insertedCount: result.insertedCount,
+        },
         { status: 200 }
       );
     } else {
-      return NextResponse.json({ error: "No valid data to process" }, { status: 400 });
+      return NextResponse.json(
+        { error: "No valid data to process" },
+        { status: 400 }
+      );
     }
   } catch (error) {
     console.error("Error saving/updating mock data:", error);
-    return NextResponse.json({ error: "Failed to save/update mock data" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to save/update mock data" },
+      { status: 500 }
+    );
   }
 }
-
-

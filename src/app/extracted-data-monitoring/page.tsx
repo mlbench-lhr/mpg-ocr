@@ -24,6 +24,9 @@ import TableSpinner from "../components/TableSpinner";
 import UploadModal from "../components/UploadModal";
 import { FiUpload } from "react-icons/fi";
 import FileNameCell from "../components/UI/FileNameCell";
+import { FileData } from "@/lib/FileData";
+import ExtractedDataTable from "../components/Tables/ExtractedData/ExtractedDataTable";
+// import { convertFileToBase64 } from "@/lib/fileUtils";
 
 type FinalStatus =
   | "new"
@@ -54,29 +57,30 @@ type ResultItem = {
 
 interface Job {
   _id: string;
-  fileId?: string;
-  blNumber: string;
+  FILE_ID?: string;
+  OCR_BOLNO: string;
   pdfUrl?: string;
   jobName: string;
-  podDate: string;
+  OCR_STMP_POD_DTT: string;
   deliveryDate: Date;
-  podSignature: string;
-  totalQty: number;
-  received: number;
-  damaged: number;
-  short: number;
-  over: number;
-  refused: number;
+  OCR_STMP_SIGN: string;
+  OCR_ISSQTY: number;
+  OCR_RCVQTY: number;
+  OCR_SYMT_DAMG: number;
+  OCR_SYMT_SHRT: number;
+  OCR_SYMT_ORVG: number;
+  OCR_SYMT_REFS: number;
   noOfPages: number;
-  stampExists: string;
+  OCR_SYMT_NONE: string;
   finalStatus: FinalStatus;
   reviewStatus: ReviewStatus;
   recognitionStatus: RecognitionStatus;
   breakdownReason: BreakdownReason;
   reviewedBy: string;
-  sealIntact: string;
+  UPTD_USR_CD: string;
+  OCR_SYMT_SEAL: string;
   cargoDescription: string;
-  createdAt: string;
+  CRTD_DTT: string;
   updatedAt?: string;
   customerOrderNum?: string | string[] | null;
 }
@@ -227,7 +231,7 @@ const MasterPage = () => {
       sessionStorage.getItem("bolNumberFilter")
     );
   };
- 
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       if (localStorage.getItem("prev") === "") {
@@ -368,33 +372,6 @@ const MasterPage = () => {
     );
   };
 
-  // useEffect(() => {
-  //   const fetchStatus = async () => {
-  //     try {
-  //       const response = await fetch("/api/jobs/ocr");
-  //       const data = await response.json();
-  //       setIsOcrRunning(data.status === "start");
-  //     } catch (error) {
-  //       console.error("Error fetching OCR status:", error);
-  //     }
-  //   };
-
-  //   fetchStatus();
-  // }, []);
-
-  // useEffect(() => {
-  //   async function fetchOcrApiUrl() {
-  //     const res = await fetch("/api/ipAddress/ip-address");
-  //     const data = await res.json();
-
-  //     if (data.ip) {
-  //       setOcrApiUrl(`http://${data.ip}:8080/run-ocr`);
-  //     }
-  //   }
-
-  //   fetchOcrApiUrl();
-  // }, []);
-
   useEffect(() => {
     const fetchStatus = async () => {
       try {
@@ -447,9 +424,7 @@ const MasterPage = () => {
     .map((rowId) => {
       const job = master.find((job) => job._id === rowId);
 
-      if (job && (!job.blNumber || !job.podSignature?.trim()) && job.pdfUrl) {
-        // const fileName = job.pdfUrl.split("/").pop() || "";
-        // return { file_url_or_path: `/api/access-file?filename=${fileName}` };
+      if (job && (!job.OCR_BOLNO || !job.OCR_STMP_SIGN?.trim()) && job.pdfUrl) {
         const fileName = job.pdfUrl.split("/").pop() || "";
         return {
           file_url_or_path: `${baseUrl}/api/access-file?filename=${encodeURIComponent(
@@ -506,18 +481,12 @@ const MasterPage = () => {
     setIsProcessModalOpen(true);
     setProgress({});
 
-    // const pdfFiles = selectedRows
-    //   .map((rowId) => {
-    //     const job = master.find((job) => job._id === rowId);
-    //     return job ? { file_url_or_path: job.pdfUrl } : null;
-    //   })
-    //   .filter((file) => file !== null);
-
     async function processPdfsSequentially() {
       for (const pdfFile of pdfFiles) {
         if (!pdfFile?.file_url_or_path) continue;
 
         const filePath = pdfFile.file_url_or_path;
+        console.log(filePath);
 
         setProgress((prev) => ({
           ...prev,
@@ -526,7 +495,7 @@ const MasterPage = () => {
 
         try {
           // const OCR_API_URL = process.env.NEXT_PUBLIC_OCR_API_URL ?? "";
-
+          // console.log("Selected Rows",selectedRows);
           const ocrResponse = await fetch(ocrApiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -540,6 +509,7 @@ const MasterPage = () => {
           }
 
           const ocrData = await ocrResponse.json();
+          // const fileBase64 = await convertFileToBase64(filePath);
 
           if (ocrData && Array.isArray(ocrData)) {
             const processedDataArray = ocrData.map((data) => {
@@ -564,26 +534,28 @@ const MasterPage = () => {
               return {
                 jobId: null,
                 pdfUrl: decodedFilePath,
+                FILE_ID: data?._id,
+                FILE_NAME: filename,
                 deliveryDate: new Date().toISOString().split("T")[0],
                 noOfPages: 1,
-                blNumber: data?.B_L_Number || "",
-                podDate: data?.POD_Date || "",
-                podSignature:
+                OCR_BOLNO: data?.B_L_Number || "",
+                OCR_STMP_POD_DTT: data?.POD_Date || "",
+                OCR_STMP_SIGN:
                   data?.Signature_Exists === "yes"
                     ? "yes"
                     : data?.Signature_Exists === "no"
                     ? "no"
                     : data?.Signature_Exists,
-                totalQty: isNaN(data?.Issued_Qty)
+                OCR_ISSQTY: isNaN(data?.Issued_Qty)
                   ? data?.Issued_Qty
                   : Number(data?.Issued_Qty),
-                received: data?.Received_Qty,
-                damaged: data?.Damage_Qty,
-                short: data?.Short_Qty,
-                over: data?.Over_Qty,
-                refused: data?.Refused_Qty,
+                OCR_RCVQTY: data?.Received_Qty,
+                OCR_SYMT_DAMG: data?.Damage_Qty,
+                OCR_SYMT_SHRT: data?.Short_Qty,
+                OCR_SYMT_ORVG: data?.Over_Qty,
+                OCR_SYMT_REFS: data?.Refused_Qty,
                 customerOrderNum: data?.Customer_Order_Num,
-                stampExists:
+                OCR_SYMT_NONE:
                   data?.Stamp_Exists === "yes"
                     ? "yes"
                     : data?.Stamp_Exists === "no"
@@ -593,9 +565,9 @@ const MasterPage = () => {
                 reviewStatus: "unConfirmed",
                 recognitionStatus: recognitionStatus,
                 breakdownReason: "none",
-                reviewedBy: "OCR Engine",
+                UPTD_USR_CD: "OCR Engine",
                 cargoDescription: "Processed from OCR API.",
-                sealIntact:
+                OCR_SYMT_SEAL:
                   data?.Seal_Intact === "yes"
                     ? "Y"
                     : data?.Seal_Intact === "no"
@@ -813,17 +785,17 @@ const MasterPage = () => {
     try {
       setLoadingTable(true);
       const filters = {
-        bolNumber: sessionStorage.getItem("bolNumberFilter") || "",
+        OCR_BOLNO: sessionStorage.getItem("bolNumberFilter") || "",
         finalStatus: sessionStorage.getItem("finalStatusFilter") || "",
         reviewStatus: sessionStorage.getItem("reviewStatusFilter") || "",
         reasonStatus: sessionStorage.getItem("reasonStatusFilter") || "",
         reviewByStatus: sessionStorage.getItem("reviewByStatusFilter") || "",
         uptd_Usr_Cd: sessionStorage.getItem("uptd_Usr_Cd") || "",
-        podDate: sessionStorage.getItem("podDateFilter") || "",
-        createdDate: sessionStorage.getItem("createdDateFilter") || "",
+        OCR_STMP_POD_DTT: sessionStorage.getItem("podDateFilter") || "",
+        CRTD_DTT: sessionStorage.getItem("createdDateFilter") || "",
         updatedDate: sessionStorage.getItem("updatedDateFilter") || "",
 
-        podDateSignature:
+        OCR_STMP_SIGN:
           sessionStorage.getItem("podDateSignatureFilter") || "",
         jobName: sessionStorage.getItem("jobNameFilter") || "",
         sortColumn,
@@ -833,7 +805,9 @@ const MasterPage = () => {
       const queryParams = new URLSearchParams();
       queryParams.set("page", currentPage.toString());
 
-      if (filters.bolNumber) queryParams.set("bolNumber", filters.bolNumber);
+      console.log("querry params-> ", filters);
+
+      if (filters.OCR_BOLNO) queryParams.set("bolNumber", filters.OCR_BOLNO);
       if (filters.finalStatus)
         queryParams.set("recognitionStatus", filters.finalStatus);
       if (filters.reviewStatus)
@@ -842,13 +816,13 @@ const MasterPage = () => {
         queryParams.set("breakdownReason", filters.reasonStatus);
       if (filters.uptd_Usr_Cd)
         queryParams.set("uptd_Usr_Cd", filters.uptd_Usr_Cd);
-      if (filters.podDate) queryParams.set("podDate", filters.podDate);
+      if (filters.OCR_STMP_POD_DTT) queryParams.set("podDate", filters.OCR_STMP_POD_DTT);
       if (filters.updatedDate)
         queryParams.set("updatedDate", filters.updatedDate);
-      if (filters.createdDate)
-        queryParams.set("createdDate", filters.createdDate);
-      if (filters.podDateSignature)
-        queryParams.set("podDateSignature", filters.podDateSignature.trim());
+      if (filters.CRTD_DTT)
+        queryParams.set("createdDate", filters.CRTD_DTT);
+      if (filters.OCR_STMP_SIGN)
+        queryParams.set("podDateSignature", filters.OCR_STMP_SIGN.trim());
       if (filters.jobName) queryParams.set("jobName", filters.jobName.trim());
 
       if (filters.sortColumn.length) {
@@ -866,9 +840,6 @@ const MasterPage = () => {
 
         queryParams.set("sortOrder", sortOrders.join(","));
       }
-
-      // console.log("Query Params:", queryParams.toString());
-
       const response = await fetch(
         `/api/process-data/get-data/?${queryParams.toString()}`
       );
@@ -880,7 +851,7 @@ const MasterPage = () => {
       }
 
       const data = await response.json();
-      console.log("data-> ", data);
+      console.log("data job-> ", data);
       setMaster(data.jobs);
       setTotalPages(data.totalPages);
       setTotalJobs(data.totalJobs);
@@ -960,7 +931,7 @@ const MasterPage = () => {
     setReviewByStatusFilter("");
     setPodDateFilter("");
     setCreatedDateFilter("");
-    setUpdatedDateFilter("")
+    setUpdatedDateFilter("");
     setPodDateSignatureFilter("");
     setJobNameFilter("");
     setBolNumberFilter("");
@@ -1481,7 +1452,7 @@ const MasterPage = () => {
                   htmlFor="finalStatusFilter"
                   className="text-sm font-semibold text-gray-800"
                 >
-                  UPTD_USR_CD
+                  Update User
                 </label>
                 <div className="relative">
                   <select
@@ -1743,7 +1714,8 @@ const MasterPage = () => {
                         .filter((rowId) => {
                           const job = master.find((job) => job._id === rowId);
                           return (
-                            job && (!job.blNumber || !job.podSignature?.trim())
+                            job &&
+                            (!job.OCR_BOLNO || !job.OCR_STMP_POD_DTT?.trim())
                           );
                         })
                         .map((rowId) => {
@@ -1857,651 +1829,38 @@ const MasterPage = () => {
             </div>
           )}
 
-          {/* {isOcrRunning && (
-            <div className="flex items-center justify-between gap-5">
-              <div className="w-full">
-                <div className="w-full bg-gray-200 rounded-full h-4">
-                  <div className="bg-[#005B97] h-4 rounded-full" style={{ width: `${progress}%` }}></div>
-                </div>
-              </div>
-              <div>
-                <p className="text-2xl text-[#005B97] font-semibold">
-                  {progress}/<span className="text-black">100(%)</span>
-                </p>
-              </div>
-            </div>
-          )} */}
-
-          <div className="py-3 mx-auto z-10">
-            {master.length === 0 && !loadingTable ? (
-              <div className="flex flex-col items-center mt-20">
-                <span className="text-gray-800 text-xl shadow-xl p-4 rounded-lg">
-                  No data found
-                </span>
-              </div>
-            ) : (
-              <div
-                className={`overflow-x-auto w-full relative ${
-                  isFilterDropDownOpen
-                    ? "2xl:h-[700px] md:h-[170px] sm:h-[150px]"
-                    : "2xl:h-[900px] md:h-[460px] sm:h-[450px]"
-                }`}
-              >
-                {/* <div className={`overflow-x-auto w-full relative`}> */}
-                <table className="table-auto min-w-full w-full border-collapse">
-                  <thead className="sticky top-0 bg-white z-20 shadow-md">
-                    <tr className="text-gray-800">
-                      <th className="py-2 px-4 border-b text-start min-w-44 max-w-44 sticky left-0 bg-white z-20">
-                        <span className="mr-3">
-                          <input
-                            type="checkbox"
-                            checked={isAllSelected}
-                            onChange={handleSelectAll}
-                          />
-                        </span>
-                        BL Number
-                      </th>
-                      <th className="py-2 px-4 border-b text-center min-w-44 max-w-44 sticky left-44 bg-white z-10">
-                        Uploaded File
-                      </th>
-                      <th className="py-2 px-4 border-b text-center min-w-44 max-w-44 sticky left-[22rem] bg-white z-10">
-                        Job Name
-                      </th>
-                      <th className="py-2 px-4 border-b text-center min-w-32">
-                        POD Date
-                      </th>
-                      <th className="py-2 px-4 border-b text-center min-w-36">
-                        Stamp Exists
-                      </th>
-                      <th className="py-2 px-4 border-b text-center min-w-40">
-                        Signature Exists
-                      </th>
-                      <th className="py-2 px-4 border-b text-center min-w-36">
-                        Seal Intact
-                      </th>
-                      <th className="py-2 px-4 border-b text-center min-w-32">
-                        Issued Qty
-                      </th>
-                      <th className="py-2 px-4 border-b text-center min-w-36">
-                        Received Qty
-                      </th>
-                      <th className="py-2 px-4 border-b text-center min-w-36">
-                        Damaged Qty
-                      </th>
-                      <th className="py-2 px-4 border-b text-center min-w-28">
-                        Short Qty
-                      </th>
-                      <th className="py-2 px-4 border-b text-center min-w-28">
-                        Over Qty
-                      </th>
-                      <th className="py-2 px-4 border-b text-center min-w-32">
-                        Refused Qty
-                      </th>
-                      <th className="py-2 px-4 border-b text-center min-w-52">
-                        Customer Order Num
-                      </th>
-                      <th className="py-2 px-4 border-b text-center min-w-32">
-                        Final Status
-                      </th>
-                      <th className="py-2 px-4 border-b text-center min-w-36">
-                        Review Status
-                      </th>
-                      <th className="py-2 px-4 border-b text-center min-w-48">
-                        Recognition Status
-                      </th>
-                      <th className="py-2 px-4 border-b text-center min-w-48">
-                        Breakdown Reason
-                      </th>
-                      <th className="py-2 px-4 border-b text-center min-w-36">
-                        Reviewed By
-                      </th>
-                      <th className="py-2 px-4 border-b text-center min-w-28">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="relative">
-                    {loadingTable ? (
-                      <tr>
-                        <td
-                          colSpan={Object.keys(master[0] || {}).length}
-                          className="text-center"
-                        >
-                          <div className="flex justify-center">
-                            <TableSpinner />
-                          </div>
-                        </td>
-                      </tr>
-                    ) : master.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={9999}
-                          className="py-10 text-center text-gray-800 text-xl shadow-xl p-4 rounded-lg"
-                        >
-                          No data found
-                        </td>
-                      </tr>
-                    ) : (
-                      master.map((job) => (
-                        <tr key={job._id} className="text-gray-500">
-                          <td className="py-2 px-4 border-b text-start m-0 sticky left-0 bg-white z-10">
-                            <span className="mr-3">
-                              <input
-                                type="checkbox"
-                                checked={selectedRows.includes(job._id)}
-                                onChange={() => handleRowSelection(job._id)}
-                              />
-                            </span>
-                            <Link
-                              href={`/extracted-data-monitoring/${job._id}`}
-                              onClick={() => {
-                                handleRouteChange();
-                                localStorage.setItem("prev", "");
-                              }}
-                              className="group"
-                            >
-                              <span className="text-[#005B97] underline group-hover:text-blue-500 transition-all duration-500 transform group-hover:scale-110">
-                                {job.blNumber}
-                              </span>
-                            </Link>
-                          </td>
-                          <FileNameCell
-                            pdfUrl={job.pdfUrl}
-                            fileId={job.fileId}
-                          />
-
-                          {/* <td className="py-2 px-4 border-b text-center sticky left-44 bg-white z-10 min-w-44 max-w-44 truncate">
-                            {job.pdfUrl
-                              ? (() => {
-                                  const fileName =
-                                    job.pdfUrl
-                                      .split("/")
-                                      .pop()
-                                      ?.replace(".pdf", ".pdf") ||
-                                    "No PDF Available";
-                                  return fileName.length > 15
-                                    ? fileName.substring(0, 15) + "..."
-                                    : fileName;
-                                })()
-                              : "No PDF Available"}
-                          </td> */}
-                          <td className="py-2 px-4 border-b text-center min-w-44 max-w-44 sticky left-[22rem] bg-white z-10">
-                            {job.jobName}
-                          </td>
-                          <td className="py-2 px-4 border-b text-center">
-                            {job.podDate}
-                          </td>
-                          <td className="py-2 px-4 border-b text-center">
-                            {job.stampExists === null ||
-                            job.stampExists === undefined ? (
-                              <span className="flex justify-center items-center">
-                                {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
-                              </span>
-                            ) : (
-                              job.stampExists
-                            )}
-                          </td>
-                          <td className="py-2 px-4 border-b text-center">
-                            {job.podSignature === null ||
-                            job.podSignature === undefined ? (
-                              <span className="flex justify-center items-center">
-                                {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
-                              </span>
-                            ) : (
-                              job.podSignature
-                            )}
-                          </td>
-                          <td className="py-2 px-4 border-b text-center">
-                            {job.sealIntact === null ||
-                            job.sealIntact === undefined ? (
-                              <span className="flex justify-center items-center">
-                                {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
-                              </span>
-                            ) : (
-                              job.sealIntact
-                            )}
-                          </td>
-                          <td className="py-2 px-4 border-b text-center">
-                            {job.totalQty === null ||
-                            job.totalQty === undefined ? (
-                              <span className="flex justify-center items-center">
-                                {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
-                              </span>
-                            ) : (
-                              job.totalQty
-                            )}
-                          </td>
-                          <td className="py-2 px-4 border-b text-center">
-                            {job.received === null ||
-                            job.received === undefined ? (
-                              <span className="flex justify-center items-center">
-                                {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
-                              </span>
-                            ) : (
-                              job.received
-                            )}
-                          </td>
-                          <td className="py-2 px-4 border-b text-center">
-                            {job.damaged === null ||
-                            job.damaged === undefined ? (
-                              <span className="flex justify-center items-center">
-                                {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
-                              </span>
-                            ) : (
-                              job.damaged
-                            )}
-                          </td>
-                          <td className="py-2 px-4 border-b text-center">
-                            {job.short === null || job.short === undefined ? (
-                              <span className="flex justify-center items-center">
-                                {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
-                              </span>
-                            ) : (
-                              job.short
-                            )}
-                          </td>
-                          <td className="py-2 px-4 border-b text-center">
-                            {job.over === null || job.over === undefined ? (
-                              <span className="flex justify-center items-center">
-                                {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
-                              </span>
-                            ) : (
-                              job.over
-                            )}
-                          </td>
-                          <td className="py-2 px-4 border-b text-center">
-                            {job.refused === null ||
-                            job.refused === undefined ? (
-                              <span className="flex justify-center items-center">
-                                {/* <IoIosInformationCircle className="text-2xl text-red-500" /> */}
-                              </span>
-                            ) : (
-                              job.refused
-                            )}
-                          </td>
-                          <td className="py-2 px-4 border-b text-center">
-                            {Array.isArray(job.customerOrderNum)
-                              ? job.customerOrderNum.join(", ")
-                              : job.customerOrderNum || ""}
-                          </td>
-                          <td className="py-2 px-4 border-b text-center">
-                            <Tippy
-                              onMount={(instance) => {
-                                parentRefFinal.current = instance;
-                              }}
-                              onHide={() => {
-                                parentRefFinal.current = null;
-                                setDropdownStates(null);
-                              }}
-                              content={
-                                <ul className="bg-white border text-center rounded-md shadow-lg w-32">
-                                  {finalOptions.map(
-                                    ({ status, color, bgColor }) => (
-                                      <li
-                                        key={status}
-                                        className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${
-                                          job.finalStatus === status
-                                            ? `${color} ${bgColor}`
-                                            : color
-                                        }`}
-                                        onClick={() => {
-                                          updateStatus(
-                                            job._id,
-                                            "finalStatus",
-                                            status,
-                                            name
-                                          );
-                                          parentRefFinal.current?.hide();
-                                        }}
-                                      >
-                                        {status}
-                                      </li>
-                                    )
-                                  )}
-                                </ul>
-                              }
-                              interactive={true}
-                              trigger="click"
-                              placement="bottom"
-                              arrow={false}
-                              zIndex={50}
-                              onShow={() => {
-                                if (userRole !== "standarduser") {
-                                  setDropdownStates(job._id);
-                                } else {
-                                  return false;
-                                }
-                              }}
-                              appendTo={() => document.body}
-                            >
-                              <div
-                                className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${
-                                  userRole !== "standarduser"
-                                    ? "cursor-pointer"
-                                    : ""
-                                } ${
-                                  job.finalStatus === "new"
-                                    ? "bg-blue-100 text-blue-600"
-                                    : job.finalStatus === "inProgress"
-                                    ? "bg-yellow-100 text-yellow-600"
-                                    : job.finalStatus === "valid"
-                                    ? "bg-green-100 text-green-600"
-                                    : job.finalStatus === "partiallyValid"
-                                    ? "bg-[#faf1be] text-[#AF9918]"
-                                    : job.finalStatus === "failure"
-                                    ? "bg-red-100 text-red-600"
-                                    : job.finalStatus === "sent"
-                                    ? "bg-green-100 text-green-600"
-                                    : "bg-gray-100 text-gray-600"
-                                }`}
-                              >
-                                <div>{job.finalStatus}</div>
-                                <RiArrowDropDownLine
-                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${
-                                    dropdownStates === job._id
-                                      ? "rotate-180"
-                                      : ""
-                                  }`}
-                                />
-                              </div>
-                            </Tippy>
-                          </td>
-                          <td className="py-2 px-4 border-b text-center">
-                            <Tippy
-                              onMount={(instance) => {
-                                parentRefReview.current = instance;
-                              }}
-                              onHide={() => {
-                                parentRefReview.current = null;
-                                setDropdownStatesFirst(null);
-                              }}
-                              content={
-                                <ul className="bg-white border text-center rounded-md shadow-lg w-32">
-                                  {reviewOptions.map(
-                                    ({ status, color, bgColor }) => (
-                                      <li
-                                        key={status}
-                                        className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${
-                                          job.reviewStatus === status
-                                            ? `${color} ${bgColor}`
-                                            : color
-                                        }`}
-                                        onClick={() => {
-                                          updateStatus(
-                                            job._id,
-                                            "reviewStatus",
-                                            status,
-                                            name
-                                          );
-                                          parentRefReview.current?.hide();
-                                        }}
-                                      >
-                                        {status}
-                                      </li>
-                                    )
-                                  )}
-                                </ul>
-                              }
-                              interactive={true}
-                              trigger="click"
-                              placement="bottom"
-                              arrow={false}
-                              zIndex={50}
-                              onShow={() => {
-                                if (userRole !== "standarduser") {
-                                  setDropdownStatesFirst(job._id);
-                                } else {
-                                  return false;
-                                }
-                              }}
-                              appendTo={() => document.body}
-                            >
-                              <div
-                                className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${
-                                  userRole !== "standarduser"
-                                    ? "cursor-pointer"
-                                    : ""
-                                } ${
-                                  job.reviewStatus === "unConfirmed"
-                                    ? "bg-yellow-100 text-yellow-600"
-                                    : job.reviewStatus === "confirmed"
-                                    ? "bg-green-100 text-green-600"
-                                    : job.reviewStatus === "denied"
-                                    ? "bg-[#faf1be] text-[#AF9918]"
-                                    : job.reviewStatus === "deleted"
-                                    ? "bg-red-100 text-red-600"
-                                    : ""
-                                }`}
-                              >
-                                <div>{job.reviewStatus}</div>
-                                <RiArrowDropDownLine
-                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${
-                                    dropdownStatesFirst === job._id
-                                      ? "rotate-180"
-                                      : ""
-                                  }`}
-                                />
-                              </div>
-                            </Tippy>
-                          </td>
-                          <td className="py-2 px-4 border-b text-center">
-                            <Tippy
-                              onMount={(instance) => {
-                                parentRefRecognition.current = instance;
-                              }}
-                              onHide={() => {
-                                parentRefRecognition.current = null;
-                                setDropdownStatesSecond(null);
-                              }}
-                              content={
-                                <ul className="bg-white border text-center rounded-md shadow-lg w-32">
-                                  {recognitionOptions.map(
-                                    ({ status, color, bgColor }) => (
-                                      <li
-                                        key={status}
-                                        className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${
-                                          job.recognitionStatus === status
-                                            ? `${color} ${bgColor}`
-                                            : color
-                                        }`}
-                                        onClick={() => {
-                                          updateStatus(
-                                            job._id,
-                                            "recognitionStatus",
-                                            status,
-                                            name
-                                          );
-                                          parentRefRecognition.current?.hide();
-                                        }}
-                                      >
-                                        {status}
-                                      </li>
-                                    )
-                                  )}
-                                </ul>
-                              }
-                              interactive={true}
-                              trigger="click"
-                              placement="bottom"
-                              arrow={false}
-                              zIndex={50}
-                              onShow={() => {
-                                if (userRole !== "standarduser") {
-                                  setDropdownStatesSecond(job._id);
-                                } else {
-                                  return false;
-                                }
-                              }}
-                              appendTo={() => document.body}
-                            >
-                              <div
-                                className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${
-                                  userRole !== "standarduser"
-                                    ? "cursor-pointer"
-                                    : ""
-                                } ${
-                                  job.recognitionStatus === "new"
-                                    ? "bg-blue-100 text-blue-600"
-                                    : job.recognitionStatus === "inProgress"
-                                    ? "bg-yellow-100 text-yellow-600"
-                                    : job.recognitionStatus === "valid"
-                                    ? "bg-green-100 text-green-600"
-                                    : job.recognitionStatus === "partiallyValid"
-                                    ? "bg-[#faf1be] text-[#AF9918]"
-                                    : job.recognitionStatus === "failure"
-                                    ? "bg-red-100 text-red-600"
-                                    : job.recognitionStatus === "sent"
-                                    ? "bg-green-100 text-green-600"
-                                    : ""
-                                }`}
-                              >
-                                <div>{job.recognitionStatus}</div>
-                                <RiArrowDropDownLine
-                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${
-                                    dropdownStatesSecond === job._id
-                                      ? "rotate-180"
-                                      : ""
-                                  }`}
-                                />
-                              </div>
-                            </Tippy>
-                          </td>
-                          <td className="py-2 px-4 border-b text-center">
-                            <Tippy
-                              onMount={(instance) => {
-                                parentRefBreakdown.current = instance;
-                              }}
-                              onHide={() => {
-                                parentRefBreakdown.current = null;
-                                setDropdownStatesThird(null);
-                              }}
-                              content={
-                                <ul className="bg-white border text-center rounded-md shadow-lg w-32">
-                                  {breakdownOptions.map(
-                                    ({ status, color, bgColor }) => (
-                                      <li
-                                        key={status}
-                                        className={`cursor-pointer px-3 py-1 hover:bg-blue-100 hover:text-black ${
-                                          job.breakdownReason === status
-                                            ? `${color} ${bgColor}`
-                                            : color
-                                        }`}
-                                        onClick={() => {
-                                          updateStatus(
-                                            job._id,
-                                            "breakdownReason",
-                                            status,
-                                            name
-                                          );
-                                          parentRefBreakdown.current?.hide();
-                                        }}
-                                      >
-                                        {status}
-                                      </li>
-                                    )
-                                  )}
-                                </ul>
-                              }
-                              interactive={true}
-                              trigger="click"
-                              placement="bottom"
-                              arrow={false}
-                              zIndex={50}
-                              onShow={() => {
-                                if (userRole !== "standarduser") {
-                                  setDropdownStatesThird(job._id);
-                                } else {
-                                  return false;
-                                }
-                              }}
-                              appendTo={() => document.body}
-                            >
-                              <div
-                                className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${
-                                  userRole !== "standarduser"
-                                    ? "cursor-pointer"
-                                    : ""
-                                } ${
-                                  job.breakdownReason === "none"
-                                    ? "bg-blue-100 text-blue-600"
-                                    : job.breakdownReason === "damaged"
-                                    ? "bg-yellow-100 text-yellow-600"
-                                    : job.breakdownReason === "shortage"
-                                    ? "bg-green-100 text-green-600"
-                                    : job.breakdownReason === "overage"
-                                    ? "bg-[#faf1be] text-[#AF9918]"
-                                    : job.breakdownReason === "refused"
-                                    ? "bg-red-100 text-red-600"
-                                    : ""
-                                }`}
-                              >
-                                <div>{job.breakdownReason}</div>
-                                <RiArrowDropDownLine
-                                  className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${
-                                    dropdownStatesThird === job._id
-                                      ? "rotate-180"
-                                      : ""
-                                  }`}
-                                />
-                              </div>
-                            </Tippy>
-                          </td>
-                          <td className="py-2 px-4 border-b text-center">
-                            {job.reviewedBy}
-                          </td>
-                          <td className="py-2 px-6 border-b text-center">
-                            <Link
-                              href={`/extracted-data-monitoring/edit-pdf/${job._id}`}
-                              onClick={() => {
-                                handleRouteChange();
-                                localStorage.setItem("prev", "");
-                              }}
-                              className="underline text-[#005B97] flex items-center gap-1 transition-all duration-300 hover:text-blue-500 group"
-                            >
-                              Detail
-                              <span className="transform transition-transform duration-300 ease-in-out group-hover:translate-x-1">
-                                <IoIosArrowForward className="text-xl p-0" />
-                              </span>
-                            </Link>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {master.length !== 0 && (
-              <div className="mt-5 flex justify-end gap-5 items-center text-gray-800">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className={`px-4 py-2 rounded-md ${
-                    currentPage === 1
-                      ? "bg-gray-300 cursor-not-allowed"
-                      : "bg-blue-500 text-white hover:bg-blue-600"
-                  }`}
-                >
-                  Previous
-                </button>
-                <span>
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className={`px-4 py-2 rounded-md ${
-                    currentPage === totalPages
-                      ? "bg-gray-300 cursor-not-allowed"
-                      : "bg-blue-500 text-white hover:bg-blue-600"
-                  }`}
-                >
-                  Next
-                </button>
-              </div>
-            )}
-          </div>
+          <ExtractedDataTable
+            isFilterDropDownOpen={isFilterDropDownOpen}
+            master={master}
+            selectedRows={selectedRows}
+            handleRowSelection={handleRowSelection}
+            handlePageChange={handlePageChange}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            loadingTable={loadingTable}
+            isAllSelected={isAllSelected}
+            handleSelectAll={handleSelectAll}
+            handleRouteChange={handleRouteChange}
+            updateStatus={updateStatus}
+            name={name}
+            userRole={userRole}
+            finalOptions={finalOptions}
+            reviewOptions={reviewOptions}
+            recognitionOptions={recognitionOptions}
+            breakdownOptions={breakdownOptions}
+            dropdownStates={dropdownStates}
+            setDropdownStates={setDropdownStates}
+            dropdownStatesFirst={dropdownStatesFirst}
+            setDropdownStatesFirst={setDropdownStatesFirst}
+            dropdownStatesSecond={dropdownStatesSecond}
+            setDropdownStatesSecond={setDropdownStatesSecond}
+            dropdownStatesThird={dropdownStatesThird}
+            setDropdownStatesThird={setDropdownStatesThird}
+            parentRefFinal={parentRefFinal}
+            parentRefReview={parentRefReview}
+            parentRefRecognition={parentRefRecognition}
+            parentRefBreakdown={parentRefBreakdown}
+          />
         </div>
       </div>
     </div>

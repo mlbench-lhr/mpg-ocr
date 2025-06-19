@@ -5,6 +5,12 @@ import oracledb from "oracledb";
 import clientPromise from "./mongodb";
 import { getOracleConnection } from "./oracle";
 import { OracleRow, PodFile } from "@/type";
+import { getJobsFromMongo } from "./getJobsFromMongo";
+
+interface MongoJob {
+  _id: string;
+  pdfUrl: string;
+}
 
 export async function getOracleOCRData(
   url: URL,
@@ -21,6 +27,11 @@ export async function getOracleOCRData(
       {},
       { sort: { _id: -1 } }
     );
+
+    const resultMongoDb = await getJobsFromMongo(url, skip, limit, page);
+    const data = await resultMongoDb.json();
+    console.log("resultMongoDb-> ", data);
+
     if (!userDBCredentials) {
       return NextResponse.json(
         { message: "OracleDB credentials not found" },
@@ -44,6 +55,7 @@ export async function getOracleOCRData(
         { status: 500 }
       );
     }
+
     const podSignature =
       url.searchParams.get("podDateSignature")?.trim().toLowerCase() || "";
     const bolNumber =
@@ -116,42 +128,84 @@ export async function getOracleOCRData(
       )
       WHERE rn > :offset AND rn <= :maxRow
     `;
-
     const resultBinds = {
       ...filterBinds,
       offset: skip,
       maxRow: skip + limit,
     };
 
-    const result = await connection.execute(sql, resultBinds, {
+    const result = await connection.execute<OracleRow>(sql, resultBinds, {
       outFormat: oracledb.OUT_FORMAT_OBJECT,
     });
 
+    console.log("result-> ", result);
+
+    const matchedMongoIds = result.rows
+      ?.map((oracleRow: OracleRow) => {
+        const fileId = oracleRow.FILE_ID;
+
+        const matchedMongoJob = (data.jobs as MongoJob[]).find((job) => {
+          const cleanFileName = job.pdfUrl.replace(".pdf", "");
+          return cleanFileName === fileId;
+        });
+
+        return matchedMongoJob?._id;
+      })
+      .filter(Boolean);
+
     const countSQL = `SELECT COUNT(*) AS TOTAL FROM ${tableName} ${whereSQL}`;
-    const countResult = await connection.execute(countSQL, filterBinds, {
-      outFormat: oracledb.OUT_FORMAT_OBJECT,
-    });
+    const countResult = await connection.execute(
+      countSQL,
+      filterBinds,
+      {
+        outFormat: oracledb.OUT_FORMAT_OBJECT,
+      }
+    );
+
+    console.log("matchedMongoIds-> ", matchedMongoIds);
 
     const totalJobs = (countResult.rows?.[0] as { TOTAL: number })?.TOTAL || 0;
 
     const rows = result.rows as OracleRow[];
 
-    const jobs = rows.map((row) => ({
-      blNumber: row.OCR_BOLNO,
-      fileId: row.FILE_ID,
-      podSignature: row.OCR_STMP_SIGN,
-      totalQty: row.OCR_ISSQTY,
-      received: row.OCR_RCVQTY,
-      damaged: row.OCR_SYMT_DAMG === "Y" ? 1 : 0,
-      short: row.OCR_SYMT_SHRT === "Y" ? 1 : 0,
-      over: row.OCR_SYMT_ORVG === "Y" ? 1 : 0,
-      refused: row.OCR_SYMT_REFS === "Y" ? 1 : 0,
-      podDate: row.OCR_STMP_POD_DTT,
-      createdAt: row.CRTD_DTT,
-      sealIntact: row.OCR_SYMT_SEAL,
-      stampExists: row.OCR_SYMT_NONE === "N" ? "no" : "yes",
-      reviewedBy: row.UPTD_USR_CD,
-    }));
+    const jobs = rows.map((row: OracleRow) => {
+      const matchedMongoJob = (data.jobs as MongoJob[]).find((job) => {
+        const cleanFileName = job.pdfUrl.replace(".pdf", "");
+        return cleanFileName === row.FILE_ID;
+      });
+    
+      // Auto-copy all fields from Oracle row
+      
+    
+      // Add/override with extra custom fields
+      return {
+        _id: matchedMongoJob?._id || row.FILE_ID,
+      
+        OCR_BOLNO: row.OCR_BOLNO,
+        FILE_ID: row.FILE_ID,
+        OCR_STMP_SIGN: row.OCR_STMP_SIGN,
+        OCR_ISSQTY: row.OCR_ISSQTY ,
+        OCR_RCVQTY: row.OCR_RCVQTY,
+      
+        OCR_SYMT_DAMG: row.OCR_SYMT_DAMG === "Y" ? 1 : 0,
+        OCR_SYMT_SHRT: row.OCR_SYMT_SHRT === "Y" ? 1 : 0,
+        OCR_SYMT_ORVG: row.OCR_SYMT_ORVG === "Y" ? 1 : 0,
+        OCR_SYMT_REFS: row.OCR_SYMT_REFS === "Y" ? 1 : 0,
+        OCR_STMP_POD_DTT: row.OCR_STMP_POD_DTT,
+        CRTD_DTT: row.CRTD_DTT,
+        OCR_SYMT_SEAL: row.OCR_SYMT_SEAL,
+        OCR_SYMT_NONE: row.OCR_SYMT_NONE,
+        UPTD_USR_CD: row.UPTD_USR_CD,
+        customerOrderNum:"NULL",
+        finalStatus : "NULL",
+    reviewStatus : "NULL",
+    recognitionStatus : "NULL",
+    breakdownReason : "NULL",
+
+
+      }
+      
+    });
 
     return NextResponse.json(
       { jobs, totalJobs, page, totalPages: Math.ceil(totalJobs / limit) },
