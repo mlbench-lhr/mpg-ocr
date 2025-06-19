@@ -63,7 +63,7 @@ export interface FileDataProps {
       this.pdfUrl = pdfUrl;
       if (overrides) Object.assign(this, overrides);
     }
-    static fromPartial(data: Partial<FileDataProps>): FileData {
+    static fromMongoDB(data: Partial<FileDataProps>): FileData {
         const instance = new FileData(data.pdfUrl ?? "");
         Object.assign(instance, data);
         return instance;
@@ -96,6 +96,63 @@ export interface FileDataProps {
           customerOrderNum: "",
         });
       }
+
+      static normalizeOcrRecord(data: any, filePath: string): Partial<FileDataProps> {
+        const urlObj = new URL(filePath);
+        const filename = urlObj.searchParams.get("filename") || "";
+        const decodedFilePath = `/file/${decodeURIComponent(filename)}`;
+      
+        const recognitionStatusMap: Record<
+          "failed" | "partially valid" | "valid" | "null",
+          string
+        > = {
+          failed: "failure",
+          "partially valid": "partiallyValid",
+          valid: "valid",
+          null: "null",
+        };
+      
+        return {
+          pdfUrl: decodedFilePath,
+          FILE_ID: data?._id,
+          FILE_NAME: filename,
+          deliveryDate: new Date().toISOString().split("T")[0],
+          noOfPages: 1,
+          OCR_BOLNO: data?.B_L_Number,
+          OCR_STMP_POD_DTT: data?.POD_Date,
+          OCR_STMP_SIGN: FileData.normalizeYesNo(data?.Signature_Exists),
+          OCR_ISSQTY: isNaN(data?.Issued_Qty)
+            ? data?.Issued_Qty
+            : String(data?.Issued_Qty),
+          OCR_RCVQTY: data?.Received_Qty,
+          OCR_SYMT_DAMG: data?.Damage_Qty,
+          OCR_SYMT_SHRT: data?.Short_Qty,
+          OCR_SYMT_ORVG: data?.Over_Qty,
+          OCR_SYMT_REFS: data?.Refused_Qty,
+          customerOrderNum: data?.Customer_Order_Num,
+          OCR_SYMT_NONE: FileData.normalizeYesNo(data?.Stamp_Exists),
+          finalStatus: "valid",
+          reviewStatus: "unConfirmed",
+          recognitionStatus:
+            recognitionStatusMap[data?.Status as keyof typeof recognitionStatusMap] ?? "null",
+          breakdownReason: "none",
+          uptd_Usr_Cd: "OCR Engine",
+          cargoDescription: "Processed from OCR API.",
+          OCR_SYMT_SEAL: FileData.normalizeYesNo(data?.Seal_Intact, true),
+        };
+      }
+      
+      static normalizeYesNo(value?: string, toYN = false): string {
+        if (toYN) {
+          if (value === "yes") return "Y";
+          if (value === "no") return "N";
+        } else {
+          if (value === "yes") return "yes";
+          if (value === "no") return "no";
+        }
+        return value || "";
+      }
+      
   }
   
   

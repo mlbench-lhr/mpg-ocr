@@ -8,7 +8,7 @@ const DB_NAME = process.env.DB_NAME || "my-next-app";
 export async function POST(req: Request) {
   try {
     const dataArray = await req.json();
-
+    console.log("Data Array ->",dataArray);
     if (!Array.isArray(dataArray)) {
       return NextResponse.json(
         { error: "Input must be an array of objects" },
@@ -76,13 +76,14 @@ console.log("data array-> ", dataArray);
         const filename = rawData.pdfUrl.split("/").pop() || "";
         rawData.FILE_ID = filename.replace(/\.[^/.]+$/, ""); // Remove extension
       }
-
+       
       // Build file data object
-      const fileData: FileDataProps = FileData.fromPartial({
+      const fileData: FileDataProps = FileData.fromMongoDB({
         ...rawData,
     
         uptd_Usr_Cd: rawData.uptd_Usr_Cd || "OCR",
       });
+      console.log("File Data ->", fileData);
 
       const { pdfUrl } = fileData;
 
