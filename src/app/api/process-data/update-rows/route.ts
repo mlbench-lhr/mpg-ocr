@@ -82,10 +82,10 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: connectionResult }, { status: 500 });
     }
     const conn: oracledb.Connection = connection;
-    const objectIds = ids.map((id) => new ObjectId(id));
+    // const objectIds = ids.map((id) => new ObjectId(id));
 
     const jobsToUpdate = await jobCollection
-      .find({ _id: { $in: objectIds } })
+      .find({ FILE_ID: { $in: ids } })
       .toArray();
     console.log("jobs to update-> ", jobsToUpdate);
 

@@ -61,17 +61,17 @@ const ExtractedDataRow: React.FC<RowProps> = ({
   parentRefBreakdown,
 }) => {
   return (
-    <tr key={job._id} className="text-gray-500">
+    <tr key={job.FILE_ID} className="text-gray-500">
       <td className="py-2 px-4 border-b text-start m-0 sticky left-0 bg-white z-10">
         <span className="mr-3">
           <input
             type="checkbox"
-            checked={selectedRows.includes(job._id)}
-            onChange={() => handleRowSelection(job._id)}
+            checked={selectedRows.includes(job.FILE_ID)}
+            onChange={() => handleRowSelection(job.FILE_ID)}
           />
         </span>
         <Link
-          href={`/extracted-data-monitoring/${job._id}`}
+          href={`/extracted-data-monitoring/${job.FILE_ID}`}
           onClick={() => {
             handleRouteChange();
             localStorage.setItem("prev", "");
@@ -106,7 +106,7 @@ const ExtractedDataRow: React.FC<RowProps> = ({
       {/* Final Status Dropdown */}
       <td className="py-2 px-4 border-b text-center">
         <StatusDropdown
-          jobId={job._id}
+          jobId={job.FILE_ID}
           statusKey="finalStatus"
           currentStatus={job.finalStatus}
           options={finalOptions}
@@ -122,7 +122,7 @@ const ExtractedDataRow: React.FC<RowProps> = ({
       {/* Review Status Dropdown */}
       <td className="py-2 px-4 border-b text-center">
         <StatusDropdown
-          jobId={job._id}
+          jobId={job.FILE_ID}
           statusKey="reviewStatus"
           currentStatus={job.reviewStatus}
           options={reviewOptions}
@@ -138,7 +138,7 @@ const ExtractedDataRow: React.FC<RowProps> = ({
       {/* Recognition Status Dropdown */}
       <td className="py-2 px-4 border-b text-center">
         <StatusDropdown
-          jobId={job._id}
+          jobId={job.FILE_ID}
           statusKey="recognitionStatus"
           currentStatus={job.recognitionStatus}
           options={recognitionOptions}
@@ -154,7 +154,7 @@ const ExtractedDataRow: React.FC<RowProps> = ({
       {/* Breakdown Reason Dropdown */}
       <td className="py-2 px-4 border-b text-center">
         <StatusDropdown
-          jobId={job._id}
+          jobId={job.FILE_ID}
           statusKey="breakdownReason"
           currentStatus={job.breakdownReason}
           options={breakdownOptions}

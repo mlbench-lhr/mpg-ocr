@@ -17,4 +17,5 @@ export interface OracleRow {
 export interface PodFile {
   FILE_ID: string;
   FILE_TABLE: string;
+  FILE_NAME: string;
 }

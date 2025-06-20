@@ -199,7 +199,7 @@ export async function PATCH(req: Request) {
       delete rawBody._id;
     }
 
-    const updatedJobData: FileDataProps = FileData.fromPartial({
+    const updatedJobData: FileDataProps = FileData.fromMongoDB({
       ...rawBody,
       updatedAt: new Date(),
     });

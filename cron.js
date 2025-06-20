@@ -59,6 +59,8 @@ async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
           pdfUrl: decodeURIComponent(
             new URL(filePath).searchParams.get("filename") || ""
           ),
+          FILE_ID:fileId,
+          FILE_DATA: fileData.FILE_DATA,
           deliveryDate: new Date().toISOString().split("T")[0],
           noOfPages: 1,
           OCR_BOLNO: String(d?.B_L_Number || ""),

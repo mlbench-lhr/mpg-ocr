@@ -67,15 +67,33 @@ export async function getOracleOCRData(
     const isOCR = uptd_Usr_Cd.toLowerCase() === "ocr";
 
     if (!isOCR) {
-      const apiRes = await fetch("http://localhost:3000/api/pod/retrieve");
-      const apiData: PodFile[] = await apiRes.json();
-      const jobs = apiData.map((row: PodFile) => ({
-        fileId: row.FILE_ID,
+      const result = await connection.execute(
+        `SELECT A.FILE_ID AS FILE_ID, A.FILE_TABLE AS FILE_TABLE, A.FILE_NAME AS FILE_NAME, A.CRTD_DTT AS CRTD_DTT 
+   FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_T A
+   JOIN ${process.env.ORACLE_DB_USER_NAME}.XTI_POD_STAMP_REQRD_T B 
+     ON A.FILE_ID = B.FILE_ID
+   WHERE TO_CHAR(B.CRTD_DTT, 'YYYYMMDD') = TO_CHAR(
+     NVL(TO_DATE(:createdDate, 'YYYY-MM-DD'), SYSDATE),
+     'YYYYMMDD'
+   )
+     AND NOT EXISTS (
+       SELECT * FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T C 
+       WHERE C.FILE_ID = A.FILE_ID
+     )`,
+        { createdDate: createdDate || null }, // Pass null if not available
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
+
+      const filteredData = (result?.rows ?? []) as PodFile[];
+
+      const jobs = filteredData.map((row: PodFile) => ({
+        FILE_ID: row.FILE_ID,
+        FILE_NAME: row.FILE_NAME
       }));
       return NextResponse.json(
         {
           jobs,
-          totalJobs: apiData.length,
+          totalJobs: filteredData.length,
           page,
           totalPages: 1,
         },
@@ -154,13 +172,9 @@ export async function getOracleOCRData(
       .filter(Boolean);
 
     const countSQL = `SELECT COUNT(*) AS TOTAL FROM ${tableName} ${whereSQL}`;
-    const countResult = await connection.execute(
-      countSQL,
-      filterBinds,
-      {
-        outFormat: oracledb.OUT_FORMAT_OBJECT,
-      }
-    );
+    const countResult = await connection.execute(countSQL, filterBinds, {
+      outFormat: oracledb.OUT_FORMAT_OBJECT,
+    });
 
     console.log("matchedMongoIds-> ", matchedMongoIds);
 
@@ -173,20 +187,17 @@ export async function getOracleOCRData(
         const cleanFileName = job.pdfUrl.replace(".pdf", "");
         return cleanFileName === row.FILE_ID;
       });
-    
+
       // Auto-copy all fields from Oracle row
-      
-    
+
       // Add/override with extra custom fields
       return {
         _id: matchedMongoJob?._id || row.FILE_ID,
-      
         OCR_BOLNO: row.OCR_BOLNO,
         FILE_ID: row.FILE_ID,
         OCR_STMP_SIGN: row.OCR_STMP_SIGN,
-        OCR_ISSQTY: row.OCR_ISSQTY ,
+        OCR_ISSQTY: row.OCR_ISSQTY,
         OCR_RCVQTY: row.OCR_RCVQTY,
-      
         OCR_SYMT_DAMG: row.OCR_SYMT_DAMG === "Y" ? 1 : 0,
         OCR_SYMT_SHRT: row.OCR_SYMT_SHRT === "Y" ? 1 : 0,
         OCR_SYMT_ORVG: row.OCR_SYMT_ORVG === "Y" ? 1 : 0,
@@ -196,15 +207,12 @@ export async function getOracleOCRData(
         OCR_SYMT_SEAL: row.OCR_SYMT_SEAL,
         OCR_SYMT_NONE: row.OCR_SYMT_NONE,
         UPTD_USR_CD: row.UPTD_USR_CD,
-        customerOrderNum:"NULL",
-        finalStatus : "NULL",
-    reviewStatus : "NULL",
-    recognitionStatus : "NULL",
-    breakdownReason : "NULL",
-
-
-      }
-      
+        customerOrderNum: "NULL",
+        finalStatus: "NULL",
+        reviewStatus: "NULL",
+        recognitionStatus: "NULL",
+        breakdownReason: "NULL",
+      };
     });
 
     return NextResponse.json(

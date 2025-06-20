@@ -28,36 +28,26 @@ import { FileData } from "@/lib/FileData";
 import ExtractedDataTable from "../components/Tables/ExtractedData/ExtractedDataTable";
 // import { convertFileToBase64 } from "@/lib/fileUtils";
 
-type FinalStatus =
-  | "new"
-  | "inProgress"
-  | "valid"
-  | "partiallyValid"
-  | "failure"
-  | "sent";
-type ReviewStatus = "unConfirmed" | "confirmed" | "denied" | "deleted";
-type RecognitionStatus =
-  | "new"
-  | "inProgress"
-  | "valid"
-  | "partiallyValid"
-  | "failure"
-  | "sent";
-type BreakdownReason = "none" | "damaged" | "shortage" | "overage" | "refused";
-type StatusCounts = {
-  updated: number;
-  notFound: number;
-  added: number;
-};
-
-type ResultItem = {
-  status: "updated" | "not_found" | "added";
-  // other fields if any...
-};
+interface OcrJob {
+  _id: string;
+  B_L_Number: string;
+  Signature_Exists: string;
+  Issued_Qty: number;
+  Received_Qty: number;
+  Damage_Qty: number;
+  Short_Qty: number;
+  Over_Qty: number;
+  Refused_Qty: number;
+  POD_Date: string;
+  Seal_Intact: string;
+  Stamp_Exists: string;
+  Customer_Order_Num?: string;
+}
 
 interface Job {
   _id: string;
   FILE_ID?: string;
+  FILE_NAME?: string;
   OCR_BOLNO: string;
   pdfUrl?: string;
   jobName: string;
@@ -84,6 +74,33 @@ interface Job {
   updatedAt?: string;
   customerOrderNum?: string | string[] | null;
 }
+
+type FinalStatus =
+  | "new"
+  | "inProgress"
+  | "valid"
+  | "partiallyValid"
+  | "failure"
+  | "sent";
+type ReviewStatus = "unConfirmed" | "confirmed" | "denied" | "deleted";
+type RecognitionStatus =
+  | "new"
+  | "inProgress"
+  | "valid"
+  | "partiallyValid"
+  | "failure"
+  | "sent";
+type BreakdownReason = "none" | "damaged" | "shortage" | "overage" | "refused";
+type StatusCounts = {
+  updated: number;
+  notFound: number;
+  added: number;
+};
+
+type ResultItem = {
+  status: "updated" | "not_found" | "added";
+  // other fields if any...
+};
 
 type LogEntry = {
   fileName: string;
@@ -365,6 +382,7 @@ const MasterPage = () => {
   }, [router, userRole]);
 
   const handleRowSelection = (id: string) => {
+    console.log("_id-> ", id);
     setSelectedRows((prevSelectedRows) =>
       prevSelectedRows.includes(id)
         ? prevSelectedRows.filter((rowId) => rowId !== id)
@@ -420,22 +438,44 @@ const MasterPage = () => {
     fetchOcrApiUrl();
   }, []);
 
+  console.log("selected rows-> ", selectedRows);
+  console.log("master -> ", master);
+
   const pdfFiles = selectedRows
     .map((rowId) => {
-      const job = master.find((job) => job._id === rowId);
+      console.log("row id-> ", rowId);
+      const job = master.find((job) => job.FILE_ID === rowId);
+      console.log("job found-> ", job);
 
-      if (job && (!job.OCR_BOLNO || !job.OCR_STMP_SIGN?.trim()) && job.pdfUrl) {
-        const fileName = job.pdfUrl.split("/").pop() || "";
+      if (
+        job &&
+        (!job.OCR_BOLNO || !job.OCR_STMP_SIGN?.trim()) &&
+        job.FILE_NAME
+      ) {
+        const fileName = job.FILE_NAME;
         return {
           file_url_or_path: `${baseUrl}/api/access-file?filename=${encodeURIComponent(
             fileName
           )}`,
+          FILE_ID: job?.FILE_ID,
+          
         };
       }
+
+      // if (job && (!job.OCR_BOLNO || !job.OCR_STMP_SIGN?.trim()) && job.pdfUrl) {
+      //   const fileName = job.pdfUrl.split("/").pop() || "";
+      //   return {
+      //     file_url_or_path: `${baseUrl}/api/access-file?filename=${encodeURIComponent(
+      //       fileName
+      //     )}`,
+      //   };
+      // }
 
       return null;
     })
     .filter(Boolean);
+
+  console.log("pdf file-> ", pdfFiles);
 
   const handleOcrToggle = async () => {
     // if (selectedRows.length === 0 && !isOcrRunning) return;
@@ -449,7 +489,7 @@ const MasterPage = () => {
       });
       return;
     }
-
+    console.log("pdf file-> ", pdfFiles);
     if (pdfFiles.length === 0 && !isOcrRunning) return;
 
     const newStatus = isOcrRunning ? "stop" : "start";
@@ -472,6 +512,8 @@ const MasterPage = () => {
       setIsOcrRunning(false);
       setSelectedRows([]);
       setProgress({});
+      console.log('fetch called inside stop...')
+
       fetchJobs();
       setIsProcessModalOpen(false);
       return;
@@ -486,6 +528,7 @@ const MasterPage = () => {
         if (!pdfFile?.file_url_or_path) continue;
 
         const filePath = pdfFile.file_url_or_path;
+        const fileId = pdfFile.FILE_ID;
         console.log(filePath);
 
         setProgress((prev) => ({
@@ -499,7 +542,7 @@ const MasterPage = () => {
           const ocrResponse = await fetch(ocrApiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ file_url_or_path: filePath }),
+            body: JSON.stringify({ _id: fileId, file_url_or_path: filePath }),
             signal: abortController.signal,
           });
 
@@ -509,6 +552,8 @@ const MasterPage = () => {
           }
 
           const ocrData = await ocrResponse.json();
+
+          console.log("ocrData-> ", ocrData);
           // const fileBase64 = await convertFileToBase64(filePath);
 
           if (ocrData && Array.isArray(ocrData)) {
@@ -585,7 +630,27 @@ const MasterPage = () => {
             if (!saveResponse.ok) {
               console.error("Error saving data:", await saveResponse.json());
             } else {
-              // console.log("OCR data saved successfully.");
+              // ✅ Update master state here
+              setMaster((prev) => {
+                const updated = [...prev];
+                processedDataArray.forEach((newItem) => {
+                  const existingIndex = updated.findIndex(
+                    (job) => job.FILE_ID === newItem.FILE_ID
+                  );
+
+                  if (existingIndex !== -1) {
+                    // Update existing entry
+                    updated[existingIndex] = {
+                      ...updated[existingIndex],
+                      ...newItem,
+                    };
+                  } else {
+                    // Append new entry
+                    updated.push(newItem);
+                  }
+                });
+                return updated;
+              });
             }
           }
 
@@ -630,7 +695,7 @@ const MasterPage = () => {
       setIsProcessModalOpen(false);
       setSelectedRows([]);
       setProgress({});
-      fetchJobs();
+      // fetchJobs();
     }
 
     await processPdfsSequentially();
@@ -775,6 +840,7 @@ const MasterPage = () => {
 
   useEffect(() => {
     if (firstTime) {
+      console.log('fetch called...')
       fetchJobs();
       setFirstTime(false);
     }
@@ -795,8 +861,7 @@ const MasterPage = () => {
         CRTD_DTT: sessionStorage.getItem("createdDateFilter") || "",
         updatedDate: sessionStorage.getItem("updatedDateFilter") || "",
 
-        OCR_STMP_SIGN:
-          sessionStorage.getItem("podDateSignatureFilter") || "",
+        OCR_STMP_SIGN: sessionStorage.getItem("podDateSignatureFilter") || "",
         jobName: sessionStorage.getItem("jobNameFilter") || "",
         sortColumn,
         sortOrder,
@@ -816,11 +881,11 @@ const MasterPage = () => {
         queryParams.set("breakdownReason", filters.reasonStatus);
       if (filters.uptd_Usr_Cd)
         queryParams.set("uptd_Usr_Cd", filters.uptd_Usr_Cd);
-      if (filters.OCR_STMP_POD_DTT) queryParams.set("podDate", filters.OCR_STMP_POD_DTT);
+      if (filters.OCR_STMP_POD_DTT)
+        queryParams.set("podDate", filters.OCR_STMP_POD_DTT);
       if (filters.updatedDate)
         queryParams.set("updatedDate", filters.updatedDate);
-      if (filters.CRTD_DTT)
-        queryParams.set("createdDate", filters.CRTD_DTT);
+      if (filters.CRTD_DTT) queryParams.set("createdDate", filters.CRTD_DTT);
       if (filters.OCR_STMP_SIGN)
         queryParams.set("podDateSignature", filters.OCR_STMP_SIGN.trim());
       if (filters.jobName) queryParams.set("jobName", filters.jobName.trim());
@@ -889,6 +954,8 @@ const MasterPage = () => {
 
   useEffect(() => {
     if (firstTime) {
+      console.log('fetch called...')
+
       fetchJobs();
       setFirstTime(false);
     }
@@ -1101,7 +1168,7 @@ const MasterPage = () => {
       setIsProcessModalOpen(false);
       setSelectedRows([]);
       setProgress({});
-      fetchJobs();
+      // fetchJobs();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isProcessModalOpen]);
