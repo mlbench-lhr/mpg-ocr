@@ -80,7 +80,7 @@ async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
         const processed = ocrData.map((d) => ({
           _id: fileId,
           jobId: job._id,
-          fileId:fileId,
+          fileId: fileId,
           pdfUrl: decodeURIComponent(
             new URL(filePath).searchParams.get("filename") || ""
           ),
@@ -115,7 +115,6 @@ async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
         }));
 
         const single = processed[0];
-      
 
         // SAP BOL matching
         try {
@@ -176,6 +175,24 @@ async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
   }
 }
 
+function getCronExpressionFromTime(timeStr) {
+  const [hours, minutes] = timeStr.split(":").map(Number);
+
+  if (hours === 0 && minutes > 0) {
+    return `*/${minutes} * * * *`; // every X minutes
+  }
+
+  if (minutes === 0 && hours > 0) {
+    return `0 */${hours} * * *`; // every X hours
+  }
+
+  if (hours > 0 && minutes > 0) {
+    return `${minutes} */${hours} * * *`; // rough combo support
+  }
+
+  return "* * * * *"; // default fallback to every minute
+}
+
 async function scheduleJobs() {
   try {
     const dbResponse = await fetch("http://localhost:3000/api/auth/public-db");
@@ -186,7 +203,6 @@ async function scheduleJobs() {
       return;
     }
 
-    // Fetch necessary data (IP, OCR URL, WMS URL, jobs)
     const ipRes = await fetch("http://localhost:3000/api/ipAddress/ip-address");
     const ipData = await ipRes.json();
     const baseUrl = `http://${ipData.secondaryIp}:3000`;
@@ -204,55 +220,55 @@ async function scheduleJobs() {
     const jobs = jobJson.activeJobs;
 
     for (const job of jobs) {
-      const now = new Date();
-      const currentHours = now.getHours();
-      const currentMinutes = now.getMinutes();
-      const currentTimeStr = `${String(currentHours).padStart(2, "0")}:${String(
-        currentMinutes
-      ).padStart(2, "0")}`;
+      const intervalStr = job.everyTime;
+      const cronExp = getCronExpressionFromTime(intervalStr);
 
-      const fromTime = new Date(job.pdfCriteria.fromTime);
-      const toTime = new Date(job.pdfCriteria.toTime);
+      cron.schedule(cronExp, async () => {
+        const now = new Date();
+        const currentDay = now.toLocaleString("en-US", { weekday: "long" });
+        const currentTimeStr = `${String(now.getHours()).padStart(2, "0")}:${String(
+          now.getMinutes()
+        ).padStart(2, "0")}`;
 
-      const fromHours = String(fromTime.getUTCHours()).padStart(2, "0");
-      const fromMinutes = String(fromTime.getUTCMinutes()).padStart(2, "0");
-      const toHours = String(toTime.getUTCHours()).padStart(2, "0");
-      const toMinutes = String(toTime.getUTCMinutes()).padStart(2, "0");
+        const fromTime = new Date(job.pdfCriteria.fromTime);
+        const toTime = new Date(job.pdfCriteria.toTime);
+        const fromTimeStr = `${String(fromTime.getUTCHours()).padStart(2, "0")}:${String(fromTime.getUTCMinutes()).padStart(2, "0")}`;
+        const toTimeStr = `${String(toTime.getUTCHours()).padStart(2, "0")}:${String(toTime.getUTCMinutes()).padStart(2, "0")}`;
 
-      const fromTimeStr = `${fromHours}:${fromMinutes}`;
-      const toTimeStr = `${toHours}:${toMinutes}`;
+        if (
+          job.selectedDays.includes(currentDay) &&
+          currentTimeStr >= fromTimeStr &&
+          currentTimeStr <= toTimeStr
+        ) {
+          console.log(`🚀 Running OCR Job: ${job._id}`);
+          runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord);
+        }
+      });
 
-      const currentDay = now.toLocaleString("en-US", { weekday: "long" });
-
-      console.log(
-        "from time-> ",
-        fromTimeStr,
-        "to time-> ",
-        toTimeStr,
-        "current time-> ",
-        currentTimeStr,
-        "current day-> ",
-        currentDay
-      );
-
-      if (
-        job.selectedDays.includes(currentDay) &&
-        currentTimeStr >= fromTimeStr &&
-        currentTimeStr <= toTimeStr
-      ) {
-        console.log("Ready to start the OCR for JOB...");
-        runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord);
-      }
+      console.log(`📅 Scheduled job ${job._id} with cron: ${cronExp}`);
     }
   } catch (err) {
     console.error("❌ Scheduling failed:", err.message);
   }
 }
 
-cron.schedule("*/1 * * * *", async () => {
-  const jobId = cronJobCounter++;
-  console.log(
-    `✅ OCR Cron Job #${jobId} Started at ${new Date().toISOString()}`
-  );
-  scheduleJobs();
-});
+const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+
+async function waitForAPI(retries = 10, interval = 2000) {
+  const url = "http://localhost:3000/api/auth/public-db";
+  while (retries--) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        console.log("✅ API is up, starting scheduler...");
+        await scheduleJobs();
+        return;
+      }
+    } catch (err) {
+      console.log("🔁 Waiting for API to be ready...");
+      await delay(interval);
+    }
+  }
+  console.error("❌ API failed to respond after multiple retries.");
+}
+waitForAPI();

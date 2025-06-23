@@ -62,30 +62,66 @@ export async function getOracleOCRData(
     const uptd_Usr_Cd = url.searchParams.get("uptd_Usr_Cd") || "";
 
     const isOCR = uptd_Usr_Cd.toLowerCase() === "ocr";
-
+    console.log("skip, limit-> ", skip, " ", limit);
     if (!isOCR) {
-    const result = await connection.execute(
-  `SELECT A.FILE_ID AS FILE_ID, A.FILE_TABLE AS FILE_TABLE, A.FILE_NAME AS FILE_NAME, A.CRTD_DTT AS CRTD_DTT 
-   FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_T A
-   JOIN ${process.env.ORACLE_DB_USER_NAME}.XTI_POD_STAMP_REQRD_T B 
-     ON A.FILE_ID = B.FILE_ID
-   WHERE TO_CHAR(B.CRTD_DTT, 'YYYYMMDD') = TO_CHAR(
-     NVL(TO_DATE(:createdDate, 'YYYY-MM-DD'), SYSDATE) - 1,
-     'YYYYMMDD'
-   )
-     AND NOT EXISTS (
-       SELECT * FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T C 
-       WHERE C.FILE_ID = A.FILE_ID
-     )`,
-  { createdDate: createdDate || null }, // Pass null if not available
-  { outFormat: oracledb.OUT_FORMAT_OBJECT }
-);
+      const baseQuery = `
+        SELECT A.FILE_ID AS FILE_ID, A.FILE_NAME AS FILE_NAME, A.CRTD_DTT AS CRTD_DTT,
+               ROW_NUMBER() OVER (ORDER BY A.CRTD_DTT DESC) AS rn
+        FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_T A
+        JOIN ${process.env.ORACLE_DB_USER_NAME}.XTI_POD_STAMP_REQRD_T B 
+          ON A.FILE_ID = B.FILE_ID
+        WHERE NOT EXISTS (
+          SELECT * FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T C 
+          WHERE C.FILE_ID = A.FILE_ID
+        )
+        ${
+          createdDate
+            ? "AND TO_CHAR(B.CRTD_DTT, 'YYYYMMDD') = TO_CHAR(NVL(TO_DATE(:createdDate, 'YYYY-MM-DD'), SYSDATE), 'YYYYMMDD')"
+            : ""
+        }
+      `;
 
-      console.log("result-> ", result);
-      console.log("created-> ", createdDate);
+      const paginatedQuery = `
+        SELECT * FROM (${baseQuery})
+        WHERE rn > :offset AND rn <= :maxRow
+      `;
+
+      const bindParams = {
+        ...(createdDate ? { createdDate } : {}),
+        offset: skip,
+        maxRow: skip + limit,
+      };
+
+      const result = await connection.execute(paginatedQuery, bindParams, {
+        outFormat: oracledb.OUT_FORMAT_OBJECT,
+      });
+
+      const countResult = await connection.execute(
+        `SELECT COUNT(*) AS TOTAL FROM (
+          SELECT A.FILE_ID
+          FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_T A
+          JOIN ${process.env.ORACLE_DB_USER_NAME}.XTI_POD_STAMP_REQRD_T B 
+            ON A.FILE_ID = B.FILE_ID
+          WHERE NOT EXISTS (
+            SELECT * FROM ${
+              process.env.ORACLE_DB_USER_NAME
+            }.XTI_FILE_POD_OCR_T C 
+            WHERE C.FILE_ID = A.FILE_ID
+          )
+          ${
+            createdDate
+              ? "AND TO_CHAR(B.CRTD_DTT, 'YYYYMMDD') = TO_CHAR(NVL(TO_DATE(:createdDate, 'YYYY-MM-DD'), SYSDATE), 'YYYYMMDD')"
+              : ""
+          }
+        )`,
+        createdDate ? { createdDate } : {},
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
 
       const filteredData = (result?.rows ?? []) as PodFile[];
-      console.log("filteredData -> ", filteredData);
+      const totalJobs =
+        (countResult.rows?.[0] as { TOTAL: number })?.TOTAL || 0;
+
       const jobs = filteredData.map((row: PodFile) => ({
         fileName: row.FILE_NAME,
         _id: row.FILE_ID,
@@ -94,9 +130,9 @@ export async function getOracleOCRData(
       return NextResponse.json(
         {
           jobs,
-          totalJobs: filteredData.length,
+          totalJobs,
           page,
-          totalPages: 1,
+          totalPages: Math.ceil(totalJobs / limit),
         },
         { status: 200 }
       );
@@ -110,7 +146,6 @@ export async function getOracleOCRData(
       whereClauses.push(`LOWER(ocr.UPTD_USR_CD) = :uptd_Usr_Cd`);
       filterBinds.uptd_Usr_Cd = uptd_Usr_Cd.toLowerCase();
     }
-
     if (createdDate) {
       whereClauses.push(
         `TRUNC(ocr.CRTD_DTT) = TO_DATE(:createdDate, 'YYYY-MM-DD')`
@@ -134,9 +169,10 @@ export async function getOracleOCRData(
       whereClauses.push(`LOWER(ocr.OCR_BOLNO) LIKE :bolNumber`);
       filterBinds.bolNumber = `%${bolNumber}%`;
     }
-
+console.log('upated user-> ', uptd_Usr_Cd)
     const whereSQL =
       whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+      console.log('where sql-> ', whereSQL)
 
     const sql = `
       SELECT * FROM (
@@ -158,6 +194,7 @@ export async function getOracleOCRData(
     const result = await connection.execute<OracleRow>(sql, resultBinds, {
       outFormat: oracledb.OUT_FORMAT_OBJECT,
     });
+    console.log("result-> ", result);
 
     const countSQL = `SELECT COUNT(*) AS TOTAL FROM ${tableName} ocr ${whereSQL}`;
     const countResult = await connection.execute(countSQL, filterBinds, {

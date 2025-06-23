@@ -38,8 +38,8 @@ console.log('filters-> ', filters)
    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
 
       {filterFieldLabels.map(({ key, label, type }) => (
-        <div key={key}>
-           <label htmlFor={key} >
+        <div key={key} >
+           <label htmlFor={key}  className='text-black'>
             {label}
           </label>
 

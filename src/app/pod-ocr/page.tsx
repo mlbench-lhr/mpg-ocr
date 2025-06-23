@@ -156,9 +156,9 @@ export default function Page() {
         .join("&");
 
       const response = await axios.get(
-        `/api/oracle-data?page=${currentPage}&${searchParam}`
+        `/api/oracle-data?page=${currentPage}&${searchParam}&limit=${limit}`
       );
-
+      console.log("response -> ", response.data);
       const data = response.data;
       setPodData(data.data);
       setTotalPages(data.totalPages);
@@ -171,11 +171,11 @@ export default function Page() {
   }, [currentPage, filters, limit]);
   console.log("limit-> ", limit);
   useEffect(() => {
-    if (applyFilters) {
+    // if (applyFilters) {
       fetchPodData();
       setApplyFilters(false); // Reset after fetch
-    }
-  }, [applyFilters, fetchPodData]);
+    // }
+  }, [applyFilters, fetchPodData, currentPage]);
 
   if (!isAuthenticated) return <p>Access Denied. Redirecting...</p>;
 
@@ -339,24 +339,27 @@ export default function Page() {
                           {podData.CRTD_USR_CD}
                         </td>
                         <td className="py-1 px-4 border-b text-center text-gray-500">
-                          {new Date(podData.CRTD_DTT).toLocaleDateString(
-                            "en-US",
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            }
-                          )}
+                          {podData.CRTD_DTT
+                            ? new Date(podData.CRTD_DTT).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                }
+                              )
+                            : "-"}
                         </td>
                         <td className="py-1 px-4 border-b text-center text-gray-500">
-                          {new Date(podData.SENT_FILE_DTT).toLocaleDateString(
-                            "en-US",
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            }
-                          )}
+                          {podData.SENT_FILE_DTT
+                            ? new Date(
+                                podData.SENT_FILE_DTT
+                              ).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              })
+                            : "-"}
                         </td>
                         <td className="py-1 px-4 border-b text-center">
                           {podData.OCR_BOLNO}
@@ -388,28 +391,32 @@ export default function Page() {
                         <td className="py-1 px-4 border-b text-center">
                           {podData.OCR_SYMT_SEAL}
                         </td>
+
                         <td className="py-1 px-4 border-b text-center text-gray-500">
-                          {new Date(podData.RECV_DATA_DTT).toLocaleDateString(
-                            "en-US",
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            }
-                          )}
+                          {podData.RECV_DATA_DTT
+                            ? new Date(
+                                podData.RECV_DATA_DTT
+                              ).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              })
+                            : "-"}
                         </td>
                         <td className="py-1 px-4 border-b text-center">
                           {podData.UPTD_USR_CD}
                         </td>
                         <td className="py-1 px-4 border-b text-center text-gray-500">
-                          {new Date(podData.UPTD_DTT).toLocaleDateString(
-                            "en-US",
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            }
-                          )}
+                          {podData.UPTD_DTT
+                            ? new Date(podData.UPTD_DTT).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                }
+                              )
+                            : "-"}
                         </td>
                         <td className="py-1 px-4 border-b text-center text-gray-500">
                           {podData.OCR_STMP_POD_DTT}

@@ -480,6 +480,7 @@ const MasterPage = () => {
       return null;
     })
     .filter(Boolean);
+
   const mergeOcrDataIntoMaster = (ocrData: OcrJob[]) => {
     setMaster((prevMaster) => {
       const updated = prevMaster.map((item) => {
@@ -580,7 +581,11 @@ const MasterPage = () => {
           const ocrResponse = await fetch(ocrApiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ _id: fileId, file_url_or_path: filePath }),
+            body: JSON.stringify({
+              _id: fileId,
+              file_url_or_path: filePath,
+              // FILE_DATA: "123",
+            }),
             signal: abortController.signal,
           });
 
@@ -912,8 +917,8 @@ const MasterPage = () => {
       if (filters.podDateSignature)
         queryParams.set("podDateSignature", filters.podDateSignature.trim());
       if (filters.jobName) queryParams.set("jobName", filters.jobName.trim());
-      if (filters.fileName) queryParams.set("fileName", filters.fileName.trim());
-
+      if (filters.fileName)
+        queryParams.set("fileName", filters.fileName.trim());
 
       if (filters.sortColumn.length) {
         queryParams.set("sortColumn", filters.sortColumn.join(","));
@@ -942,7 +947,7 @@ const MasterPage = () => {
 
       const data = await response.json();
       setMaster(data.jobs);
-      console.log('extracted data-> ', data)
+      console.log("extracted data-> ", data);
       setTotalPages(data.totalPages);
       setTotalJobs(data.totalJobs);
     } catch (error) {

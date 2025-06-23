@@ -57,10 +57,8 @@ export async function getJobsFromMongo(
   const jobName = url.searchParams.get("jobName") || "";
   const searchQuery = url.searchParams.get("search") || "";
   const filter: Filter<Job> = {};
-
   const sortColumnsString = url.searchParams.get("sortColumn");
   const sortColumns = sortColumnsString ? sortColumnsString.split(",") : [];
-
   const sortOrderString = url.searchParams.get("sortOrder") || "asc";
   const sortOrders = sortOrderString.split(",");
 
@@ -137,7 +135,6 @@ export async function getJobsFromMongo(
     $lt: nextDay,
   };
 }
-  console.log("fileName-> ", fileName);
   if (fileName) {
     const fileNameRegex = new RegExp(fileName.trim(), "i");
     filter.pdfUrl = { $regex: fileNameRegex };
