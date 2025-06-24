@@ -18,7 +18,7 @@ export async function getOracleOCRData(
   limit: number,
   page: number
 ) {
-  let connection;
+  let connection: oracledb.Connection | null;
   try {
     const client = await clientPromise;
     const db = client.db("my-next-app");
@@ -56,6 +56,23 @@ export async function getOracleOCRData(
       );
     }
 
+    async function getFileDataById(connection: any, fileId: string): Promise<Buffer | null> {
+      const fileResult = await connection.execute(
+        `SELECT FILE_DATA FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_2025_T WHERE FILE_ID = :fileId`,
+        { fileId },
+        {
+          outFormat: oracledb.OUT_FORMAT_OBJECT,
+          fetchInfo: {
+            FILE_DATA: { type: (oracledb as any).BUFFER },// 👈 force correct type
+          }
+        }
+      );
+    
+      const fileRow = fileResult.rows?.[0] as { FILE_DATA?: Buffer } | undefined;
+      return fileRow?.FILE_DATA || null;
+    }
+    
+
     const podSignature =
       url.searchParams.get("podDateSignature")?.trim().toLowerCase() || "";
     const bolNumber =
@@ -69,31 +86,58 @@ export async function getOracleOCRData(
     if (!isOCR) {
       const result = await connection.execute(
         `SELECT A.FILE_ID AS FILE_ID, A.FILE_TABLE AS FILE_TABLE, A.FILE_NAME AS FILE_NAME, A.CRTD_DTT AS CRTD_DTT 
-   FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_T A
-   JOIN ${process.env.ORACLE_DB_USER_NAME}.XTI_POD_STAMP_REQRD_T B 
-     ON A.FILE_ID = B.FILE_ID
-   WHERE TO_CHAR(B.CRTD_DTT, 'YYYYMMDD') = TO_CHAR(
-     NVL(TO_DATE(:createdDate, 'YYYY-MM-DD'), SYSDATE),
-     'YYYYMMDD'
-   )
-     AND NOT EXISTS (
-       SELECT * FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T C 
-       WHERE C.FILE_ID = A.FILE_ID
-     )`,
-        { createdDate: createdDate || null }, // Pass null if not available
+         FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_T A
+         JOIN ${process.env.ORACLE_DB_USER_NAME}.XTI_POD_STAMP_REQRD_T B 
+           ON A.FILE_ID = B.FILE_ID
+         WHERE TO_CHAR(B.CRTD_DTT, 'YYYYMMDD') = TO_CHAR(
+           NVL(TO_DATE(:createdDate, 'YYYY-MM-DD'), SYSDATE),
+           'YYYYMMDD'
+         )
+           AND NOT EXISTS (
+             SELECT * FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T C 
+             WHERE C.FILE_ID = A.FILE_ID
+           )`,
+        { createdDate: createdDate || null },
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
 
       const filteredData = (result?.rows ?? []) as PodFile[];
 
-      const jobs = filteredData.map((row: PodFile) => ({
-        FILE_ID: row.FILE_ID,
-        FILE_NAME: row.FILE_NAME
-      }));
+      const jobs: {
+        FILE_ID: string;
+        FILE_NAME: string;
+        FILE_DATA?: string;
+      }[] = [];
+
+      for (const row of filteredData) {
+        // Use FILE_TABLE or fallback to your known table if it's always xti_2025_t
+        const fileTable = row.FILE_TABLE || "XTI_2025_T";
+
+        const fileResult = await connection.execute(
+          `SELECT FILE_DATA FROM ${process.env.ORACLE_DB_USER_NAME}.${fileTable} WHERE FILE_ID = :fileId`,
+          { fileId: row.FILE_ID },
+          {
+            outFormat: oracledb.OUT_FORMAT_OBJECT,
+            fetchInfo: {
+              FILE_DATA: { type: (oracledb as any).BUFFER }, // 🔧 bypass TypeScript
+            },
+          }
+        );
+
+        const fileRow = fileResult.rows?.[0] as { FILE_DATA?: Buffer };
+        const bufferData = fileRow?.FILE_DATA as Buffer | undefined;
+
+        jobs.push({
+          FILE_ID: row.FILE_ID,
+          FILE_NAME: row.FILE_NAME,
+          FILE_DATA: bufferData?.toString("base64"),
+        });
+      }
+
       return NextResponse.json(
         {
           jobs,
-          totalJobs: filteredData.length,
+          totalJobs: jobs.length,
           page,
           totalPages: 1,
         },
@@ -182,38 +226,42 @@ export async function getOracleOCRData(
 
     const rows = result.rows as OracleRow[];
 
-    const jobs = rows.map((row: OracleRow) => {
-      const matchedMongoJob = (data.jobs as MongoJob[]).find((job) => {
-        const cleanFileName = job.pdfUrl.replace(".pdf", "");
-        return cleanFileName === row.FILE_ID;
-      });
-
-      // Auto-copy all fields from Oracle row
-
-      // Add/override with extra custom fields
-      return {
-        _id: matchedMongoJob?._id || row.FILE_ID,
-        OCR_BOLNO: row.OCR_BOLNO,
-        FILE_ID: row.FILE_ID,
-        OCR_STMP_SIGN: row.OCR_STMP_SIGN,
-        OCR_ISSQTY: row.OCR_ISSQTY,
-        OCR_RCVQTY: row.OCR_RCVQTY,
-        OCR_SYMT_DAMG: row.OCR_SYMT_DAMG === "Y" ? 1 : 0,
-        OCR_SYMT_SHRT: row.OCR_SYMT_SHRT === "Y" ? 1 : 0,
-        OCR_SYMT_ORVG: row.OCR_SYMT_ORVG === "Y" ? 1 : 0,
-        OCR_SYMT_REFS: row.OCR_SYMT_REFS === "Y" ? 1 : 0,
-        OCR_STMP_POD_DTT: row.OCR_STMP_POD_DTT,
-        CRTD_DTT: row.CRTD_DTT,
-        OCR_SYMT_SEAL: row.OCR_SYMT_SEAL,
-        OCR_SYMT_NONE: row.OCR_SYMT_NONE,
-        UPTD_USR_CD: row.UPTD_USR_CD,
-        customerOrderNum: "NULL",
-        finalStatus: "NULL",
-        reviewStatus: "NULL",
-        recognitionStatus: "NULL",
-        breakdownReason: "NULL",
-      };
-    });
+    const jobs = await Promise.all(
+      rows.map(async (row: OracleRow) => {
+        const matchedMongoJob = (data.jobs as MongoJob[]).find((job) => {
+          const cleanFileName = job.pdfUrl.replace(".pdf", "");
+          return cleanFileName === row.FILE_ID;
+        });
+    
+        const fileData = await getFileDataById(connection, row.FILE_ID);
+         console.log("fileData-> ", fileData);  
+        
+    
+        return {
+          _id: matchedMongoJob?._id || row.FILE_ID,
+          FILE_ID: row.FILE_ID,
+          FILE_DATA: fileData?.toString("base64"), // ✅ Add this field
+          OCR_BOLNO: row.OCR_BOLNO,
+          OCR_STMP_SIGN: row.OCR_STMP_SIGN,
+          OCR_ISSQTY: row.OCR_ISSQTY,
+          OCR_RCVQTY: row.OCR_RCVQTY,
+          OCR_SYMT_DAMG: row.OCR_SYMT_DAMG === "Y" ? 1 : 0,
+          OCR_SYMT_SHRT: row.OCR_SYMT_SHRT === "Y" ? 1 : 0,
+          OCR_SYMT_ORVG: row.OCR_SYMT_ORVG === "Y" ? 1 : 0,
+          OCR_SYMT_REFS: row.OCR_SYMT_REFS === "Y" ? 1 : 0,
+          OCR_STMP_POD_DTT: row.OCR_STMP_POD_DTT,
+          CRTD_DTT: row.CRTD_DTT,
+          OCR_SYMT_SEAL: row.OCR_SYMT_SEAL,
+          OCR_SYMT_NONE: row.OCR_SYMT_NONE,
+          UPTD_USR_CD: row.UPTD_USR_CD,
+          customerOrderNum: "NULL",
+          finalStatus: "NULL",
+          reviewStatus: "NULL",
+          recognitionStatus: "NULL",
+          breakdownReason: "NULL",
+        };
+      })
+    );
 
     return NextResponse.json(
       { jobs, totalJobs, page, totalPages: Math.ceil(totalJobs / limit) },
@@ -223,6 +271,7 @@ export async function getOracleOCRData(
     console.error("Oracle DB error:", err);
     return NextResponse.json({ error: "Oracle DB error" }, { status: 500 });
   } finally {
+    let connection:any;
     if (connection) await connection.close();
   }
 }

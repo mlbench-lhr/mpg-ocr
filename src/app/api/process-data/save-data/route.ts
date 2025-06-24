@@ -8,6 +8,7 @@ const DB_NAME = process.env.DB_NAME || "my-next-app";
 export async function POST(req: Request) {
   try {
     const dataArray = await req.json();
+    console.log("Data Array",dataArray);
     if (!Array.isArray(dataArray)) {
       return NextResponse.json(
         { error: "Input must be an array of objects" },

@@ -1,68 +1,92 @@
 import React from "react";
 import Link from "next/link";
-import FileNameCell from "../../UI/FileNameCell";
 import { IoIosArrowForward } from "react-icons/io";
-import StatusDropdown from "./StatusDropdown"; // Make sure the path is correct
+import FileNameCell from "../../UI/FileNameCell";
+import StatusDropdown from "./StatusDropdown";
+import { Instance } from "tippy.js";
+import { PODOCR } from "@/app/extracted-data-monitoring/page";
 
-interface RowProps {
-  job: any;
-  selectedRows: string[];
-  handleRowSelection: (id: string) => void;
-  handleRouteChange: () => void;
+interface StatusOption {
+  status: string;
+  color: string;
+  bgColor: string;
+}
+
+interface TableControllerSubset {
   updateStatus: (
     id: string,
     field: string,
     value: string,
-    name: string
-  ) => void;
+    reviewedBy: string
+  ) => Promise<void>;
   name: string;
   userRole: string;
-  finalOptions: any[];
-  reviewOptions: any[];
-  recognitionOptions: any[];
-  breakdownOptions: any[];
-  dropdownStates: string | null;
-  setDropdownStates: (id: string | null) => void;
-  dropdownStatesFirst: string | null;
-  setDropdownStatesFirst: (id: string | null) => void;
-  dropdownStatesSecond: string | null;
-  setDropdownStatesSecond: (id: string | null) => void;
-  dropdownStatesThird: string | null;
-  setDropdownStatesThird: (id: string | null) => void;
-  parentRefFinal: any;
-  parentRefReview: any;
-  parentRefRecognition: any;
-  parentRefBreakdown: any;
 }
 
-const ExtractedDataRow: React.FC<RowProps> = ({
+interface HandlersSubset {
+  handleRowSelection: (id: string) => void;
+  handleRouteChange: () => void;
+}
+
+interface UIControlsSubset {
+  finalOptions: StatusOption[];
+  reviewOptions: StatusOption[];
+  recognitionOptions: StatusOption[];
+  breakdownOptions: StatusOption[];
+  dropdownStates: string | null;
+  setDropdownStates: React.Dispatch<React.SetStateAction<string | null>>;
+  dropdownStatesFirst: string | null;
+  setDropdownStatesFirst: React.Dispatch<React.SetStateAction<string | null>>;
+  dropdownStatesSecond: string | null;
+  setDropdownStatesSecond: React.Dispatch<React.SetStateAction<string | null>>;
+  dropdownStatesThird: string | null;
+  setDropdownStatesThird: React.Dispatch<React.SetStateAction<string | null>>;
+  parentRefFinal: React.MutableRefObject<Instance | null>;
+  parentRefReview: React.MutableRefObject<Instance | null>;
+  parentRefRecognition: React.MutableRefObject<Instance | null>;
+  parentRefBreakdown: React.MutableRefObject<Instance | null>;
+}
+
+interface ExtractedDataRowProps {
+  job: PODOCR;
+  selectedRows: string[];
+  tableController: TableControllerSubset;
+  handlers: HandlersSubset;
+  uiControls: UIControlsSubset;
+}
+
+const ExtractedDataRow: React.FC<ExtractedDataRowProps> = ({
   job,
   selectedRows,
-  handleRowSelection,
-  handleRouteChange,
-  updateStatus,
-  name,
-  userRole,
-  finalOptions,
-  reviewOptions,
-  recognitionOptions,
-  breakdownOptions,
-  dropdownStates,
-  setDropdownStates,
-  dropdownStatesFirst,
-  setDropdownStatesFirst,
-  dropdownStatesSecond,
-  setDropdownStatesSecond,
-  dropdownStatesThird,
-  setDropdownStatesThird,
-  parentRefFinal,
-  parentRefReview,
-  parentRefRecognition,
-  parentRefBreakdown,
+  tableController,
+  handlers,
+  uiControls,
 }) => {
+  const { updateStatus, name, userRole } = tableController;
+  const { handleRowSelection, handleRouteChange } = handlers;
+  const {
+    finalOptions,
+    reviewOptions,
+    recognitionOptions,
+    breakdownOptions,
+    dropdownStates,
+    setDropdownStates,
+    dropdownStatesFirst,
+    setDropdownStatesFirst,
+    dropdownStatesSecond,
+    setDropdownStatesSecond,
+    dropdownStatesThird,
+    setDropdownStatesThird,
+    parentRefFinal,
+    parentRefReview,
+    parentRefRecognition,
+    parentRefBreakdown,
+  } = uiControls;
+
   return (
-    <tr key={job.FILE_ID} className="text-gray-500">
-      <td className="py-2 px-4 border-b text-start m-0 sticky left-0 bg-white z-10">
+    <tr className="text-gray-500">
+      {/* Checkbox + BL Number */}
+      <td className="py-2 px-4 border-b text-start sticky left-0 bg-white z-10 min-w-44 max-w-44">
         <span className="mr-3">
           <input
             type="checkbox"
@@ -78,15 +102,21 @@ const ExtractedDataRow: React.FC<RowProps> = ({
           }}
           className="group"
         >
-          <span className="text-[#005B97] underline group-hover:text-blue-500 transition-all duration-500 transform group-hover:scale-110">
+          <span className="text-[#005B97] underline group-hover:text-blue-500 transition-all duration-300 transform group-hover:scale-110">
             {job.OCR_BOLNO}
           </span>
         </Link>
       </td>
+
+      {/* File name */}
       <FileNameCell pdfUrl={job.pdfUrl} fileId={job.FILE_ID} />
+
+      {/* Job name */}
       <td className="py-2 px-4 border-b text-center min-w-44 max-w-44 sticky left-[22rem] bg-white z-10">
         {job.jobName}
       </td>
+
+      {/* Metadata Fields */}
       <td className="py-2 px-4 border-b text-center">{job.OCR_STMP_POD_DTT}</td>
       <td className="py-2 px-4 border-b text-center">{job.OCR_SYMT_NONE ?? ""}</td>
       <td className="py-2 px-4 border-b text-center">{job.OCR_STMP_SIGN ?? ""}</td>
@@ -103,71 +133,106 @@ const ExtractedDataRow: React.FC<RowProps> = ({
           : job.customerOrderNum || ""}
       </td>
 
-      {/* Final Status Dropdown */}
+      {/* Status Dropdowns */}
       <td className="py-2 px-4 border-b text-center">
-        <StatusDropdown
-          jobId={job.FILE_ID}
-          statusKey="finalStatus"
-          currentStatus={job.finalStatus}
-          options={finalOptions}
-          userRole={userRole}
-          dropdownState={dropdownStates}
-          setDropdownState={setDropdownStates}
-          updateStatus={updateStatus}
-          name={name}
-          parentRef={parentRefFinal}
-        />
+      <StatusDropdown
+  statusData={{
+    jobId: job.FILE_ID,
+    statusKey: "finalStatus",
+    currentStatus: job.finalStatus,
+    userRole,
+    name,
+  }}
+  dropdownController={{
+    dropdownState: dropdownStates,
+    setDropdownState: setDropdownStates,
+    parentRef: parentRefFinal,
+  }}
+  interactionHandlers={{
+    options: finalOptions,
+    updateStatus,
+  }}
+/>
       </td>
 
-      {/* Review Status Dropdown */}
       <td className="py-2 px-4 border-b text-center">
-        <StatusDropdown
-          jobId={job.FILE_ID}
-          statusKey="reviewStatus"
-          currentStatus={job.reviewStatus}
-          options={reviewOptions}
-          userRole={userRole}
-          dropdownState={dropdownStatesFirst}
-          setDropdownState={setDropdownStatesFirst}
-          updateStatus={updateStatus}
-          name={name}
-          parentRef={parentRefReview}
-        />
+        
+<StatusDropdown
+  statusData={{
+    jobId: job.FILE_ID,
+    statusKey: "reviewStatus",
+    currentStatus: job.reviewStatus,
+    userRole,
+    name,
+  }}
+  dropdownController={{
+    dropdownState: dropdownStatesFirst,
+    setDropdownState: setDropdownStatesFirst,
+    parentRef: parentRefReview,
+  }}
+  interactionHandlers={{
+    options: reviewOptions,
+    updateStatus,
+  }}
+/>
+
+
+
       </td>
 
-      {/* Recognition Status Dropdown */}
       <td className="py-2 px-4 border-b text-center">
-        <StatusDropdown
-          jobId={job.FILE_ID}
-          statusKey="recognitionStatus"
-          currentStatus={job.recognitionStatus}
-          options={recognitionOptions}
-          userRole={userRole}
-          dropdownState={dropdownStatesSecond}
-          setDropdownState={setDropdownStatesSecond}
-          updateStatus={updateStatus}
-          name={name}
-          parentRef={parentRefRecognition}
-        />
+        
+<StatusDropdown
+  statusData={{
+    jobId: job.FILE_ID,
+    statusKey: "recognitionStatus",
+    currentStatus: job.recognitionStatus,
+    userRole,
+    name,
+  }}
+  dropdownController={{
+    dropdownState: dropdownStatesSecond,
+    setDropdownState: setDropdownStatesSecond,
+    parentRef: parentRefRecognition,
+  }}
+  interactionHandlers={{
+    options: recognitionOptions,
+    updateStatus,
+  }}
+/>
+
+
+
+
       </td>
 
-      {/* Breakdown Reason Dropdown */}
       <td className="py-2 px-4 border-b text-center">
-        <StatusDropdown
-          jobId={job.FILE_ID}
-          statusKey="breakdownReason"
-          currentStatus={job.breakdownReason}
-          options={breakdownOptions}
-          userRole={userRole}
-          dropdownState={dropdownStatesThird}
-          setDropdownState={setDropdownStatesThird}
-          updateStatus={updateStatus}
-          name={name}
-          parentRef={parentRefBreakdown}
-        />
+       
+
+<StatusDropdown
+  statusData={{
+    jobId: job.FILE_ID,
+    statusKey: "breakdownReason",
+    currentStatus: job.breakdownReason,
+    userRole,
+    name,
+  }}
+  dropdownController={{
+    dropdownState: dropdownStatesThird,
+    setDropdownState: setDropdownStatesThird,
+    parentRef: parentRefBreakdown,
+  }}
+  interactionHandlers={{
+    options: breakdownOptions,
+    updateStatus,
+  }}
+/>
       </td>
 
+      {/* Updated By */}
       <td className="py-2 px-4 border-b text-center">{job.UPTD_USR_CD}</td>
+
+      {/* Detail Link */}
       <td className="py-2 px-6 border-b text-center">
         <Link
           href={`/extracted-data-monitoring/edit-pdf/${job.FILE_ID}`}
@@ -179,7 +244,7 @@ const ExtractedDataRow: React.FC<RowProps> = ({
         >
           Detail
           <span className="transform transition-transform duration-300 ease-in-out group-hover:translate-x-1">
-            <IoIosArrowForward className="text-xl p-0" />
+            <IoIosArrowForward className="text-xl" />
           </span>
         </Link>
       </td>

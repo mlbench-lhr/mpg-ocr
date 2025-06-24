@@ -1,5 +1,6 @@
 import { POD } from "@/type/pod";
 import React from "react";
+import PODDataRow from "./PODDataRow";
 
 interface Props {
   data: POD[];
@@ -44,26 +45,7 @@ export default function PodTable({ data }: Props) {
       </thead>
       <tbody>
         {data.map((item, index) => (
-          <tr key={index} className="text-gray-600">
-            {Object.values(item).map((value, idx) => (
-              <td
-                key={idx}
-                className={`py-1 px-4 border-b text-center ${
-                  typeof value === "string" && value.includes("T")
-                    ? "text-gray-500"
-                    : ""
-                }`}
-              >
-                {value?.toString()?.includes("T")
-                  ? new Date(value).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })
-                  : value}
-              </td>
-            ))}
-          </tr>
+          <PODDataRow key={index} item={item} />
         ))}
       </tbody>
     </table>

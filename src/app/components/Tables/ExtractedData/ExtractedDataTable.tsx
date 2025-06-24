@@ -4,84 +4,109 @@ import { RiArrowDropDownLine } from "react-icons/ri";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
 import TableSpinner from "../../TableSpinner";
-// import FileNameCell from "./FileNameCell";
 import FileNameCell from "../../UI/FileNameCell";
 import { IoIosArrowForward } from "react-icons/io";
 import ExtractedDataRow from "./ExtractedDataRow";
+import { Instance } from "tippy.js";
+import { PODOCR } from "@/app/extracted-data-monitoring/page";
 
-interface TableProps {
-  isFilterDropDownOpen: any;
-  master: any[];
+interface TableController {
+  PODOCR: PODOCR[];
   selectedRows: string[];
-  handleRowSelection: (id: string) => void;
-  handlePageChange: (page: number) => void;
   currentPage: number;
   totalPages: number;
   loadingTable: boolean;
   isAllSelected: boolean;
-  handleSelectAll: () => void;
-  handleRouteChange: () => void;
+  name: string;
+  userRole: string;
   updateStatus: (
     id: string,
     field: string,
     value: string,
-    name: string
-  ) => void;
-  name: string;
-  userRole: string;
+    reviewedBy: string
+  ) => Promise<void>;
+}
+
+interface Handlers {
+  handleRowSelection: (id: string) => void;
+  handlePageChange: (page: number) => void;
+  handleSelectAll: () => void;
+  handleRouteChange: () => void;
+}
+
+interface UIControls {
+  isFilterDropDownOpen: boolean;
+  dropdownStates: string | null;
+  setDropdownStates: React.Dispatch<React.SetStateAction<string | null>>;
+  dropdownStatesFirst: string | null;
+  setDropdownStatesFirst: React.Dispatch<React.SetStateAction<string | null>>;
+  dropdownStatesSecond: string | null;
+  setDropdownStatesSecond: React.Dispatch<React.SetStateAction<string | null>>;
+  dropdownStatesThird: string | null;
+  setDropdownStatesThird: React.Dispatch<React.SetStateAction<string | null>>;
+  parentRefFinal: React.MutableRefObject<Instance | null>;
+  parentRefReview: React.MutableRefObject<Instance | null>;
+  parentRefRecognition: React.MutableRefObject<Instance | null>;
+  parentRefBreakdown: React.MutableRefObject<Instance | null>;
   finalOptions: any[];
   reviewOptions: any[];
   recognitionOptions: any[];
   breakdownOptions: any[];
-  dropdownStates: string | null;
-  setDropdownStates: (id: string | null) => void;
-  dropdownStatesFirst: string | null;
-  setDropdownStatesFirst: (id: string | null) => void;
-  dropdownStatesSecond: string | null;
-  setDropdownStatesSecond: (id: string | null) => void;
-  dropdownStatesThird: string | null;
-  setDropdownStatesThird: (id: string | null) => void;
-  parentRefFinal: any;
-  parentRefReview: any;
-  parentRefRecognition: any;
-  parentRefBreakdown: any;
 }
 
-const ExtractedDataTable: React.FC<TableProps> = ({
-  isFilterDropDownOpen,
-  master,
-  selectedRows,
-  handleRowSelection,
-  handlePageChange,
-  currentPage,
-  totalPages,
-  loadingTable,
-  isAllSelected,
-  handleSelectAll,
-  handleRouteChange,
-  updateStatus,
-  name,
-  userRole,
-  finalOptions,
-  reviewOptions,
-  recognitionOptions,
-  breakdownOptions,
-  dropdownStates,
-  setDropdownStates,
-  dropdownStatesFirst,
-  setDropdownStatesFirst,
-  dropdownStatesSecond,
-  setDropdownStatesSecond,
-  dropdownStatesThird,
-  setDropdownStatesThird,
-  parentRefFinal,
-  parentRefReview,
-  parentRefRecognition,
-  parentRefBreakdown,
+interface ExtractedDataTableProps {
+  tableController: TableController;
+  handlers: Handlers;
+  uiControls: UIControls;
+}
+
+const ExtractedDataTable: React.FC<ExtractedDataTableProps> = ({
+  tableController,
+  handlers,
+  uiControls,
 }) => {
+  const {
+    PODOCR,
+    selectedRows,
+    currentPage,
+    totalPages,
+    loadingTable,
+    isAllSelected,
+    name,
+    userRole,
+    updateStatus,
+  } = tableController;
+
+  const {
+    handleRowSelection,
+    handlePageChange,
+    handleSelectAll,
+    handleRouteChange,
+  } = handlers;
+
+  const {
+    isFilterDropDownOpen,
+    dropdownStates,
+    setDropdownStates,
+    dropdownStatesFirst,
+    setDropdownStatesFirst,
+    dropdownStatesSecond,
+    setDropdownStatesSecond,
+    dropdownStatesThird,
+    setDropdownStatesThird,
+    parentRefFinal,
+    parentRefReview,
+    parentRefRecognition,
+    parentRefBreakdown,
+    finalOptions,
+    reviewOptions,
+    recognitionOptions,
+    breakdownOptions,
+  } = uiControls;
+
   return (
     <div className="py-3 mx-auto z-10">
-      {master.length === 0 && !loadingTable ? (
+      {PODOCR.length === 0 && !loadingTable ? (
         <div className="flex flex-col items-center mt-20">
           <span className="text-gray-800 text-xl shadow-xl p-4 rounded-lg">
             No data found
@@ -95,7 +120,6 @@ const ExtractedDataTable: React.FC<TableProps> = ({
               : "2xl:h-[900px] md:h-[460px] sm:h-[450px]"
           }`}
         >
-          {/* <div className={`overflow-x-auto w-full relative`}> */}
           <table className="table-auto min-w-full w-full border-collapse">
             <thead className="sticky top-0 bg-white z-20 shadow-md">
               <tr className="text-gray-800">
@@ -109,8 +133,9 @@ const ExtractedDataTable: React.FC<TableProps> = ({
                   </span>
                   BL Number
                 </th>
+                
                 <th className="py-2 px-4 border-b text-center min-w-44 max-w-44 sticky left-44 bg-white z-10">
-                  Uploaded File
+                  File Name
                 </th>
                 <th className="py-2 px-4 border-b text-center min-w-44 max-w-44 sticky left-[22rem] bg-white z-10">
                   Job Name
@@ -172,7 +197,7 @@ const ExtractedDataTable: React.FC<TableProps> = ({
               {loadingTable ? (
                 <tr>
                   <td
-                    colSpan={Object.keys(master[0] || {}).length}
+                    colSpan={Object.keys(PODOCR[0] || {}).length}
                     className="text-center"
                   >
                     <div className="flex justify-center">
@@ -180,7 +205,7 @@ const ExtractedDataTable: React.FC<TableProps> = ({
                     </div>
                   </td>
                 </tr>
-              ) : master.length === 0 ? (
+              ) : PODOCR.length === 0 ? (
                 <tr>
                   <td
                     colSpan={9999}
@@ -190,33 +215,33 @@ const ExtractedDataTable: React.FC<TableProps> = ({
                   </td>
                 </tr>
               ) : (
-                master.map((job) => (
+                PODOCR.map((job) => (
                   <ExtractedDataRow
-                    key={job._id}
-                    job={job}
-                    selectedRows={selectedRows}
-                    handleRowSelection={handleRowSelection}
-                    handleRouteChange={handleRouteChange}
-                    updateStatus={updateStatus}
-                    name={name}
-                    userRole={userRole}
-                    finalOptions={finalOptions}
-                    reviewOptions={reviewOptions}
-                    recognitionOptions={recognitionOptions}
-                    breakdownOptions={breakdownOptions}
-                    dropdownStates={dropdownStates}
-                    setDropdownStates={setDropdownStates}
-                    dropdownStatesFirst={dropdownStatesFirst}
-                    setDropdownStatesFirst={setDropdownStatesFirst}
-                    dropdownStatesSecond={dropdownStatesSecond}
-                    setDropdownStatesSecond={setDropdownStatesSecond}
-                    dropdownStatesThird={dropdownStatesThird}
-                    setDropdownStatesThird={setDropdownStatesThird}
-                    parentRefFinal={parentRefFinal}
-                    parentRefReview={parentRefReview}
-                    parentRefRecognition={parentRefRecognition}
-                    parentRefBreakdown={parentRefBreakdown}
-                  />
+                  key={job.FILE_ID}
+                  job={job}
+                  selectedRows={selectedRows}
+                  tableController={{ updateStatus, name, userRole }}
+                  handlers={{ handleRowSelection, handleRouteChange }}
+                  uiControls={{
+                    finalOptions,
+                    reviewOptions,
+                    recognitionOptions,
+                    breakdownOptions,
+                    dropdownStates,
+                    setDropdownStates,
+                    dropdownStatesFirst,
+                    setDropdownStatesFirst,
+                    dropdownStatesSecond,
+                    setDropdownStatesSecond,
+                    dropdownStatesThird,
+                    setDropdownStatesThird,
+                    parentRefFinal,
+                    parentRefReview,
+                    parentRefRecognition,
+                    parentRefBreakdown,
+                  }}
+                />
+                
                 ))
               )}
             </tbody>
@@ -224,7 +249,7 @@ const ExtractedDataTable: React.FC<TableProps> = ({
         </div>
       )}
 
-      {master.length !== 0 && (
+      {PODOCR.length !== 0 && (
         <div className="mt-5 flex justify-end gap-5 items-center text-gray-800">
           <button
             onClick={() => handlePageChange(currentPage - 1)}

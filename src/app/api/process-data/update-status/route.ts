@@ -25,7 +25,7 @@ export async function PATCH(req: Request) {
     const historyCollection = db.collection("jobHistory");
 
     // Fetch existing job to get old value
-    const existingJob = await dataCollection.findOne({ _id: new ObjectId(id) });
+    const existingJob = await dataCollection.findOne({ FILE_ID:id });
 
     if (!existingJob) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
@@ -37,7 +37,7 @@ export async function PATCH(req: Request) {
 
 
     const result = await dataCollection.updateOne(
-      { _id: new ObjectId(id) },
+      { FILE_ID: id },
       {
         $set: {
           [field]: value,
@@ -52,7 +52,7 @@ export async function PATCH(req: Request) {
 
     // Store the change in job history
     const historyEntry = {
-      jobId: new ObjectId(id),
+      jobId: id,
       field: field,
       oldValue: oldValue,
       newValue: value,

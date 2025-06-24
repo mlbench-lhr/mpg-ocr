@@ -2,31 +2,88 @@ import React from "react";
 import Tippy from "@tippyjs/react";
 import { RiArrowDropDownLine } from "react-icons/ri";
 
-interface StatusDropdownProps {
+interface StatusOption {
+  status: string;
+  color: string;
+  bgColor: string;
+}
+
+interface StatusData {
   jobId: string;
-  statusKey: string; // e.g., 'finalStatus', 'reviewStatus'
+  statusKey: string;
   currentStatus: string;
-  options: { status: string; color: string; bgColor: string }[];
   userRole: string;
+  name: string;
+}
+
+interface DropdownController {
   dropdownState: string | null;
   setDropdownState: (id: string | null) => void;
-  updateStatus: (id: string, field: string, value: string, name: string) => void;
-  name: string;
   parentRef: React.MutableRefObject<any>;
 }
 
+interface InteractionHandlers {
+  options: StatusOption[];
+  updateStatus: (
+    id: string,
+    field: string,
+    value: string,
+    reviewedBy: string
+  ) => void;
+}
+
+interface StatusDropdownProps {
+  statusData: StatusData;
+  dropdownController: DropdownController;
+  interactionHandlers: InteractionHandlers;
+}
+
+const getStatusStyle = (status: string) => {
+  const styles: Record<string, string> = {
+    new: "bg-blue-100 text-blue-600",
+    inProgress: "bg-yellow-100 text-yellow-600",
+    valid: "bg-green-100 text-green-600",
+    partiallyValid: "bg-[#faf1be] text-[#AF9918]",
+    failure: "bg-red-100 text-red-600",
+    sent: "bg-green-100 text-green-600",
+    unConfirmed: "bg-yellow-100 text-yellow-600",
+    confirmed: "bg-green-100 text-green-600",
+    denied: "bg-[#faf1be] text-[#AF9918]",
+    deleted: "bg-red-100 text-red-600",
+    none: "bg-blue-100 text-blue-600",
+    damaged: "bg-yellow-100 text-yellow-600",
+    shortage: "bg-green-100 text-green-600",
+    overage: "bg-[#faf1be] text-[#AF9918]",
+    refused: "bg-red-100 text-red-600",
+  };
+
+  return styles[status] || "bg-gray-100 text-gray-600";
+};
+
 const StatusDropdown: React.FC<StatusDropdownProps> = ({
-  jobId,
-  statusKey,
-  currentStatus,
-  options,
-  userRole,
-  dropdownState,
-  setDropdownState,
-  updateStatus,
-  name,
-  parentRef,
+  statusData,
+  dropdownController,
+  interactionHandlers,
 }) => {
+  const {
+    jobId,
+    statusKey,
+    currentStatus,
+    userRole,
+    name,
+  } = statusData;
+
+  const {
+    dropdownState,
+    setDropdownState,
+    parentRef,
+  } = dropdownController;
+
+  const {
+    options,
+    updateStatus,
+  } = interactionHandlers;
+
   return (
     <Tippy
       onMount={(instance) => {
@@ -69,45 +126,13 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
       appendTo={() => document.body}
     >
       <div
-        className={`inline-flex items-center transition-all duration-500 ease-in-out justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium ${
+        className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium transition-all duration-300 ${
           userRole !== "standarduser" ? "cursor-pointer" : ""
-        } ${
-          currentStatus === "new"
-            ? "bg-blue-100 text-blue-600"
-            : currentStatus === "inProgress"
-            ? "bg-yellow-100 text-yellow-600"
-            : currentStatus === "valid"
-            ? "bg-green-100 text-green-600"
-            : currentStatus === "partiallyValid"
-            ? "bg-[#faf1be] text-[#AF9918]"
-            : currentStatus === "failure"
-            ? "bg-red-100 text-red-600"
-            : currentStatus === "sent"
-            ? "bg-green-100 text-green-600"
-            : currentStatus === "unConfirmed"
-            ? "bg-yellow-100 text-yellow-600"
-            : currentStatus === "confirmed"
-            ? "bg-green-100 text-green-600"
-            : currentStatus === "denied"
-            ? "bg-[#faf1be] text-[#AF9918]"
-            : currentStatus === "deleted"
-            ? "bg-red-100 text-red-600"
-            : currentStatus === "none"
-            ? "bg-blue-100 text-blue-600"
-            : currentStatus === "damaged"
-            ? "bg-yellow-100 text-yellow-600"
-            : currentStatus === "shortage"
-            ? "bg-green-100 text-green-600"
-            : currentStatus === "overage"
-            ? "bg-[#faf1be] text-[#AF9918]"
-            : currentStatus === "refused"
-            ? "bg-red-100 text-red-600"
-            : "bg-gray-100 text-gray-600"
-        }`}
+        } ${getStatusStyle(currentStatus)}`}
       >
         <div>{currentStatus}</div>
         <RiArrowDropDownLine
-          className={`text-2xl p-0 transform transition-transform duration-300 ease-in-out ${
+          className={`text-2xl transform transition-transform duration-300 ${
             dropdownState === jobId ? "rotate-180" : ""
           }`}
         />

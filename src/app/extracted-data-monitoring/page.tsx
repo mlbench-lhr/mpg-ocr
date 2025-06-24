@@ -44,13 +44,13 @@ interface OcrJob {
   Customer_Order_Num?: string;
 }
 
-interface Job {
-  _id: string;
-  FILE_ID?: string;
+export interface PODOCR {
+  _id?: string;
+  FILE_ID: string;
   FILE_NAME?: string;
   OCR_BOLNO: string;
   pdfUrl?: string;
-  jobName: string;
+  jobName?: string;
   OCR_STMP_POD_DTT: string;
   deliveryDate: Date;
   OCR_STMP_SIGN: string;
@@ -66,11 +66,11 @@ interface Job {
   reviewStatus: ReviewStatus;
   recognitionStatus: RecognitionStatus;
   breakdownReason: BreakdownReason;
-  reviewedBy: string;
+  reviewedBy?: string;
   UPTD_USR_CD: string;
   OCR_SYMT_SEAL: string;
   cargoDescription: string;
-  CRTD_DTT: string;
+  CRTD_DTT?: string;
   updatedAt?: string;
   customerOrderNum?: string | string[] | null;
 }
@@ -131,19 +131,21 @@ const options = [
   { value: "reviewedBy", label: "Reviewed By" },
 ];
 
-const MasterPage = () => {
+const PODOCRPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState("");
   const [isFilterDropDownOpen, setIsFilterDropDownOpen] = useState(true);
   const [loadingTable, setLoadingTable] = useState(false);
-  const [master, setMaster] = useState<Job[]>([]);
+  const [POD, setPOD] = useState<PODOCR[]>([]);
   const [totalJobs, setTotalJobs] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showButton, setShowButton] = useState(false);
   const [name, setName] = useState("");
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [fileNameFilter, setFileNameFilter] = useState("");
+
   const [finalStatusFilter, setFinalStatusFilter] = useState("");
   const [reviewStatusFilter, setReviewStatusFilter] = useState("");
   const [reasonStatusFilter, setReasonStatusFilter] = useState("");
@@ -235,6 +237,8 @@ const MasterPage = () => {
   ];
   const isAnyFilterApplied = () => {
     return (
+      sessionStorage.getItem("fileNameFilter") ||
+
       sessionStorage.getItem("finalStatusFilter") ||
       sessionStorage.getItem("reviewStatusFilter") ||
       sessionStorage.getItem("reasonStatusFilter") ||
@@ -254,6 +258,8 @@ const MasterPage = () => {
       if (localStorage.getItem("prev") === "") {
         console.log("type of window-> ", typeof window);
         setFirstTime(true);
+        setFileNameFilter(sessionStorage.getItem("fileNameFilter") || "");
+
         setFinalStatusFilter(sessionStorage.getItem("finalStatusFilter") || "");
         setReviewStatusFilter(
           sessionStorage.getItem("reviewStatusFilter") || ""
@@ -276,6 +282,8 @@ const MasterPage = () => {
         setBolNumberFilter(sessionStorage.getItem("bolNumberFilter") || "");
       } else {
         console.log("called->");
+        sessionStorage.setItem("fileNameFilter", "");
+
         sessionStorage.setItem("finalStatusFilter", "");
         sessionStorage.setItem("reviewStatusFilter", "");
         sessionStorage.setItem("reasonStatusFilter", "");
@@ -288,6 +296,7 @@ const MasterPage = () => {
         sessionStorage.setItem("podDateSignatureFilter", "");
         sessionStorage.setItem("jobNameFilter", "");
         sessionStorage.setItem("bolNumberFilter", "");
+        setFileNameFilter("");
         setFinalStatusFilter("");
         setReviewStatusFilter("");
         setReasonStatusFilter("");
@@ -382,7 +391,7 @@ const MasterPage = () => {
   }, [router, userRole]);
 
   const handleRowSelection = (id: string) => {
-    console.log("_id-> ", id);
+    // console.log("_id-> ", id);
     setSelectedRows((prevSelectedRows) =>
       prevSelectedRows.includes(id)
         ? prevSelectedRows.filter((rowId) => rowId !== id)
@@ -439,12 +448,12 @@ const MasterPage = () => {
   }, []);
 
   console.log("selected rows-> ", selectedRows);
-  console.log("master -> ", master);
+  console.log("POD -> ", POD);
 
   const pdfFiles = selectedRows
     .map((rowId) => {
       console.log("row id-> ", rowId);
-      const job = master.find((job) => job.FILE_ID === rowId);
+      const job = POD.find((job) => job.FILE_ID === rowId);
       console.log("job found-> ", job);
 
       if (
@@ -458,7 +467,6 @@ const MasterPage = () => {
             fileName
           )}`,
           FILE_ID: job?.FILE_ID,
-          
         };
       }
 
@@ -512,7 +520,7 @@ const MasterPage = () => {
       setIsOcrRunning(false);
       setSelectedRows([]);
       setProgress({});
-      console.log('fetch called inside stop...')
+      console.log("fetch called inside stop...");
 
       fetchJobs();
       setIsProcessModalOpen(false);
@@ -631,24 +639,30 @@ const MasterPage = () => {
               console.error("Error saving data:", await saveResponse.json());
             } else {
               // ✅ Update master state here
-              setMaster((prev) => {
-                const updated = [...prev];
-                processedDataArray.forEach((newItem) => {
+              setPOD((prev: any) => {
+                const updated: any[] = [...prev];
+              
+                (processedDataArray as any[]).forEach((newItem: any) => {
                   const existingIndex = updated.findIndex(
-                    (job) => job.FILE_ID === newItem.FILE_ID
+                    (job: any) => job.FILE_ID === newItem.FILE_ID
                   );
-
+              
+                  // Convert deliveryDate to Date object
+                  const parsedItem: any = {
+                    ...newItem,
+                    deliveryDate: new Date(newItem.deliveryDate),
+                  };
+              
                   if (existingIndex !== -1) {
-                    // Update existing entry
                     updated[existingIndex] = {
                       ...updated[existingIndex],
-                      ...newItem,
+                      ...parsedItem,
                     };
                   } else {
-                    // Append new entry
-                    updated.push(newItem);
+                    updated.push(parsedItem);
                   }
                 });
+              
                 return updated;
               });
             }
@@ -702,15 +716,14 @@ const MasterPage = () => {
   };
 
   const handleSelectAll = () => {
-    if (selectedRows.length === master.length) {
+    if (selectedRows.length === POD.length) {
       setSelectedRows([]);
     } else {
-      setSelectedRows(master.map((job) => job._id));
+      setSelectedRows(POD.map((job) => job.FILE_ID));
     }
   };
 
-  const isAllSelected =
-    selectedRows.length === master.length && master.length > 0;
+  const isAllSelected = selectedRows.length === POD.length && POD.length > 0;
 
   const capitalizeFirstLetter = (str: string): string => {
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -737,9 +750,9 @@ const MasterPage = () => {
       });
 
       if (res.ok) {
-        setMaster((prevJobs) =>
+        setPOD((prevJobs) =>
           prevJobs.map((job) =>
-            job._id === id
+            job.FILE_ID === id
               ? { ...job, [field]: value, reviewedBy: formattedReviewedBy }
               : job
           )
@@ -788,7 +801,7 @@ const MasterPage = () => {
 
           if (response.ok) {
             const isLastPage =
-              master.length === selectedRows.length && currentPage > 1;
+              POD.length === selectedRows.length && currentPage > 1;
             if (isLastPage) {
               setCurrentPage((prevPage) => prevPage - 1);
             }
@@ -840,7 +853,7 @@ const MasterPage = () => {
 
   useEffect(() => {
     if (firstTime) {
-      console.log('fetch called...')
+      console.log("fetch called...");
       fetchJobs();
       setFirstTime(false);
     }
@@ -851,6 +864,7 @@ const MasterPage = () => {
     try {
       setLoadingTable(true);
       const filters = {
+        FILE_NAME: sessionStorage.getItem("fileNameFilter") || "",
         OCR_BOLNO: sessionStorage.getItem("bolNumberFilter") || "",
         finalStatus: sessionStorage.getItem("finalStatusFilter") || "",
         reviewStatus: sessionStorage.getItem("reviewStatusFilter") || "",
@@ -871,6 +885,7 @@ const MasterPage = () => {
       queryParams.set("page", currentPage.toString());
 
       console.log("querry params-> ", filters);
+      if(filters.FILE_NAME) queryParams.set("fileName", filters.FILE_NAME);
 
       if (filters.OCR_BOLNO) queryParams.set("bolNumber", filters.OCR_BOLNO);
       if (filters.finalStatus)
@@ -917,7 +932,7 @@ const MasterPage = () => {
 
       const data = await response.json();
       console.log("data job-> ", data);
-      setMaster(data.jobs);
+      setPOD(data.jobs);
       setTotalPages(data.totalPages);
       setTotalJobs(data.totalJobs);
     } catch (error) {
@@ -929,32 +944,13 @@ const MasterPage = () => {
     currentPage,
     sortColumn,
     sortOrder,
-    // bolNumberFilter,
-    // finalStatusFilter,
-    // reviewStatusFilter,
-    // reasonStatusFilter,
-    // reviewByStatusFilter,
-    // podDateFilter,
-    // podDateSignatureFilter,
-    // jobNameFilter,
-    // carrierFilter,
+
   ]);
 
-  // const toggleSort = (column: string) => {
-  //   if (sortColumn === column) {
-  //     setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-  //   } else {
-  //     setSortColumn(column);
-  //     setSortOrder("asc");
-  //   }
-  //   sessionStorage.setItem("sortColumn", column);
-  //   sessionStorage.setItem("sortOrder", sortOrder === "asc" ? "desc" : "asc");
-  //   fetchJobs();
-  // };
 
   useEffect(() => {
     if (firstTime) {
-      console.log('fetch called...')
+      console.log("fetch called...");
 
       fetchJobs();
       setFirstTime(false);
@@ -964,6 +960,8 @@ const MasterPage = () => {
 
   const handleFilterApply = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    sessionStorage.setItem("fileNameFilter", fileNameFilter);
+
     sessionStorage.setItem("finalStatusFilter", finalStatusFilter);
     sessionStorage.setItem("reviewStatusFilter", reviewStatusFilter);
     sessionStorage.setItem("reasonStatusFilter", reasonStatusFilter);
@@ -980,6 +978,7 @@ const MasterPage = () => {
   };
 
   const resetFiltersAndFetch = async () => {
+    sessionStorage.setItem("fileNameFilter", "");
     sessionStorage.setItem("finalStatusFilter", "");
     sessionStorage.setItem("reviewStatusFilter", "");
     sessionStorage.setItem("reasonStatusFilter", "");
@@ -991,6 +990,7 @@ const MasterPage = () => {
     sessionStorage.setItem("podDateSignatureFilter", "");
     sessionStorage.setItem("jobNameFilter", "");
     sessionStorage.setItem("bolNumberFilter", "");
+    setFileNameFilter("");
     setFinalStatusFilter("");
     setReviewStatusFilter("");
     setReasonStatusFilter("");
@@ -1002,13 +1002,14 @@ const MasterPage = () => {
     setPodDateSignatureFilter("");
     setJobNameFilter("");
     setBolNumberFilter("");
-    setMaster([]);
+    setPOD([]);
     await fetchJobs();
   };
 
   const handleRouteChange = () => {
     if (typeof window !== "undefined") {
       const filters = {
+        fileNameFilter,
         finalStatusFilter,
         reviewStatusFilter,
         reasonStatusFilter,
@@ -1037,30 +1038,6 @@ const MasterPage = () => {
     setSortOrder(value);
     setFirstTime(true);
   };
-
-  // const handleSend = () => {
-  //   Swal.fire({
-  //     title: 'Send Files',
-  //     text: 'Are you sure you want to send these files?',
-  //     icon: 'warning',
-  //     iconColor: '#AF9918',
-  //     showCancelButton: true,
-  //     confirmButtonColor: '#AF9918',
-  //     cancelButtonColor: '#E0E0E0',
-  //     confirmButtonText: 'Yes Sure!',
-  //   }).then((result) => {
-  //     if (result.isConfirmed) {
-  //       setSelectedRows([]);
-  //       Swal.fire({
-  //         title: 'Sent!',
-  //         text: 'Your files have been Sent.',
-  //         icon: 'success',
-  //         timer: 2000,
-  //         showConfirmButton: false,
-  //       });
-  //     }
-  //   });
-  // };
 
   const handleSend = async () => {
     Swal.fire({
@@ -1168,6 +1145,7 @@ const MasterPage = () => {
       setIsProcessModalOpen(false);
       setSelectedRows([]);
       setProgress({});
+
       // fetchJobs();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1179,6 +1157,45 @@ const MasterPage = () => {
 
   if (loading) return <Spinner />;
   if (!isAuthenticated) return <p>Access Denied. Redirecting...</p>;
+
+  const tableController = {
+    PODOCR: POD,
+    selectedRows,
+    currentPage,
+    totalPages,
+    loadingTable,
+    isAllSelected,
+    name,
+    userRole,
+    updateStatus,
+  };
+
+  const handlers = {
+    handleRowSelection,
+    handlePageChange,
+    handleSelectAll,
+    handleRouteChange,
+  };
+
+  const uiControls = {
+    isFilterDropDownOpen,
+    dropdownStates,
+    setDropdownStates,
+    dropdownStatesFirst,
+    setDropdownStatesFirst,
+    dropdownStatesSecond,
+    setDropdownStatesSecond,
+    dropdownStatesThird,
+    setDropdownStatesThird,
+    parentRefFinal,
+    parentRefReview,
+    parentRefRecognition,
+    parentRefBreakdown,
+    finalOptions,
+    reviewOptions,
+    recognitionOptions,
+    breakdownOptions,
+  };
 
   return (
     <div className="h-screen bg-white overflow-x-hidden max-w-screen">
@@ -1572,6 +1589,26 @@ const MasterPage = () => {
                   </button>
                 </div>
               </div>
+              <div className="flex flex-col">
+                <label
+                  htmlFor="search"
+                  className="text-sm font-semibold text-gray-800"
+                >
+                  File Name
+                </label>
+                <div className="relative">
+                  <input
+                    id="fileName"
+                    type="text"
+                    placeholder="File Name"
+                    value={fileNameFilter}
+                    onChange={(e) => setFileNameFilter(e.target.value)}
+                    className="w-full px-4 py-2 mt-1 pr-10 border rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#005B97] custom-date-input"
+                  
+                  />
+                  
+                </div>
+              </div>
 
               <div className="flex justify-end items-center gap-2 col-span-3">
                 <button
@@ -1779,14 +1816,14 @@ const MasterPage = () => {
                         if (!job || !job.pdfUrl) return null; */}
                       {selectedRows
                         .filter((rowId) => {
-                          const job = master.find((job) => job._id === rowId);
+                          const job = POD.find((job) => job._id === rowId);
                           return (
                             job &&
                             (!job.OCR_BOLNO || !job.OCR_STMP_POD_DTT?.trim())
                           );
                         })
                         .map((rowId) => {
-                          const job = master.find((job) => job._id === rowId);
+                          const job = POD.find((job) => job._id === rowId);
                           if (!job || !job.pdfUrl) return null;
                           // const pdfFilename = job.pdfUrl.split('/').pop();
                           const pdfFilename = job.pdfUrl
@@ -1897,40 +1934,13 @@ const MasterPage = () => {
           )}
 
           <ExtractedDataTable
-            isFilterDropDownOpen={isFilterDropDownOpen}
-            master={master}
-            selectedRows={selectedRows}
-            handleRowSelection={handleRowSelection}
-            handlePageChange={handlePageChange}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            loadingTable={loadingTable}
-            isAllSelected={isAllSelected}
-            handleSelectAll={handleSelectAll}
-            handleRouteChange={handleRouteChange}
-            updateStatus={updateStatus}
-            name={name}
-            userRole={userRole}
-            finalOptions={finalOptions}
-            reviewOptions={reviewOptions}
-            recognitionOptions={recognitionOptions}
-            breakdownOptions={breakdownOptions}
-            dropdownStates={dropdownStates}
-            setDropdownStates={setDropdownStates}
-            dropdownStatesFirst={dropdownStatesFirst}
-            setDropdownStatesFirst={setDropdownStatesFirst}
-            dropdownStatesSecond={dropdownStatesSecond}
-            setDropdownStatesSecond={setDropdownStatesSecond}
-            dropdownStatesThird={dropdownStatesThird}
-            setDropdownStatesThird={setDropdownStatesThird}
-            parentRefFinal={parentRefFinal}
-            parentRefReview={parentRefReview}
-            parentRefRecognition={parentRefRecognition}
-            parentRefBreakdown={parentRefBreakdown}
+            tableController={tableController}
+            handlers={handlers}
+            uiControls={uiControls}
           />
         </div>
       </div>
     </div>
   );
 };
-export default MasterPage;
+export default PODOCRPage;

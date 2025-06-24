@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 interface Job {
   _id?: ObjectId;
   OCR_BOLNO: string | number;
+  FILE_NAME: string;
   jobName?: string;
   OCR_STMP_POD_DTT?: string;
   deliveryDate?: Date;
@@ -52,6 +53,10 @@ export async function getJobsFromMongo(
   const bolNumber = url.searchParams.get("bolNumber") || "";
   const jobName = url.searchParams.get("jobName") || "";
   const searchQuery = url.searchParams.get("search") || "";
+  const createdDate = url.searchParams.get("createdDate") || "";
+  const updatedDate = url.searchParams.get("updatedDate") || "";
+  const fileName = url.searchParams.get("fileName")||"";
+
   const filter: Filter<Job> = {};
 
   const sortColumnsString = url.searchParams.get("sortColumn");
@@ -106,6 +111,9 @@ export async function getJobsFromMongo(
   if (reviewStatus) filter.reviewStatus = reviewStatus;
   if (reviewByStatus) filter.reviewedBy = reviewByStatus;
   if (breakdownReason) filter.breakdownReason = breakdownReason;
+  if (fileName) {
+    filter.FILE_NAME = { $regex: fileName.trim(), $options: "i" };
+  }
 
   if (podDate) {
     try {
@@ -114,6 +122,33 @@ export async function getJobsFromMongo(
       filter.OCR_STMP_POD_DTT = podDate;
     } catch (error) {
       console.log("Invalid podDate format:", error);
+    }
+  }
+  if (createdDate) {
+    try {
+      const parsedDate = parse(createdDate, "yyyy-MM-dd", new Date());
+      const startOfDay = new Date(parsedDate.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(parsedDate.setHours(23, 59, 59, 999));
+      filter.CRTD_DTT = {
+        $gte: startOfDay,
+        $lt: endOfDay,
+      } as any;
+    } catch (error) {
+      console.log("Invalid createdDate format:", error);
+    }
+  }
+
+  if (updatedDate) {
+    try {
+      const parsedDate = parse(updatedDate, "yyyy-MM-dd", new Date());
+      const startOfDay = new Date(parsedDate.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(parsedDate.setHours(23, 59, 59, 999));
+      filter.updatedAt = {
+        $gte: startOfDay,
+        $lt: endOfDay,
+      } as any;
+    } catch (error) {
+      console.log("Invalid createdDate format:", error);
     }
   }
 
