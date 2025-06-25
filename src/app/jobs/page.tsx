@@ -14,8 +14,6 @@ import { MdDelete } from "react-icons/md";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import Image from "next/image";
 import { Job } from "../../types";
-import { useDBConnection } from "../context/DBConnectionContext";
-
 
 const JobPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -25,8 +23,6 @@ const JobPage = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [totalJobs, setTotalJobs] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const {db}=useDBConnection()
-  console.log('db connection context-> ', db)
   const jobsPerPage = 10;
   const [totalPages, setTotalPages] = useState(1);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -40,7 +36,6 @@ const JobPage = () => {
   const handleSidebarStateChange = (newState: boolean) => {
     // setIsSidebarExpanded(newState);
     return newState;
-
   };
 
   useEffect(() => {
@@ -89,15 +84,15 @@ const JobPage = () => {
 
       if (res.ok) {
         setJobs((prevJobs) =>
-          prevJobs.map((job) =>
-            job._id === _id ? { ...job, active } : job
-          )
+          prevJobs.map((job) => (job._id === _id ? { ...job, active } : job))
         );
 
         Swal.fire({
           icon: "success",
           title: "Status Updated",
-          text: `The job status has been ${active ? "activated" : "deactivated"}.`,
+          text: `The job status has been ${
+            active ? "activated" : "deactivated"
+          }.`,
           timer: 2000,
           showConfirmButton: false,
         });
@@ -190,11 +185,15 @@ const JobPage = () => {
           });
         } else {
           const errorData = await response.json();
-          console.log("Failed to delete job:", errorData.error || "Unknown error");
+          console.log(
+            "Failed to delete job:",
+            errorData.error || "Unknown error"
+          );
           Swal.fire({
             icon: "error",
             title: "Delete Failed",
-            text: errorData.error || "Something went wrong while deleting the job.",
+            text:
+              errorData.error || "Something went wrong while deleting the job.",
           });
         }
       } catch (error) {
@@ -212,8 +211,12 @@ const JobPage = () => {
     try {
       setLoadingTable(true);
 
-      const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery.trim())}` : '';
-      const response = await fetch(`/api/jobs/add-job/?page=${currentPage}${searchParam}`);
+      const searchParam = searchQuery
+        ? `&search=${encodeURIComponent(searchQuery.trim())}`
+        : "";
+      const response = await fetch(
+        `/api/jobs/add-job/?page=${currentPage}${searchParam}`
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -236,7 +239,6 @@ const JobPage = () => {
     fetchJobs();
   }, [currentPage, fetchJobs, searchQuery]);
 
-
   if (loading) return <Spinner />;
   if (!isAuthenticated) return <p>Access Denied. Redirecting...</p>;
 
@@ -244,8 +246,9 @@ const JobPage = () => {
     <div className="flex flex-row h-screen bg-white">
       <Sidebar onStateChange={handleSidebarStateChange} />
       <div
-        className={`flex-1 flex flex-col transition-all bg-white duration-300 ${isExpanded ? "ml-64" : "ml-24"
-          }`}
+        className={`flex-1 flex flex-col transition-all bg-white duration-300 ${
+          isExpanded ? "ml-64" : "ml-24"
+        }`}
       >
         <Header
           leftContent="Jobs"
@@ -269,7 +272,6 @@ const JobPage = () => {
           }
         />
         <div className="flex-1 p-4 bg-white">
-
           {loadingTable ? (
             <div className="flex justify-center items-center">
               <Spinner />
@@ -283,7 +285,6 @@ const JobPage = () => {
                 height={200}
                 priority
                 style={{ width: "auto", height: "auto" }}
-
               />
             </div>
           ) : (
@@ -301,13 +302,18 @@ const JobPage = () => {
                   <th className="py-2 px-4 border-b text-center">At/From</th>
                   <th className="py-2 px-4 border-b text-center">To</th>
                   <th className="py-2 px-4 border-b text-center">Every</th>
+                  <th className="py-2 px-4 border-b text-center">Day Offset</th>
+                  <th className="py-2 px-4 border-b text-center">
+                    Fetch Limit
+                  </th>
                   <th className="py-2 px-4 border-b text-center">Status</th>
                   <th className="py-2 px-4 border-b text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {jobs.map((job: Job, index: number) => {
-                  const jobNumber = (currentPage - 1) * jobsPerPage + (index + 1);
+                  const jobNumber =
+                    (currentPage - 1) * jobsPerPage + (index + 1);
 
                   return (
                     <tr key={job._id} className="text-gray-600">
@@ -315,8 +321,19 @@ const JobPage = () => {
                         {`Job #${jobNumber}`}
                       </td>
 
-                      {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
-                        <td key={day} className="py-2 px-4 border-b text-center">
+                      {[
+                        "Monday",
+                        "Tuesday",
+                        "Wednesday",
+                        "Thursday",
+                        "Friday",
+                        "Saturday",
+                        "Sunday",
+                      ].map((day) => (
+                        <td
+                          key={day}
+                          className="py-2 px-4 border-b text-center"
+                        >
                           <input
                             type="checkbox"
                             checked={job.selectedDays.includes(day)}
@@ -325,25 +342,44 @@ const JobPage = () => {
                           />
                         </td>
                       ))}
-                      <td className="py-2 px-4 border-b text-center">{job.fromTime}</td>
-                      <td className="py-2 px-4 border-b text-center">{job.toTime}</td>
-                      <td className="py-2 px-4 border-b text-center">{job.everyTime}</td>
+                      <td className="py-2 px-4 border-b text-center">
+                        {job.fromTime}
+                      </td>
+                      <td className="py-2 px-4 border-b text-center">
+                        {job.toTime}
+                      </td>
+                      <td className="py-2 px-4 border-b text-center">
+                        {job.everyTime}
+                      </td>
+                      <td className="py-2 px-4 border-b text-center">
+                        {job.dayOffset}
+                      </td>
+                      <td className="py-2 px-4 border-b text-center">
+                        {job.fetchLimit ? job.fetchLimit : "-"}
+                      </td>
+
                       <td className="py-2 px-4 border-b text-center">
                         <div
-                          className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium transition-all duration-500 ease-in-out cursor-pointer ${job.active ? "bg-blue-100 text-blue-600" : "bg-red-100 text-red-600"
-                            }`} onClick={() => toggleDropdown(job._id)}
+                          className={`inline-flex items-center justify-center gap-0 px-2 py-1 rounded-full text-sm font-medium transition-all duration-500 ease-in-out cursor-pointer ${
+                            job.active
+                              ? "bg-blue-100 text-blue-600"
+                              : "bg-red-100 text-red-600"
+                          }`}
+                          onClick={() => toggleDropdown(job._id)}
                         >
                           <div>{job.active ? "Active" : "Inactive"}</div>
                           <div className="relative">
                             <RiArrowDropDownLine
-                              className={`text-2xl p-0 transform transition-transform duration-300 ${dropdownStates === job._id ? "rotate-180" : ""
-                                }`}
+                              className={`text-2xl p-0 transform transition-transform duration-300 ${
+                                dropdownStates === job._id ? "rotate-180" : ""
+                              }`}
                             />
                             <ul
-                              className={`absolute mt-2 right-1 z-50 bg-white border rounded-md shadow-lg w-24 transform origin-top transition-all duration-300 ease-in-out ${dropdownStates === job._id
-                                ? "scale-100 opacity-100 pointer-events-auto"
-                                : "scale-95 opacity-0 pointer-events-none"
-                                }`}
+                              className={`absolute mt-2 right-1 z-50 bg-white border rounded-md shadow-lg w-24 transform origin-top transition-all duration-300 ease-in-out ${
+                                dropdownStates === job._id
+                                  ? "scale-100 opacity-100 pointer-events-auto"
+                                  : "scale-95 opacity-0 pointer-events-none"
+                              }`}
                             >
                               <li
                                 onClick={() => toggleStatus(job._id, true)}
@@ -359,15 +395,19 @@ const JobPage = () => {
                               </li>
                             </ul>
                           </div>
-
                         </div>
-
                       </td>
                       <td className="py-2 px-4 border-b text-center">
-                        <button onClick={() => handleEditJob(job._id)} className="mr-5">
+                        <button
+                          onClick={() => handleEditJob(job._id)}
+                          className="mr-5"
+                        >
                           <BiSolidEditAlt className="fill-[#005B97] text-2xl" />
                         </button>
-                        <button onClick={() => handleDeleteJob(job._id)} className="">
+                        <button
+                          onClick={() => handleDeleteJob(job._id)}
+                          className=""
+                        >
                           <MdDelete className="fill-[red] text-2xl" />
                         </button>
                       </td>
@@ -378,31 +418,44 @@ const JobPage = () => {
             </table>
           )}
 
-          {loadingTable || totalPages === 0 ?
-            ''
-            :
+          {loadingTable || totalPages === 0 ? (
+            ""
+          ) : (
             <div className="mt-4 flex justify-end gap-5 items-center text-gray-800">
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`px-4 py-2 rounded-md ${currentPage === 1 ? "bg-gray-300 cursor-not-allowed" : "bg-blue-500 text-white hover:bg-blue-600"}`}
+                className={`px-4 py-2 rounded-md ${
+                  currentPage === 1
+                    ? "bg-gray-300 cursor-not-allowed"
+                    : "bg-blue-500 text-white hover:bg-blue-600"
+                }`}
               >
                 Previous
               </button>
-              <span>Page {currentPage} of {totalPages}</span>
+              <span>
+                Page {currentPage} of {totalPages}
+              </span>
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={`px-4 py-2 rounded-md ${currentPage === totalPages ? "bg-gray-300 cursor-not-allowed" : "bg-blue-500 text-white hover:bg-blue-600"}`}
+                className={`px-4 py-2 rounded-md ${
+                  currentPage === totalPages
+                    ? "bg-gray-300 cursor-not-allowed"
+                    : "bg-blue-500 text-white hover:bg-blue-600"
+                }`}
               >
                 Next
               </button>
             </div>
-          }
+          )}
         </div>
       </div>
       {isModalOpen && (
-        <AddJobModal onClose={() => setIsModalOpen(false)} onSubmit={() => fetchJobs()} />
+        <AddJobModal
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={() => fetchJobs()}
+        />
       )}
       {isEditModalOpen && editingJob && (
         <EditJobModal

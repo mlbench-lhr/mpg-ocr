@@ -9,8 +9,16 @@ const path = require("path");
 dayjs.extend(utc);
 dayjs.extend(isBetween);
 
-let cronJobCounter = 1;
 console.log("✅ OCR Cron Job Script Initialized");
+const scheduledTasks = new Map();
+function clearScheduledJobs() {
+  for (const [jobId, task] of scheduledTasks.entries()) {
+    console.log('scheduled-> ', jobId)
+    task.stop();
+    scheduledTasks.delete(jobId);
+    console.log(`🛑 Cleared job ${jobId}`);
+  }
+}
 
 const getDBConnectionType = () => {
   try {
@@ -32,13 +40,23 @@ const getDBConnectionType = () => {
   }
 };
 
-async function runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord) {
+async function runOcrForJob(
+  job,
+  ocrUrl,
+  baseUrl,
+  wmsUrl,
+  userName,
+  passWord,
+  dayOffset,
+  fetchLimit
+) {
   console.log("ocr script started.");
   const dbConnectionType = getDBConnectionType();
   console.log("db connection-> ", dbConnectionType);
   try {
-    const retrieveRes = await fetch("http://localhost:3000/api/pod/retrieve");
-
+    const retrieveRes = await fetch(
+      `http://localhost:3000/api/pod/retrieve?dayOffset=${dayOffset}&fetchLimit=${fetchLimit}`
+    );
     const fileList = await retrieveRes.json();
     console.log("file list-> ", fileList);
 
@@ -219,21 +237,31 @@ async function scheduleJobs() {
     const jobJson = await jobRes.json();
     const jobs = jobJson.activeJobs;
 
+    console.log("jobs0-> ", jobs);
+    clearScheduledJobs();
+
     for (const job of jobs) {
       const intervalStr = job.everyTime;
       const cronExp = getCronExpressionFromTime(intervalStr);
 
-      cron.schedule(cronExp, async () => {
+      const task = cron.schedule(cronExp, async () => {
         const now = new Date();
         const currentDay = now.toLocaleString("en-US", { weekday: "long" });
-        const currentTimeStr = `${String(now.getHours()).padStart(2, "0")}:${String(
-          now.getMinutes()
-        ).padStart(2, "0")}`;
+        const currentTimeStr = `${String(now.getHours()).padStart(
+          2,
+          "0"
+        )}:${String(now.getMinutes()).padStart(2, "0")}`;
 
         const fromTime = new Date(job.pdfCriteria.fromTime);
         const toTime = new Date(job.pdfCriteria.toTime);
-        const fromTimeStr = `${String(fromTime.getUTCHours()).padStart(2, "0")}:${String(fromTime.getUTCMinutes()).padStart(2, "0")}`;
-        const toTimeStr = `${String(toTime.getUTCHours()).padStart(2, "0")}:${String(toTime.getUTCMinutes()).padStart(2, "0")}`;
+        const fromTimeStr = `${String(fromTime.getUTCHours()).padStart(
+          2,
+          "0"
+        )}:${String(fromTime.getUTCMinutes()).padStart(2, "0")}`;
+        const toTimeStr = `${String(toTime.getUTCHours()).padStart(
+          2,
+          "0"
+        )}:${String(toTime.getUTCMinutes()).padStart(2, "0")}`;
 
         if (
           job.selectedDays.includes(currentDay) &&
@@ -241,10 +269,23 @@ async function scheduleJobs() {
           currentTimeStr <= toTimeStr
         ) {
           console.log(`🚀 Running OCR Job: ${job._id}`);
-          runOcrForJob(job, ocrUrl, baseUrl, wmsUrl, userName, passWord);
+          runOcrForJob(
+            
+            job,
+            ocrUrl,
+            baseUrl,
+            wmsUrl,
+            userName,
+            passWord,
+            job.dayOffset,
+            job.fetchLimit
+          );
         }
       });
 
+      console.log('task-> ', task)
+
+      scheduledTasks.set(job._id, task);
       console.log(`📅 Scheduled job ${job._id} with cron: ${cronExp}`);
     }
   } catch (err) {
@@ -272,3 +313,7 @@ async function waitForAPI(retries = 10, interval = 2000) {
   console.error("❌ API failed to respond after multiple retries.");
 }
 waitForAPI();
+setInterval(() => {
+  console.log("🔄 Checking for updated jobs...");
+  scheduleJobs();
+}, 60000);

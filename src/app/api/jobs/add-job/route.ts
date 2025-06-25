@@ -19,10 +19,21 @@ export async function POST(req: Request) {
   try {
     const jobsCollection = await getJobsCollection();
     const body = await req.json();
-    const { selectedDays, fromTime, toTime, everyTime } = body;
+    const { selectedDays, fromTime, toTime, everyTime, dayOffset, fetchLimit } =
+      body;
 
-    if (!selectedDays?.length || !fromTime || !toTime || !everyTime) {
-      return NextResponse.json({ error: "All fields are required." }, { status: 400 });
+    if (
+      !selectedDays?.length ||
+      !fromTime ||
+      !toTime ||
+      !everyTime ||
+      !dayOffset ||
+      !fetchLimit
+    ) {
+      return NextResponse.json(
+        { error: "All fields are required." },
+        { status: 400 }
+      );
     }
 
     const currentDate = new Date();
@@ -52,7 +63,10 @@ export async function POST(req: Request) {
 
     let nextJobNumber = 1;
     if (latestJob.length > 0 && latestJob[0].jobName?.startsWith("Job #")) {
-      const lastJobNumber = parseInt(latestJob[0].jobName.replace("Job #", ""), 10);
+      const lastJobNumber = parseInt(
+        latestJob[0].jobName.replace("Job #", ""),
+        10
+      );
       nextJobNumber = isNaN(lastJobNumber) ? 1 : lastJobNumber + 1;
     }
 
@@ -60,7 +74,9 @@ export async function POST(req: Request) {
 
     const result = await jobsCollection.insertOne({
       jobName,
+      fetchLimit,
       selectedDays,
+      dayOffset,
       fromTime,
       toTime,
       everyTime,
@@ -69,13 +85,15 @@ export async function POST(req: Request) {
       createdAt: new Date(),
     });
 
-    return NextResponse.json({ message: "Job added successfully.", data: result }, { status: 201 });
+    return NextResponse.json(
+      { message: "Job added successfully.", data: result },
+      { status: 201 }
+    );
   } catch (error) {
     console.log("Error adding job:", error);
     return NextResponse.json({ error: "Failed to add job." }, { status: 500 });
   }
 }
-
 
 export async function GET(req: Request) {
   try {
@@ -84,18 +102,26 @@ export async function GET(req: Request) {
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const limit = parseInt(url.searchParams.get("limit") || "10", 10);
     const skip = (page - 1) * limit;
-    const searchQuery = url.searchParams.get("search")?.trim().toLowerCase() || "";
+    const searchQuery =
+      url.searchParams.get("search")?.trim().toLowerCase() || "";
 
     let filter = {};
 
     const activeKeywords = ["ac", "active", "act", "acti", "activ"];
-    const inactiveKeywords = ["in", "inactive", "inact", "ina", "inac", "inacti", "inactiv"];
+    const inactiveKeywords = [
+      "in",
+      "inactive",
+      "inact",
+      "ina",
+      "inac",
+      "inacti",
+      "inactiv",
+    ];
 
     if (searchQuery) {
       if (activeKeywords.some((keyword) => searchQuery === keyword)) {
         filter = { active: true };
-      }
-      else if (inactiveKeywords.some((keyword) => searchQuery === keyword)) {
+      } else if (inactiveKeywords.some((keyword) => searchQuery === keyword)) {
         filter = { active: false };
       }
       // else {
@@ -114,10 +140,12 @@ export async function GET(req: Request) {
     );
   } catch (error) {
     console.log("Error fetching jobs:", error);
-    return NextResponse.json({ error: "Failed to fetch jobs." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch jobs." },
+      { status: 500 }
+    );
   }
 }
-
 
 export async function PATCH(req: Request) {
   try {
@@ -129,7 +157,10 @@ export async function PATCH(req: Request) {
     }
 
     if (!ObjectId.isValid(id)) {
-      return NextResponse.json({ error: "Invalid ObjectId format." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid ObjectId format." },
+        { status: 400 }
+      );
     }
 
     const result = await jobsCollection.updateOne(
@@ -141,10 +172,16 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Job not found." }, { status: 404 });
     }
 
-    return NextResponse.json({ message: "Job status updated successfully." }, { status: 200 });
+    return NextResponse.json(
+      { message: "Job status updated successfully." },
+      { status: 200 }
+    );
   } catch (error) {
     console.log("Error updating job status:", error);
-    return NextResponse.json({ error: "Failed to update job status." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update job status." },
+      { status: 500 }
+    );
   }
 }
 

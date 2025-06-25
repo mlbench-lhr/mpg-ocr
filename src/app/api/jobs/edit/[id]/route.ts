@@ -25,7 +25,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(job);
   } catch (error) {
     console.log("Error fetching job:", error);
-    return NextResponse.json({ error: "Failed to fetch job." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch job." },
+      { status: 500 }
+    );
   }
 }
 
@@ -33,10 +36,21 @@ export async function PATCH(req: NextRequest) {
   try {
     const id = new URL(req.url).pathname.split("/").pop();
     const body = await req.json();
-    const { selectedDays, fromTime, toTime, everyTime, active } = body;
+    const { selectedDays, fromTime, toTime, everyTime, active, dayOffset,fetchLimit } =
+      body;
 
-    if (!selectedDays?.length || !fromTime || !toTime || !everyTime) {
-      return NextResponse.json({ error: "All fields are required." }, { status: 400 });
+    if (
+      !selectedDays?.length ||
+      !fromTime ||
+      !toTime ||
+      !everyTime ||
+      !dayOffset||
+      !fetchLimit
+    ) {
+      return NextResponse.json(
+        { error: "All fields are required." },
+        { status: 400 }
+      );
     }
 
     const currentDate = new Date();
@@ -66,9 +80,11 @@ export async function PATCH(req: NextRequest) {
       {
         $set: {
           selectedDays,
+          fetchLimit,
           fromTime,
           toTime,
           everyTime,
+          dayOffset,
           active,
           pdfCriteria: pdfCriteria,
           updatedAt: new Date(),
@@ -83,6 +99,9 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ message: "Job updated successfully." });
   } catch (error) {
     console.log("Error updating job:", error);
-    return NextResponse.json({ error: "Failed to update job." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update job." },
+      { status: 500 }
+    );
   }
 }

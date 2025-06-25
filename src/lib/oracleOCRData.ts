@@ -57,37 +57,47 @@ export async function getOracleOCRData(
       url.searchParams.get("podDateSignature")?.trim().toLowerCase() || "";
     const bolNumber =
       url.searchParams.get("bolNumber")?.trim().toLowerCase() || "";
+
     const createdDate = url.searchParams.get("createdDate") || "";
     const updatedDate = url.searchParams.get("updatedDate") || "";
     const uptd_Usr_Cd = url.searchParams.get("uptd_Usr_Cd") || "";
 
     const isOCR = uptd_Usr_Cd.toLowerCase() === "ocr";
-    console.log("skip, limit-> ", skip, " ", limit);
     if (!isOCR) {
+      const fileName =
+        url.searchParams.get("fileName")?.trim().toLowerCase() || "";
       const baseQuery = `
-        SELECT A.FILE_ID AS FILE_ID, A.FILE_NAME AS FILE_NAME, A.CRTD_DTT AS CRTD_DTT,
-               ROW_NUMBER() OVER (ORDER BY A.CRTD_DTT DESC) AS rn
-        FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_T A
-        JOIN ${process.env.ORACLE_DB_USER_NAME}.XTI_POD_STAMP_REQRD_T B 
-          ON A.FILE_ID = B.FILE_ID
-        WHERE NOT EXISTS (
-          SELECT * FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T C 
-          WHERE C.FILE_ID = A.FILE_ID
-        )
-        ${
-          createdDate
-            ? "AND TO_CHAR(B.CRTD_DTT, 'YYYYMMDD') = TO_CHAR(NVL(TO_DATE(:createdDate, 'YYYY-MM-DD'), SYSDATE), 'YYYYMMDD')"
-            : ""
-        }
-      `;
+    SELECT 
+      A.FILE_ID AS FILE_ID,
+      A.FILE_NAME AS FILE_NAME,
+      A.CRTD_DTT AS CRTD_DTT,
+      ROW_NUMBER() OVER (ORDER BY A.CRTD_DTT DESC) AS rn
+    FROM 
+      ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_T A
+    JOIN 
+      ${process.env.ORACLE_DB_USER_NAME}.XTI_POD_STAMP_REQRD_T B 
+      ON A.FILE_ID = B.FILE_ID
+    LEFT JOIN 
+      ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T C 
+      ON A.FILE_ID = C.FILE_ID
+    WHERE 
+      (C.FILE_ID IS NULL OR C.UPTD_DTT IS NULL)
+      ${
+        createdDate
+          ? "AND TO_CHAR(B.CRTD_DTT, 'YYYYMMDD') = TO_CHAR(TO_DATE(:createdDate, 'YYYY-MM-DD'), 'YYYYMMDD')"
+          : ""
+      }
+      ${fileName ? "AND LOWER(A.FILE_NAME) LIKE :fileName" : ""}
+  `;
 
       const paginatedQuery = `
-        SELECT * FROM (${baseQuery})
-        WHERE rn > :offset AND rn <= :maxRow
-      `;
+    SELECT * FROM (${baseQuery})
+    WHERE rn > :offset AND rn <= :maxRow
+  `;
 
       const bindParams = {
         ...(createdDate ? { createdDate } : {}),
+        ...(fileName ? { fileName: `%${fileName}%` } : {}),
         offset: skip,
         maxRow: skip + limit,
       };
@@ -96,26 +106,34 @@ export async function getOracleOCRData(
         outFormat: oracledb.OUT_FORMAT_OBJECT,
       });
 
+      const countQuery = `
+    SELECT COUNT(*) AS TOTAL FROM (
+      SELECT A.FILE_ID
+      FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_T A
+      JOIN ${process.env.ORACLE_DB_USER_NAME}.XTI_POD_STAMP_REQRD_T B 
+        ON A.FILE_ID = B.FILE_ID
+      LEFT JOIN ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T C 
+        ON A.FILE_ID = C.FILE_ID
+      WHERE 
+        (C.FILE_ID IS NULL OR C.UPTD_DTT IS NULL)
+        ${
+          createdDate
+            ? "AND TO_CHAR(B.CRTD_DTT, 'YYYYMMDD') = TO_CHAR(TO_DATE(:createdDate, 'YYYY-MM-DD'), 'YYYYMMDD')"
+            : ""
+        }
+        ${fileName ? "AND LOWER(A.FILE_NAME) LIKE :fileName" : ""}
+    )
+  `;
+      const countBindParams: Record<string, string | number | Date> = {};
+      if (createdDate) countBindParams.createdDate = createdDate;
+      if (fileName) countBindParams.fileName = `%${fileName}%`;
+
       const countResult = await connection.execute(
-        `SELECT COUNT(*) AS TOTAL FROM (
-          SELECT A.FILE_ID
-          FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_T A
-          JOIN ${process.env.ORACLE_DB_USER_NAME}.XTI_POD_STAMP_REQRD_T B 
-            ON A.FILE_ID = B.FILE_ID
-          WHERE NOT EXISTS (
-            SELECT * FROM ${
-              process.env.ORACLE_DB_USER_NAME
-            }.XTI_FILE_POD_OCR_T C 
-            WHERE C.FILE_ID = A.FILE_ID
-          )
-          ${
-            createdDate
-              ? "AND TO_CHAR(B.CRTD_DTT, 'YYYYMMDD') = TO_CHAR(NVL(TO_DATE(:createdDate, 'YYYY-MM-DD'), SYSDATE), 'YYYYMMDD')"
-              : ""
-          }
-        )`,
-        createdDate ? { createdDate } : {},
-        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        countQuery,
+        countBindParams,
+        {
+          outFormat: oracledb.OUT_FORMAT_OBJECT,
+        }
       );
 
       const filteredData = (result?.rows ?? []) as PodFile[];
@@ -169,10 +187,10 @@ export async function getOracleOCRData(
       whereClauses.push(`LOWER(ocr.OCR_BOLNO) LIKE :bolNumber`);
       filterBinds.bolNumber = `%${bolNumber}%`;
     }
-console.log('upated user-> ', uptd_Usr_Cd)
+
     const whereSQL =
       whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
-      console.log('where sql-> ', whereSQL)
+    console.log("where sql-> ", whereSQL);
 
     const sql = `
       SELECT * FROM (

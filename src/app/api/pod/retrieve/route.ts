@@ -10,6 +10,12 @@ export async function GET(req: NextRequest) {
     const client = await clientPromise;
     const db = client.db("my-next-app");
     const connectionsCollection = db.collection("db_connections");
+    const url = new URL(req.url);
+    const dayOffsetParam = url.searchParams.get("dayOffset");
+    const dayOffset = parseInt(dayOffsetParam || "0", 10);
+    const fetchLimitParam = url.searchParams.get("fetchLimit");
+    const fetchLimit = parseInt(fetchLimitParam || "5000", 10);
+    console.log("fetch limit-> ", fetchLimit, dayOffset);
 
     const userDBCredentials = await connectionsCollection.findOne(
       {},
@@ -40,19 +46,21 @@ export async function GET(req: NextRequest) {
       );
     }
     oracledb.fetchAsString = [oracledb.CLOB];
-  const result = await connection.execute(
-  `SELECT A.FILE_ID AS FILE_ID, A.FILE_TABLE AS FILE_TABLE, A.FILE_NAME AS FILE_NAME, A.CRTD_DTT AS CRTD_DTT 
+
+    const result = await connection.execute(
+      `SELECT A.FILE_ID AS FILE_ID, A.FILE_TABLE AS FILE_TABLE, A.FILE_NAME AS FILE_NAME, A.CRTD_DTT AS CRTD_DTT 
    FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_T A
    JOIN ${process.env.ORACLE_DB_USER_NAME}.XTI_POD_STAMP_REQRD_T B 
      ON A.FILE_ID = B.FILE_ID
-   WHERE TO_CHAR(B.CRTD_DTT, 'YYYYMMDD') = TO_CHAR(SYSDATE - 1, 'YYYYMMDD')
-     AND NOT EXISTS (
-       SELECT * FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T C 
-       WHERE C.FILE_ID = A.FILE_ID
-     )`,
-  [],
-  { outFormat: oracledb.OUT_FORMAT_OBJECT }
-);
+   LEFT JOIN ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T C 
+     ON A.FILE_ID = C.FILE_ID
+   WHERE TO_CHAR(B.CRTD_DTT, 'YYYYMMDD') = TO_CHAR(SYSDATE + :dayOffset, 'YYYYMMDD')
+     AND (C.FILE_ID IS NULL OR C.UPTD_DTT IS NULL)
+       AND ROWNUM <= :fetchLimit ORDER BY FILE_ID ASC`,
+      { dayOffset, fetchLimit },
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
     const formattedResult = result.rows ?? [];
     return NextResponse.json(formattedResult);
   } catch (err) {

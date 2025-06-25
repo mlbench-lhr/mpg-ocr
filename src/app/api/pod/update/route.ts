@@ -7,6 +7,8 @@ export async function PUT(req: Request) {
   try {
     const { fileId, ocrData } = await req.json();
 
+    console.log('update executed...')
+
     if (!fileId || !ocrData) {
       return NextResponse.json(
         { error: "fileId and ocrData are required" },

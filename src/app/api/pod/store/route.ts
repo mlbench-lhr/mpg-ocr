@@ -55,7 +55,14 @@ export async function POST(req: Request) {
       `INSERT INTO  ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T (FILE_ID, CRTD_USR_CD, CRTD_DTT, SENT_FILE_DTT)
              SELECT B.FILE_ID, 'OCR', SYSDATE, SYSDATE
              FROM  ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_T B
-             WHERE B.FILE_ID = :fileId`,
+             WHERE B.FILE_ID = :fileId
+             AND NOT EXISTS (
+
+        SELECT 1 FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T C
+
+         WHERE C.FILE_ID = B.FILE_ID
+
+      )`,
       [fileId]
     );
 
