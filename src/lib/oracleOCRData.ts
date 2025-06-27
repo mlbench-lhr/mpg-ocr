@@ -190,7 +190,6 @@ export async function getOracleOCRData(
 
     const whereSQL =
       whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
-    console.log("where sql-> ", whereSQL);
 
     const sql = `
       SELECT * FROM (
@@ -212,7 +211,6 @@ export async function getOracleOCRData(
     const result = await connection.execute<OracleRow>(sql, resultBinds, {
       outFormat: oracledb.OUT_FORMAT_OBJECT,
     });
-    console.log("result-> ", result);
 
     const countSQL = `SELECT COUNT(*) AS TOTAL FROM ${tableName} ocr ${whereSQL}`;
     const countResult = await connection.execute(countSQL, filterBinds, {
@@ -246,7 +244,6 @@ export async function getOracleOCRData(
         podDate: row.OCR_STMP_POD_DTT,
         createdAt: row.CRTD_DTT,
         sealIntact: row.OCR_SYMT_SEAL,
-        stampExists: row.OCR_SYMT_NONE === "N" ? "no" : "yes",
         reviewedBy: row.UPTD_USR_CD,
       };
     });

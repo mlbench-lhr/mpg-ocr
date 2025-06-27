@@ -47,7 +47,6 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const id = url.pathname.split("/").pop();
     const dbType = getDBConnectionType();
-  console.log("db type-> ", dbType);
     if (!id) {
       return NextResponse.json(
         { error: "Job ID is required" },
@@ -144,7 +143,6 @@ export async function GET(req: Request) {
         );
       }
       const lob = row.FILE_DATA;
-      console.log("blob row-> ", row);
       const buffer = await new Promise<Buffer>((resolve, reject) => {
         const chunks: Buffer[] = [];
         lob.on("data", (chunk) => chunks.push(chunk));

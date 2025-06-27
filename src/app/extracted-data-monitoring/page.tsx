@@ -584,7 +584,6 @@ const MasterPage = () => {
             body: JSON.stringify({
               _id: fileId,
               file_url_or_path: filePath,
-              // FILE_DATA: "123",
             }),
             signal: abortController.signal,
           });
@@ -594,7 +593,7 @@ const MasterPage = () => {
             throw new Error(errorData?.error || "Failed to process OCR");
           }
           const ocrData = await ocrResponse.json();
-          console.log("ocrdata-> ", ocrData);
+          console.log('ocr dtaa-> ', ocrData)
 
           if (ocrData && Array.isArray(ocrData)) {
             if (db === "remote") {

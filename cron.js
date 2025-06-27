@@ -9,14 +9,12 @@ const path = require("path");
 dayjs.extend(utc);
 dayjs.extend(isBetween);
 
-console.log("✅ OCR Cron Job Script Initialized");
+console.log("OCR Cron Job Script Initialized");
 const scheduledTasks = new Map();
 function clearScheduledJobs() {
   for (const [jobId, task] of scheduledTasks.entries()) {
-    console.log('scheduled-> ', jobId)
     task.stop();
     scheduledTasks.delete(jobId);
-    console.log(`🛑 Cleared job ${jobId}`);
   }
 }
 
@@ -25,7 +23,7 @@ const getDBConnectionType = () => {
     const filePath = path.join(__dirname, "db-config.json");
 
     if (!fs.existsSync(filePath)) {
-      console.error("❌ db-config.json not found.");
+      console.error("db-config.json not found.");
       return;
     }
 
@@ -33,10 +31,10 @@ const getDBConnectionType = () => {
     const config = JSON.parse(raw);
 
     const dbType = config.dbType;
-    console.log("✅ DB Type:", dbType);
+    console.log("DB Type:", dbType);
     return dbType;
   } catch (err) {
-    console.error("❌ Error reading DB config:", err.message);
+    console.error("Error reading DB config:", err.message);
   }
 };
 
@@ -84,7 +82,7 @@ async function runOcrForJob(
         const ocrRes = await fetch(ocrUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ file_url_or_path: filePath }),
+          body: JSON.stringify({ _id: fileId, file_url_or_path: filePath }),
         });
 
         if (!ocrRes.ok) {
@@ -93,6 +91,7 @@ async function runOcrForJob(
         }
 
         const ocrData = await ocrRes.json();
+        console.log("ocrData-> ", ocrData);
         if (!Array.isArray(ocrData)) continue;
 
         const processed = ocrData.map((d) => ({
@@ -133,7 +132,7 @@ async function runOcrForJob(
         }));
 
         const single = processed[0];
-
+        console.log("data-> ", ocrData);
         // SAP BOL matching
         try {
           const basicAuth = Buffer.from(`${userName}:${passWord}`).toString(
@@ -160,11 +159,14 @@ async function runOcrForJob(
         } catch (err) {
           console.error("SAP check error:", err.message);
         }
+        console.log("data1-> ", ocrData);
 
         const confirmRes = await fetch(
           "http://localhost:3000/api/settings/auto-confirmation"
         );
         const confirmJson = await confirmRes.json();
+        console.log("data2-> ", ocrData);
+
 
         if (confirmJson.isAutoConfirmationOpen) {
           await fetch("http://localhost:3000/api/pod/update", {
@@ -183,9 +185,9 @@ async function runOcrForJob(
           body: JSON.stringify(processed),
         });
 
-        console.log(`✅ File ${fileId} processed.`);
+        console.log(`File ${fileId} processed.`);
       } catch (err) {
-        console.error("❌ File processing error:", err);
+        console.error("File processing error:", err);
       }
     }
   } catch (err) {
@@ -197,18 +199,18 @@ function getCronExpressionFromTime(timeStr) {
   const [hours, minutes] = timeStr.split(":").map(Number);
 
   if (hours === 0 && minutes > 0) {
-    return `*/${minutes} * * * *`; // every X minutes
+    return `*/${minutes} * * * *`;
   }
 
   if (minutes === 0 && hours > 0) {
-    return `0 */${hours} * * *`; // every X hours
+    return `0 */${hours} * * *`;
   }
 
   if (hours > 0 && minutes > 0) {
-    return `${minutes} */${hours} * * *`; // rough combo support
+    return `${minutes} */${hours} * * *`;
   }
 
-  return "* * * * *"; // default fallback to every minute
+  return "* * * * *";
 }
 
 async function scheduleJobs() {
@@ -237,7 +239,6 @@ async function scheduleJobs() {
     const jobJson = await jobRes.json();
     const jobs = jobJson.activeJobs;
 
-    console.log("jobs0-> ", jobs);
     clearScheduledJobs();
 
     for (const job of jobs) {
@@ -262,15 +263,19 @@ async function scheduleJobs() {
           2,
           "0"
         )}:${String(toTime.getUTCMinutes()).padStart(2, "0")}`;
+        console.log("currentday-> ", currentDay);
+        console.log("currentTimeStr-> ", currentTimeStr);
+        console.log("fromTime-> ", fromTime);
+        console.log("toTime-> ", toTime);
+        console.log("fromTimeStr-> ", fromTimeStr);
 
         if (
           job.selectedDays.includes(currentDay) &&
           currentTimeStr >= fromTimeStr &&
           currentTimeStr <= toTimeStr
         ) {
-          console.log(`🚀 Running OCR Job: ${job._id}`);
+          console.log(`Running OCR Job: ${job._id}`);
           runOcrForJob(
-            
             job,
             ocrUrl,
             baseUrl,
@@ -283,13 +288,11 @@ async function scheduleJobs() {
         }
       });
 
-      console.log('task-> ', task)
-
       scheduledTasks.set(job._id, task);
-      console.log(`📅 Scheduled job ${job._id} with cron: ${cronExp}`);
+      console.log(`Scheduled job ${job._id} with cron: ${cronExp}`);
     }
   } catch (err) {
-    console.error("❌ Scheduling failed:", err.message);
+    console.error("Scheduling failed:", err.message);
   }
 }
 
@@ -301,19 +304,19 @@ async function waitForAPI(retries = 10, interval = 2000) {
     try {
       const res = await fetch(url);
       if (res.ok) {
-        console.log("✅ API is up, starting scheduler...");
+        console.log("API is up, starting scheduler...");
         await scheduleJobs();
         return;
       }
     } catch (err) {
-      console.log("🔁 Waiting for API to be ready...");
+      console.log("Waiting for API to be ready...");
       await delay(interval);
     }
   }
-  console.error("❌ API failed to respond after multiple retries.");
+  console.error("API failed to respond after multiple retries.");
 }
 waitForAPI();
 setInterval(() => {
-  console.log("🔄 Checking for updated jobs...");
+  console.log("Checking for updated jobs...");
   scheduleJobs();
 }, 60000);
