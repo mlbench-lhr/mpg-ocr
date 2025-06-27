@@ -9,7 +9,6 @@ import { useSidebar } from "../../../context/SidebarContext";
 import Link from "next/link";
 import { ObjectId } from "mongodb";
 import { useDBConnection } from "@/app/context/DBConnectionContext";
-import { getFileExtension } from "@/lib/getMimeType";
 
 interface Job {
   _id: ObjectId;
@@ -170,8 +169,10 @@ const JobDetail = () => {
     }
   }, [id, db]);
 
-  const mimeTypeSafe = mimeType ?? "application/pdf";
-  const fileExtension = getFileExtension(mimeTypeSafe);
+  console.log('mimeType-> ', mimeType)
+
+  // const mimeTypeSafe = mimeType ?? "application/pdf";
+  // const fileExtension = getFileExtension(mimeTypeSafe);
   const handleIframeLoad = () => {
     setIsLoading(false);
   };
@@ -282,6 +283,7 @@ const JobDetail = () => {
 
   if (!job) return <>{error}</>;
 
+
   const fileName = job.pdfUrl.split("/").pop();
 
   return (
@@ -322,11 +324,7 @@ const JobDetail = () => {
           <>
             <div className="mx-5 flex bg-white pt-3 h-5/6">
               <div className="flex-auto xl:h-[calc(143vh-6rem)] 2xl:h-screen bg-white relative">
-                <iframe
-                  src={`data:application/pdf;base64,${base64Data}`}
-                  className="w-full h-screen"
-                  title="PDF Preview"
-                />
+              
                 {db === "local" ? (
                   <>
                     <p>local</p>
@@ -348,7 +346,7 @@ const JobDetail = () => {
                   <>
                     <p>remote</p>
                     <iframe
-                      src={`data:${fileExtension};base64,${base64Data}`}
+                      src={`data:${mimeType};base64,${base64Data}`}
                       className="w-full h-screen"
                       title="PDF Preview"
                     />

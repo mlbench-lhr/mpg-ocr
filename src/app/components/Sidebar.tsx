@@ -55,7 +55,7 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
 
   const [isInputActive, setIsInputActive] = useState(false); // Track input foc
   const [dataBase, setDataBase] = useState("local");
-  console.log(dataBase)
+  console.log(dataBase);
   const [status, setStatus] = useState<"online" | "offline" | "loading">(
     "loading"
   );
@@ -85,46 +85,6 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
 
     fetchExistingData();
   }, []);
-
-  // useEffect(() => {
-  //     const fetchWmsUrl = async () => {
-  //         try {
-  //             const response = await fetch("/api/save-wms-url");
-  //             const data = await response.json();
-  //             if (response.ok && data.wmsUrl) {
-  //                 setWmsUrl(data.wmsUrl);
-  //                 setOriginalUrl(data.wmsUrl);
-  //             }
-  //         } catch (error) {
-  //             console.error("Error fetching WMS URL:", error);
-  //         }
-  //     };
-
-  //     fetchWmsUrl();
-  // }, []);
-
-  // const handleSave = async () => {
-  //     setIsSaving(true);
-  //     try {
-  //         const response = await fetch("/api/save-wms-url", {
-  //             method: "POST",
-  //             headers: { "Content-Type": "application/json" },
-  //             body: JSON.stringify({ wmsUrl }),
-  //         });
-
-  //         if (response.ok) {
-  //             setSaved(true);
-  //             setOriginalUrl(wmsUrl); // Update stored URL after save
-  //             setTimeout(() => setSaved(false), 3000); // Hide success message after 10 sec
-  //         } else {
-  //             console.error("Failed to save WMS URL");
-  //         }
-  //     } catch (error) {
-  //         console.error("Error saving WMS URL:", error);
-  //     } finally {
-  //         setIsSaving(false);
-  //     }
-  // };
 
   useEffect(() => {
     const fetchWmsUrl = async () => {
@@ -196,27 +156,7 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     preloadImage.onload = () => setIsImageLoaded(true);
   }, []);
 
-  // const [isExpanded, setIsExpanded] = useState<boolean>();
-
-  // useEffect(() => {
-  //     const savedState = localStorage.getItem("sidebar");
-  //     if (savedState !== null) {
-  //         const parsedState = JSON.parse(savedState);
-  //         setIsExpanded(parsedState);
-  //         onStateChange(parsedState);
-  //     }
-  // }, [onStateChange]);
-
-  // const toggleExpand = () => {
-  //     setDropdownOpen(false);
-  //     const newState = !isExpanded;
-  //     setIsExpanded(newState);
-  //     localStorage.setItem("sidebar", JSON.stringify(newState));
-  //     onStateChange(newState);
-  // };
-
   useEffect(() => {
-    // Fetch the stored IP from MongoDB
     fetch("/api/ipAddress/ip-address")
       .then((res) => res.json())
       .then((data) => {
@@ -298,10 +238,6 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
     );
     return JSON.parse(jsonPayload);
   };
-
-  // const toggleAutoConfirmation = () => {
-  //     setAutoConfirmationOpen((prevState) => !prevState);
-  // };
 
   useEffect(() => {
     const checkStatus = async () => {

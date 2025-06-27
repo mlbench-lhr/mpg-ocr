@@ -91,8 +91,10 @@ export async function getJobsFromMongo(
     filter.jobName = { $regex: jobName.trim(), $options: "i" };
   }
 
-  if (uptd_Usr_Cd) {
+  if (uptd_Usr_Cd.trim()) {
     filter.uptd_Usr_Cd = { $regex: uptd_Usr_Cd.trim(), $options: "i" };
+  } else {
+    filter.uptd_Usr_Cd = "";
   }
 
   if (searchQuery) {
@@ -127,14 +129,14 @@ export async function getJobsFromMongo(
     }
   }
   if (createdAt) {
-  const nextDay = new Date(createdAt);
-  nextDay.setDate(nextDay.getDate() + 1);
+    const nextDay = new Date(createdAt);
+    nextDay.setDate(nextDay.getDate() + 1);
 
-  filter.createdAt = {
-    $gte: createdAt,
-    $lt: nextDay,
-  };
-}
+    filter.createdAt = {
+      $gte: createdAt,
+      $lt: nextDay,
+    };
+  }
   if (fileName) {
     const fileNameRegex = new RegExp(fileName.trim(), "i");
     filter.pdfUrl = { $regex: fileNameRegex };

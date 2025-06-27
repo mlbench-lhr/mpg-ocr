@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
                 reviewedBy: "",
                 cargoDescription: "",
                 sealIntact: "",
-                uptd_Usr_Cd:"OCR",
+                uptd_Usr_Cd:"",
                 createdAt: new Date(),
             };
 
