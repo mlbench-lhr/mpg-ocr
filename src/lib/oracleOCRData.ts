@@ -228,6 +228,7 @@ export async function getOracleOCRData(
         );
         return cleanFileName === row.FILE_ID;
       });
+      
 
       return {
         _id: matchedMongoJob?._id || `${row.FILE_ID}`,

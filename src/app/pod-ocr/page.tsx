@@ -4,11 +4,11 @@ import { useState, useEffect, useCallback } from "react";
 import Sidebar from "../components/Sidebar";
 import { useSidebar } from "../context/SidebarContext";
 import Header from "../components/Header";
-import Spinner from "../components/Spinner";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import axios from "axios";
 import PODFilter from "../components/PODFilter";
+import TableSpinner from "../components/TableSpinner";
 
 type Log = {
   FILE_ID: string;
@@ -42,6 +42,7 @@ export default function Page() {
   const [applyFilters, setApplyFilters] = useState(false);
   const [resetEnabled, setResetEnabled] = useState(false);
   const [limit, setLimit] = useState<number | "">(100);
+  const [allowPageOneFetch, setAllowPageOneFetch] = useState(false);
 
   const [filters, setFilters] = useState({
     file_id: "",
@@ -136,15 +137,19 @@ export default function Page() {
   }, [router]);
 
   const { isExpanded } = useSidebar();
-  console.log("current page-> ", currentPage);
   const handleSidebarStateChange = (newState: boolean) => {
     // setIsSidebarExpanded(newState);
     return newState;
   };
 
-  const handlePageChange = (newPage: number) => {
-    setCurrentPage(newPage);
-  };
+const handlePageChange = (newPage: number) => {
+  if (newPage === 2) {
+    setAllowPageOneFetch(true);
+  }
+
+  setCurrentPage(newPage); // ✅ Always set page
+};
+
 
   const fetchPodData = useCallback(async () => {
     try {
@@ -158,7 +163,6 @@ export default function Page() {
       const response = await axios.get(
         `/api/oracle-data?page=${currentPage}&${searchParam}&limit=${limit}`
       );
-      console.log("response -> ", response.data);
       const data = response.data;
       setPodData(data.data);
       setTotalPages(data.totalPages);
@@ -169,13 +173,22 @@ export default function Page() {
       setLoadingTable(false);
     }
   }, [currentPage, filters, limit]);
-  console.log("limit-> ", limit);
-  useEffect(() => {
-    // if (applyFilters) {
-      fetchPodData();
-      setApplyFilters(false); // Reset after fetch
-    // }
-  }, [applyFilters, fetchPodData, currentPage]);
+
+useEffect(() => {
+  if (
+    applyFilters ||
+    currentPage > 1 ||
+    (currentPage === 1 && allowPageOneFetch)
+  ) {
+    fetchPodData();
+    setApplyFilters(false);
+    if (currentPage === 1 && allowPageOneFetch) {
+      setAllowPageOneFetch(false);
+    }
+  }
+}, [applyFilters, currentPage, allowPageOneFetch]);
+
+
 
   if (!isAuthenticated) return <p>Access Denied. Redirecting...</p>;
 
@@ -202,7 +215,7 @@ export default function Page() {
           }
           buttonContent={""}
         />
-        <div className="px-2  bg-[#E6E7EB] rounded-lg mx-2 mb-3 pb-3">
+        <div className="px-2  bg-[#E6E7EB] rounded-lg mx-2 mb-3 pb-3 pt-3">
           <PODFilter filters={filters} setFilters={setFilters} />
           <label className="mb-1 text-sm font-semibold text-gray-800">
             Maximum No. of Hits
@@ -250,7 +263,7 @@ export default function Page() {
         <div className="flex-1 p-4 bg-white">
           {loadingTable ? (
             <div className="flex justify-center ">
-              <Spinner />
+              <TableSpinner />
             </div>
           ) : podData.length === 0 ? (
             <div className="flex flex-col items-center mt-20">
@@ -268,7 +281,7 @@ export default function Page() {
               <div className="w-full overflow-x-auto grid">
                 <table className="min-w-full bg-white border-gray-300">
                   <thead>
-                    <tr className="text-xl text-gray-800">
+                    <tr className="text-xl text-gray-800 pt-10">
                       <th className="py-2 px-4 border-b text-start font-medium">
                         File ID
                       </th>

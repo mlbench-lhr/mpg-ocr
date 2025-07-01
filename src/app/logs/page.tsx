@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import Sidebar from "../components/Sidebar";
 import { useSidebar } from "../context/SidebarContext";
 import Header from "../components/Header";
-import Spinner from "../components/Spinner";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -16,6 +15,7 @@ import { MdDelete } from "react-icons/md";
 import { FiSearch } from "react-icons/fi";
 import { FaChevronDown } from "react-icons/fa";
 import { IoCalendar } from "react-icons/io5";
+import TableSpinner from "../components/TableSpinner";
 
 export interface Log {
   _id: string; // MongoDB ObjectId as string
@@ -44,6 +44,8 @@ export default function Page() {
   const [logs, setLogs] = useState<Log[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [allowPageOneFetch, setAllowPageOneFetch] = useState(false);
+  const [applyFilters, setApplyFilters] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -97,8 +99,13 @@ export default function Page() {
   };
 
   const handlePageChange = (newPage: number) => {
+  if (newPage !== currentPage) {
+    if (newPage > 1) {
+      setAllowPageOneFetch(true);
+    }
     setCurrentPage(newPage);
-  };
+  }
+};
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -110,7 +117,8 @@ export default function Page() {
         status: sessionStorage.getItem("statusFilter") || "",
         connectionResult: sessionStorage.getItem("oracleFilter") || "",
       };
-      const PageParam = currentPage.toString();
+      // const PageParam = currentPage.toString();
+      // console.log("Current Page:", PageParam);
       const queryParams = new URLSearchParams();
       // queryParams.set("page", currentPage.toString());
 
@@ -126,8 +134,10 @@ export default function Page() {
       //   ? `&search=${encodeURIComponent(searchQuery)}`
       //   : "";
       const response = await fetch(
-        `/api/get-logs/?${PageParam}&${queryParams.toString()}&limit=${limit}`
+        `/api/get-logs?page=${currentPage}&${queryParams.toString()}&limit=${limit}`
       );
+
+      console.log("called...");
 
       if (response.ok) {
         const data = await response.json();
@@ -144,10 +154,21 @@ export default function Page() {
       setLoadingTable(false);
     }
   }, [currentPage, limit]);
-
   useEffect(() => {
-    fetchUsers();
-  }, [currentPage, fetchUsers]);
+    if (
+      applyFilters ||
+      currentPage > 1 ||
+      (currentPage === 1 && allowPageOneFetch)
+    ) {
+      fetchUsers();
+      setApplyFilters(false);
+
+      // Reset page-1 fetch flag once it's used
+      if (currentPage === 1 && allowPageOneFetch) {
+        setAllowPageOneFetch(false);
+      }
+    }
+  }, [applyFilters, currentPage, allowPageOneFetch]);
 
   useEffect(() => {
     setShowButton(selectedRows.length > 0);
@@ -167,19 +188,21 @@ export default function Page() {
   const handleFilterApply = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("Filters applied:", fileNameFilter);
+
     sessionStorage.setItem("fileName", fileNameFilter);
     sessionStorage.setItem("statusFilter", statusFilter);
-      sessionStorage.setItem("submittedFilter", submittedFilter);
-      sessionStorage.setItem("oracleFilter", oracleFilter);
+    sessionStorage.setItem("submittedFilter", submittedFilter);
+    sessionStorage.setItem("oracleFilter", oracleFilter);
 
-    fetchUsers();
+    setCurrentPage(1); // ✅ Reset to first page
+    setApplyFilters(true); // ✅ Trigger fetch
   };
 
   const resetFiltersAndFetch = async () => {
     sessionStorage.setItem("fileName", "");
     sessionStorage.setItem("statusFilter", "");
-      sessionStorage.setItem("submittedFilter", "");
-      sessionStorage.setItem("oracleFilter", "");
+    sessionStorage.setItem("submittedFilter", "");
+    sessionStorage.setItem("oracleFilter", "");
     setFileNameFilter("");
     setStatusFilter("");
     setSubmittedFilter("");
@@ -510,7 +533,7 @@ export default function Page() {
 
           {loadingTable ? (
             <div className="flex justify-center items-center">
-              <Spinner />
+              <TableSpinner />
             </div>
           ) : logs.length === 0 ? (
             <div className="flex flex-col items-center mt-20">
@@ -527,7 +550,7 @@ export default function Page() {
             <table className="min-w-full bg-white border-gray-300">
               <thead>
                 <tr className="text-xl text-gray-800">
-                  <th className="py-2 px-4 border-b text-start min-w-44 max-w-44 sticky left-0 bg-white z-20">
+                  <th className="py-2 px-4 border-b text-start font-medium">
                     <span className="mr-3">
                       <input
                         type="checkbox"
@@ -550,7 +573,7 @@ export default function Page() {
                   <th className="py-2 px-4 border-b text-center font-medium">
                     Status
                   </th>
-                  <th>Actions</th>
+                  <th className="py-2 px-4 border-b text-center font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>

@@ -257,14 +257,10 @@ const MasterPage = () => {
     fetchDBType();
   }, [db]);
 
-  useEffect(() => {
-    console.log("dbType->>> ", db);
-  }, [db]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       if (localStorage.getItem("prev") === "") {
-        console.log("type of window-> ", typeof window);
         setFirstTime(true);
         setFinalStatusFilter(sessionStorage.getItem("finalStatusFilter") || "");
         setReviewStatusFilter(
@@ -288,7 +284,6 @@ const MasterPage = () => {
         setFileNameFilter(sessionStorage.getItem("fileNameFilter") || "");
         setBolNumberFilter(sessionStorage.getItem("bolNumberFilter") || "");
       } else {
-        console.log("called->");
         sessionStorage.setItem("finalStatusFilter", "");
         sessionStorage.setItem("reviewStatusFilter", "");
         sessionStorage.setItem("reasonStatusFilter", "");
@@ -318,12 +313,7 @@ const MasterPage = () => {
       }
     }
   }, []);
-
-  // const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>();
-  // const handleSidebarStateChange = (newState: boolean) => {
-  //   setIsSidebarExpanded(newState);
-  // };
-
+ 
   const { isExpanded } = useSidebar();
 
   const handleSidebarStateChange = (newState: boolean) => {
@@ -1168,9 +1158,7 @@ const MasterPage = () => {
     return () => {
       window.removeEventListener("beforeunload", preventRefresh);
       window.removeEventListener("unload", updateStatus);
-
       updateStatus();
-
       setIsOcrRunning(false);
       setIsProcessModalOpen(false);
       setSelectedRows([]);

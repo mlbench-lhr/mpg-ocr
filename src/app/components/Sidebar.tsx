@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Cookie from "js-cookie";
 import Link from "next/link";
 import Image from "next/image";
 import sideBarLogo from "../../../public/images/sidbar.svg";
@@ -310,6 +311,9 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
         localStorage.removeItem("token");
         localStorage.removeItem("username");
         localStorage.removeItem("role");
+        Cookie.remove("token");
+        Cookie.remove("role");
+        Cookie.remove("username");
 
         if (userRole === "admin") {
           window.location.href = "/admin-login";
@@ -833,7 +837,7 @@ export default function Sidebar({ onStateChange }: SidebarProps) {
                       WMS API Configuration
                     </li>
 
-                    <li className="pl-2 border-b">
+                    <li className="px-2 border-b pb-3">
                       <span className="block mt-2 mb-1">Hostname</span>
                       <input
                         type="text"

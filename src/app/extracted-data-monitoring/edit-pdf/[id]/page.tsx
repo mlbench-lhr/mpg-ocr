@@ -169,8 +169,6 @@ const JobDetail = () => {
     }
   }, [id, db]);
 
-  console.log('mimeType-> ', mimeType)
-
   // const mimeTypeSafe = mimeType ?? "application/pdf";
   // const fileExtension = getFileExtension(mimeTypeSafe);
   const handleIframeLoad = () => {
@@ -327,7 +325,7 @@ const JobDetail = () => {
               
                 {db === "local" ? (
                   <>
-                    <p>local</p>
+                 
                     {fileName && isSupportedFormat(fileName) ? (
                       <iframe
                         src={`${job.pdfUrl}#toolbar=0`}
@@ -344,7 +342,6 @@ const JobDetail = () => {
                   </>
                 ) : db === "remote" ? (
                   <>
-                    <p>remote</p>
                     <iframe
                       src={`data:${mimeType};base64,${base64Data}`}
                       className="w-full h-screen"

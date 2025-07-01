@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -8,6 +7,8 @@ import Link from "next/link";
 import ForgotPasswordModal from "../components/ForgotPasswordModal";
 import ResetPasswordModal from "../components/ResetPasswordModal";
 import Router from "next/router";
+import Cookie from "js-cookie";
+import { storeToken } from "@/lib/auth/storeToken";
 
 
 export default function LoginPage() {
@@ -31,7 +32,7 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password}),
       });
 
       const data = await res.json();
@@ -44,6 +45,8 @@ export default function LoginPage() {
       localStorage.removeItem("token");
       localStorage.setItem("token", data.token);
       localStorage.setItem("username", data.name);
+
+      storeToken(data.token, data.name, data.role);
 
       router.push("/extracted-data-monitoring");
     } catch (err: unknown) {

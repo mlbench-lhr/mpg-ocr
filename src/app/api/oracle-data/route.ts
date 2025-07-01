@@ -41,26 +41,39 @@ export async function GET(req: Request) {
     console.log("✅ Received Filters:", filters);
 
     // Define which fields are DATE in the Oracle table
-    const dateFields = new Set([
-      "crtd_dtt",
-      "sent_file_dtt",
-      "recv_data_dtt",
-      "uptd_dtt"
-    ]);
+   const dateFields = new Set([
+  "crtd_dtt",
+  "sent_file_dtt",
+  "recv_data_dtt",
+  "uptd_dtt",
+  "ocr_stmp_pod_dtt"  // <-- Add this line
+]);
+
 
     // Build WHERE clause and binds
     const whereClauses: string[] = [];
 const binds: Record<string, string | number> = {};
 
-    for (const [key, value] of Object.entries(filters)) {
-      if (dateFields.has(key)) {
-        whereClauses.push(`TRUNC(${key}) = TO_DATE(:${key}, 'YYYY-MM-DD')`);
-        binds[key] = value;
-      } else {
-        whereClauses.push(`UPPER(${key}) LIKE :${key}`);
-        binds[key] = `%${value.toUpperCase()}%`;
-      }
-    }
+for (const [key, value] of Object.entries(filters)) {
+  if (key === "ocr_stmp_pod_dtt") {
+    const jsDate = new Date(value);
+    const mm = String(jsDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(jsDate.getDate()).padStart(2, '0');
+    const yy = String(jsDate.getFullYear()).slice(-2);
+    const formatted = `${mm}/${dd}/${yy}`; // 07/01/25
+
+    whereClauses.push(`${key} = :${key}`);
+    binds[key] = formatted;
+  }
+  else if (dateFields.has(key)) {
+    whereClauses.push(`TRUNC(${key}) = TO_DATE(:${key}, 'YYYY-MM-DD')`);
+    binds[key] = value;
+  } else {
+    whereClauses.push(`UPPER(${key}) LIKE :${key}`);
+    binds[key] = `%${value.toUpperCase()}%`;
+  }
+}
+
 
     const whereClause = whereClauses.length > 0 ? "WHERE " + whereClauses.join(" AND ") : "";
 

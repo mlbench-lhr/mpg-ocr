@@ -16,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="h-screen bg-white">
+      <body className="h-screen bg-white" suppressHydrationWarning>
         <DBConnectionProvider>
           <SidebarProvider>{children}</SidebarProvider>
         </DBConnectionProvider>
