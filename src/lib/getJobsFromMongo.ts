@@ -55,6 +55,7 @@ export async function getJobsFromMongo(
   const podDateSignature = url.searchParams.get("podDateSignature") || "";
   const bolNumber = url.searchParams.get("bolNumber") || "";
   const jobName = url.searchParams.get("jobName") || "";
+  const fileId = url.searchParams.get("fileId") || "";
   const searchQuery = url.searchParams.get("search") || "";
   const filter: Filter<Job> = {};
   const sortColumnsString = url.searchParams.get("sortColumn");
@@ -89,6 +90,10 @@ export async function getJobsFromMongo(
 
   if (jobName) {
     filter.jobName = { $regex: jobName.trim(), $options: "i" };
+  }
+
+  if (fileId) {
+    filter.fileId = { $regex: fileId.trim(), $options: "i" };
   }
 
   if (uptd_Usr_Cd.trim()) {

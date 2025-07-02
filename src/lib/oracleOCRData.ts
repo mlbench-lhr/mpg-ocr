@@ -57,15 +57,18 @@ export async function getOracleOCRData(
       url.searchParams.get("podDateSignature")?.trim().toLowerCase() || "";
     const bolNumber =
       url.searchParams.get("bolNumber")?.trim().toLowerCase() || "";
-
     const createdDate = url.searchParams.get("createdDate") || "";
     const updatedDate = url.searchParams.get("updatedDate") || "";
     const uptd_Usr_Cd = url.searchParams.get("uptd_Usr_Cd") || "";
+    const fileId = url.searchParams.get("fileId")?.trim().toLowerCase() || "";
+    const fileName =
+      url.searchParams.get("fileName")?.trim().toLowerCase() || "";
 
     const isOCR = uptd_Usr_Cd.toLowerCase() === "ocr";
     if (!isOCR) {
       const fileName =
         url.searchParams.get("fileName")?.trim().toLowerCase() || "";
+      const fileId = url.searchParams.get("fileId")?.trim().toLowerCase() || "";
       const baseQuery = `
     SELECT 
       A.FILE_ID AS FILE_ID,
@@ -88,6 +91,8 @@ export async function getOracleOCRData(
           : ""
       }
       ${fileName ? "AND LOWER(A.FILE_NAME) LIKE :fileName" : ""}
+          ${fileId ? "AND LOWER(A.FILE_ID) LIKE :fileId" : ""}
+
   `;
 
       const paginatedQuery = `
@@ -98,6 +103,8 @@ export async function getOracleOCRData(
       const bindParams = {
         ...(createdDate ? { createdDate } : {}),
         ...(fileName ? { fileName: `%${fileName}%` } : {}),
+        ...(fileId ? { fileId: `%${fileId}%` } : {}),
+
         offset: skip,
         maxRow: skip + limit,
       };
@@ -122,11 +129,14 @@ export async function getOracleOCRData(
             : ""
         }
         ${fileName ? "AND LOWER(A.FILE_NAME) LIKE :fileName" : ""}
+        ${fileId ? "AND LOWER(A.FILE_ID) LIKE :fileId" : ""}
+
     )
   `;
       const countBindParams: Record<string, string | number | Date> = {};
       if (createdDate) countBindParams.createdDate = createdDate;
       if (fileName) countBindParams.fileName = `%${fileName}%`;
+      if (fileId) countBindParams.fileId = `%${fileId}%`;
 
       const countResult = await connection.execute(
         countQuery,
@@ -156,7 +166,7 @@ export async function getOracleOCRData(
       );
     }
 
-    const tableName = `${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T`;
+    // const tableName = `${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T`;
     const whereClauses: string[] = [];
     const filterBinds: Record<string, string | Date | number> = {};
 
@@ -187,6 +197,14 @@ export async function getOracleOCRData(
       whereClauses.push(`LOWER(ocr.OCR_BOLNO) LIKE :bolNumber`);
       filterBinds.bolNumber = `%${bolNumber}%`;
     }
+    if (fileId) {
+      whereClauses.push(`LOWER(ocr.FILE_ID) LIKE :fileId`);
+      filterBinds.fileId = `%${fileId}%`;
+    }
+    if (fileName) {
+      whereClauses.push(`LOWER(pod.FILE_NAME) LIKE :fileName`);
+      filterBinds.fileName = `%${fileName}%`;
+    }
 
     const whereSQL =
       whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
@@ -212,7 +230,15 @@ export async function getOracleOCRData(
       outFormat: oracledb.OUT_FORMAT_OBJECT,
     });
 
-    const countSQL = `SELECT COUNT(*) AS TOTAL FROM ${tableName} ocr ${whereSQL}`;
+    // const countSQL = `SELECT COUNT(*) AS TOTAL FROM ${tableName} ocr ${whereSQL}`;
+    const countSQL = `
+  SELECT COUNT(*) AS TOTAL
+  FROM ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_OCR_T ocr
+  INNER JOIN ${process.env.ORACLE_DB_USER_NAME}.XTI_FILE_POD_T pod
+  ON ocr.FILE_ID = pod.FILE_ID
+  ${whereSQL}
+`;
+
     const countResult = await connection.execute(countSQL, filterBinds, {
       outFormat: oracledb.OUT_FORMAT_OBJECT,
     });
@@ -228,7 +254,6 @@ export async function getOracleOCRData(
         );
         return cleanFileName === row.FILE_ID;
       });
-      
 
       return {
         _id: matchedMongoJob?._id || `${row.FILE_ID}`,
