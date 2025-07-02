@@ -58,25 +58,24 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const tableCheckQuery = `SELECT TABLE_NAME FROM USER_TABLES WHERE TABLE_NAME = :fileTable`;
-    const tableCheckResult = await connection.execute(tableCheckQuery, [
-      fileTable.toUpperCase(),
-    ]);
+    // const tableCheckQuery = `SELECT TABLE_NAME FROM USER_TABLES WHERE TABLE_NAME = :fileTable`;
+    // const tableCheckResult = await connection.execute(tableCheckQuery, [
+    //   fileTable.toUpperCase(),
+    // ]);
 
-    if (!tableCheckResult.rows || tableCheckResult.rows.length === 0) {
-      return NextResponse.json(
-        { message: "Invalid fileTable name" },
-        { status: 400 }
-      );
-    }
-console.log('file table data-> ', fileTable)
+    // if (!tableCheckResult.rows || tableCheckResult.rows.length === 0) {
+    //   return NextResponse.json(
+    //     { message: "Invalid fileTable name" },
+    //     { status: 400 }
+    //   );
+    // }
+
+
     const result = await connection.execute<FileRow>(
       `SELECT FILE_ID, FILE_DATA FROM ${process.env.ORACLE_DB_USER_NAME}.${fileTable} WHERE FILE_ID = :fileId`,
       { fileId },
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
-
-    console.log('file fetched-> ', result)
 
     const row = result.rows?.[0] as FileRow | undefined;
 

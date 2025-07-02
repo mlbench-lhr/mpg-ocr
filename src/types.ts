@@ -2,9 +2,11 @@ export interface Job {
     _id: string;
     selectedDays: string[];
     fromTime: string | null;
+    fetchLimit:number;
     toTime: string | null;
     everyTime: string;
     active: boolean;
+    dayOffset:number;
   }
   
 

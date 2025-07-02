@@ -1,5 +1,6 @@
 export interface OracleRow {
   OCR_BOLNO: string;
+  FILE_NAME: string;
   FILE_ID: string;
   OCR_STMP_SIGN: string;
   OCR_ISSQTY: number;
@@ -13,8 +14,10 @@ export interface OracleRow {
   OCR_SYMT_SEAL: string;
   OCR_SYMT_NONE: string;
   UPTD_USR_CD: string;
-};
+}
 export interface PodFile {
   FILE_ID: string;
   FILE_TABLE: string;
+  CRTD_DTT:Date;
+  FILE_NAME: string;
 }

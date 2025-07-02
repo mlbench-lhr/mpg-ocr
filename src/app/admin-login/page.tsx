@@ -6,6 +6,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Image from "next/image";
 import ForgotPasswordModal from "../components/ForgotPasswordModal";
 import ResetPasswordModal from "../components/ResetPasswordModal";
+import { storeToken } from "@/lib/auth/storeToken";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -18,67 +19,6 @@ export default function LoginPage() {
   const [isResetPasswordVisible, setIsResetPasswordVisible] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const router = useRouter();
-
-  // const handleLogin = useCallback(async (e: React.FormEvent) => {
-  //     e.preventDefault();
-  //     setError(null);
-  //     setLoading(true);
-
-  //     try {
-  //         const res = await fetch("/api/auth/login", {
-  //             method: "POST",
-  //             headers: { "Content-Type": "application/json" },
-  //             body: JSON.stringify({ email, password, role }),
-  //         });
-
-  //         const data = await res.json();
-
-  //         if (!res.ok) {
-  //             throw new Error(data.message);
-  //         }
-
-  //         localStorage.removeItem("token");
-  //         localStorage.setItem("token", data.token);
-
-  //         router.push("/db-connection");
-
-  //     } catch (err: unknown) {
-  //         if (err instanceof Error) {
-  //             setError(err.message);
-  //         } else {
-  //             setError("An unexpected error occurred");
-  //         }
-  //         setLoading(false);
-  //     } finally {
-  //         Router.events.on("routeChangeComplete", () => setLoading(false));
-  //     }
-  // }, [email, password, role, router]);
-
-  // const handleLogin = useCallback(async (e: React.FormEvent) => {
-  //     e.preventDefault();
-  //     setError(null);
-  //     setLoading(true);
-
-  //     try {
-  //         const res = await fetch("/api/auth/login", {
-  //             method: "POST",
-  //             headers: { "Content-Type": "application/json" },
-  //             body: JSON.stringify({ email, password, role }),
-  //         });
-
-  //         const data = await res.json();
-  //         console.log('res-> ', res)
-  //         if (!res.ok) throw new Error(data.message);
-
-  //         localStorage.setItem("token", data.token);
-  //         router.push("/db-connection");
-
-  //     } catch (err: unknown) {
-  //         setError(err instanceof Error ? err.message : "An unexpected error occurred");
-  //     } finally {
-  //         setLoading(false);
-  //     }
-  // }, [email, password, role, router]);
 
   const handleLogin = useCallback(
     async (e: React.FormEvent) => {
@@ -101,6 +41,7 @@ export default function LoginPage() {
 
         // Save token to localStorage
         localStorage.setItem("token", token);
+        storeToken(token, loginData.name, loginData.role);
 
         // Step 2: Call /api/auth/db with the token
         const dbRes = await fetch("/api/auth/db", {
@@ -149,7 +90,7 @@ export default function LoginPage() {
       const baseUrl = `${urlObj.origin}`; // e.g., http://localhost:3000/admin-login
 
       // Send baseUrl to the backend
-      console.log("base url-> ", baseUrl);
+    
       fetch("/api/save-url", {
         method: "POST",
         headers: {

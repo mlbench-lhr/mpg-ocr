@@ -6,6 +6,7 @@ import clientPromise from "@/lib/mongodb";
 export async function PUT(req: Request) {
   try {
     const { fileId, ocrData } = await req.json();
+    console.log("update executed...");
 
     if (!fileId || !ocrData) {
       return NextResponse.json(
@@ -53,7 +54,6 @@ export async function PUT(req: Request) {
                 OCR_RCVQTY = :rcvQty,
                 OCR_STMP_POD_DTT = :podDate, 
                 OCR_STMP_SIGN = :sign, 
-                OCR_SYMT_NONE = :symtNone, 
                 OCR_SYMT_DAMG = :symtDamg, 
                 OCR_SYMT_SHRT = :symtShrt, 
                 OCR_SYMT_ORVG = :symtOrvg, 
@@ -68,8 +68,7 @@ export async function PUT(req: Request) {
         issQty: ocrData.totalQty,
         rcvQty: ocrData.received,
         podDate: ocrData.podDate,
-        sign: ocrData.podSignature,
-        symtNone: ocrData.none,
+        sign: ocrData.podSignature === "yes" ? "Y" : "N",
         symtDamg: ocrData.damaged,
         symtShrt: ocrData.short,
         symtOrvg: ocrData.over,

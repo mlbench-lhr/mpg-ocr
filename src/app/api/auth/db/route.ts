@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { ObjectId } from "mongodb";
 import oracledb from "oracledb";
 import clientPromise from "@/lib/mongodb";
+import { jsonDBConnectionHandler } from "@/lib/JsonDBConfig/jsonDBConnectionHandler";
 
 const SECRET_KEY = process.env.JWT_SECRET as string;
 const DB_NAME = process.env.DB_NAME || "my-next-app";
@@ -10,10 +11,9 @@ const DB_NAME = process.env.DB_NAME || "my-next-app";
 export async function POST(req: NextRequest) {
   let connection;
   let logMessage = "";
-  console.log("request: ", req);
+
   try {
     const token = req.headers.get("Authorization")?.split(" ")[1];
-    console.log("request: ", req);
     if (!token) {
       return NextResponse.json(
         { message: "Authentication required" },
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     const missingFields = [];
     if (!systemID) missingFields.push("systemID");
     if (!userName) missingFields.push("userName");
-    // if (!password) missingFields.push("password");
+    if (!password) missingFields.push("password");
     if (!ipAddress) missingFields.push("ipAddress");
     if (!portNumber) missingFields.push("portNumber");
     if (!serviceName) missingFields.push("serviceName");
@@ -53,11 +53,8 @@ export async function POST(req: NextRequest) {
     const client = await clientPromise;
     const db = client.db(DB_NAME);
     const connectionsCollection = db.collection("db_connections");
-
+    await jsonDBConnectionHandler(dataBase);
     const userObjId = new ObjectId(userId);
-
-    // const existingConnection = await connectionsCollection.findOne({ userId: userObjId });
-
     let oracleMessage = "Unknown status";
 
     if (dataBase !== "local" && checkbox === true) {
@@ -89,10 +86,10 @@ export async function POST(req: NextRequest) {
           oracleError instanceof Error
             ? oracleError.message
             : "An unknown error occurred";
+
         oracleMessage = "Failed to connect to OracleDB";
         logMessage = `Failed to connect to OracleDB: ${errorMessage}`;
 
-        // Save logMessage in the DB
         await connectionsCollection.updateOne(
           { userId: userObjId },
           {
@@ -176,7 +173,6 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const token = req.headers.get("Authorization")?.split(" ")[1];
-
     if (!token) {
       return NextResponse.json(
         { success: false, message: "Authentication required" },
@@ -188,7 +184,6 @@ export async function GET(req: NextRequest) {
     console.log("Decoded userId:", userId);
 
     const client = await clientPromise;
-
     const db = client.db(DB_NAME);
     const connectionsCollection = db.collection("db_connections");
 
@@ -214,8 +209,8 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const { password, ...connectionWithoutPassword } = connection;
-    console.log(password)
+    const { password, ...connectionWithoutPassword } = connection ?? {};
+    void password; // Mark as intentionally unused
 
     return NextResponse.json(
       { success: true, data: connectionWithoutPassword },

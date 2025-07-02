@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { getTruncatedText } from "@/lib/truncate"; 
 
 interface FileNameCellProps {
   pdfUrl?: string;
@@ -8,11 +9,8 @@ interface FileNameCellProps {
 const FileNameCell = ({ pdfUrl, fileId }: FileNameCellProps) => {
   const [showFull, setShowFull] = useState(false);
 
-  // Extract file name from either pdfUrl or fileId
   const fileName = pdfUrl?.split("/").pop() || fileId || "No PDF Available";
-
-  const isTruncated = fileName.length > 15 && !showFull;
-  const displayName = isTruncated ? fileName.substring(0, 15) + "..." : fileName;
+  const { displayText, isTruncated } = getTruncatedText(fileName, 15, showFull);
 
   return (
     <td
@@ -22,7 +20,7 @@ const FileNameCell = ({ pdfUrl, fileId }: FileNameCellProps) => {
       onClick={() => setShowFull((prev) => !prev)}
       title={!showFull ? "Click to show full name" : "Click to hide"}
     >
-      {displayName}
+      {displayText}
     </td>
   );
 };
